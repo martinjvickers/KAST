@@ -31,7 +31,7 @@
 #include <cassert>
 #include <boost/unordered_map.hpp>
 #include <string>
-//http://theboostcpplibraries.com/boost.unordered
+#include <pthread.h>
 
 using namespace seqan;
 using namespace std;
@@ -91,11 +91,9 @@ void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 		assign(meh,kmers[i]);
 		map.emplace(meh, 0);
         }
-	//std::cout << map.size() << '\n';
 
         for(int i = 0; i <= length(seq)-klen; i++)
         {
-		//infix(seq, i, i+klen) //gets me the value
 		string meh;
 		assign(meh,infix(seq, i, i+klen));
 		map[meh]++;
@@ -106,32 +104,6 @@ void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 		string meh;
 		assign(meh,kmers[i]);
 		counts[i] = (int)map[meh];
-		//cout << meh << " " << map[meh] << endl;
-	}
-}
-
-//this works, don't touch it
-void count2(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
-{
-	//zero the array
-	for(int i = 0; i < length(kmers); i++)
-	{
-		counts[i] = 0;
-	}
-
-	int mehcount = 0;
-
-	//count the number of occurances of each kmer
-	for(int i = 0; i <= length(seq)-klen; i++)
-	{
-		for(int j = 0; j < length(kmers); j++)
-		{
-			if(infix(seq, i, i+klen) == kmers[j])
-			{
-				mehcount = mehcount + 1;
-				counts[j] = counts[j] + 1;
-			}
-		}
 	}
 }
 
@@ -220,22 +192,6 @@ void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitp
 	}
 }
 
-double d2(int ref[], int qry[], int nokmers)
-{
-	double sumqCrC = 0.0;
-	double sumqC2 = 0.0;
-	double sumrC2 = 0.0;
-
-	for(int i = 0; i < nokmers; i++){
-		sumqCrC = sumqCrC + (qry[i] * ref[i]);
-		sumqC2 = sumqC2 + (qry[i] * qry[i]);
-		sumrC2 = sumrC2 + (ref[i] * ref[i]);
-	}               
-
-	double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
-	return 0.5*(1-score);
-}
-
 double d2(array_type ref, int qry[], int nokmers, int val)
 {
         double sumqCrC = 0.0;
@@ -250,27 +206,6 @@ double d2(array_type ref, int qry[], int nokmers, int val)
 
         double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
         return 0.5*(1-score);
-}
-
-
-double euler(int ref[], int qry[], int nokmers)
-{
-        double score = 0.0;
-        double rN = 0.0;
-        double qN = 0.0;
-
-        for(int i = 0; i < nokmers; i++){
-		rN = rN + ref[i];
-		qN = qN + qry[i];
-        }
-
-	for(int i = 0; i < nokmers; i++){
-		double rF = ref[i] / rN;
-		double qF = qry[i] / qN;
-		score = score + (pow((rF - qF), 2));
-	}
-
-        return pow(score, 0.5);
 }
 
 double euler(array_type ref, int qry[], int nokmers, int val)
@@ -291,53 +226,6 @@ double euler(array_type ref, int qry[], int nokmers, int val)
         }
 
         return pow(score, 0.5);
-}
-
-
-double d2s(int refCounts[], int qryCounts[], int nokmers, double refProbs[], double qryProbs[])
-{
-	double score = 0.0;
-	double D2S = 0.0;
-	double sum1 = 0.0;
-	double sum2 = 0.0;
-	double rN = 0.0;
-	double qN = 0.0;
-	double rtot = 0.0;
-	double qtot = 0.0;
-
-	for(int i = 0; i < nokmers; i++)
-	{
-		qN = qN + qryCounts[i];
-		qtot = qtot + qryProbs[i];
-                rN = rN + refCounts[i];
-                rtot = rtot + refProbs[i];
-	}
-
-	for(int i = 0; i < nokmers; i++)
-	{
-		double qC = qryCounts[i];
-		double rC = refCounts[i];
-		double qP = qryProbs[i];
-		double rP = refProbs[i];
-
-		double qCt = qC - (qN * qP);
-		double rCt = rC - (rN * rP);
-		double dist = sqrt(( qCt * qCt )+( rCt * rCt ));
-
-		if(dist == 0.0)
-		{
-			std::cout << "Div by zero" << std::endl;
-		}
-
-		D2S = D2S + ( ( qCt * rCt ) / dist );
-		sum1 = sum1 + ( ( qCt * qCt ) / dist );
-		sum2 = sum2 + ( ( rCt * rCt ) / dist );
-	}
-
-	score = 0.5 * (1 - ( (D2S) / (sqrt(sum1)*sqrt(sum2)) ) );
-
-	return score;
-
 }
 
 double d2s(array_type refCounts, int qryCounts[], int nokmers, array_type2 refProbs, double qryProbs[], int val)
@@ -384,48 +272,6 @@ double d2s(array_type refCounts, int qryCounts[], int nokmers, array_type2 refPr
 
         return score;
 
-}
-
-double d2star(int refCounts[], int qryCounts[], int nokmers, double refProbs[], double qryProbs[])
-{
-        double score = 0.0;
-        double D2Star = 0.0;
-        double sum1 = 0.0;
-        double sum2 = 0.0;
-        double qN = 0.0;
-        double rN = 0.0;
-
-        for(int i = 0; i < nokmers; i++)
-        {
-                qN = qN + qryCounts[i];
-                rN = rN + refCounts[i];
-        }
-
-        for(int i = 0; i < nokmers; i++)
-        {
-                double qC = qryCounts[i];
-                double rC = refCounts[i];
-                double qP = qryProbs[i];
-                double rP = refProbs[i];
-
-                double q_np = qN * qP;
-                double r_np = rN * rP;
-		double qCt = qC - q_np;
-		double rCt = rC - r_np;
-		
-                double dist = sqrt(q_np) * sqrt(r_np);
-
-                if(dist == 0.0)
-                {
-                        std::cout << "Div by zero" << std::endl;
-                }
-
-                D2Star = D2Star + ( ( qCt * rCt ) / dist );
-                sum1 = sum1 + ( ( qCt * qCt ) / q_np );
-                sum2 = sum2 + ( ( rCt * rCt ) / r_np );
-        }
-        score = 0.5 * (1 - ( (D2Star) / (sqrt(sum1)*sqrt(sum2)) ) );
-        return score;
 }
 
 double d2star(array_type refCounts, int qryCounts[], int nokmers, array_type2 refProbs, double qryProbs[], int val)
@@ -556,24 +402,6 @@ int main(int argc, char const ** argv)
 	StringSet<Dna5String> qseqs;
 	readRecords(qids, qseqs, seqFileIn);
 
-	/*
-	cout << "Test1" << endl;
-	CharString test1ids;
-	Dna5String test1seqs;
-	SeqFileIn seqFileIntest1("test.fasta");
-	readRecord(test1ids, test1seqs, seqFileIntest1);	
-	cout << "Test1 - complete" << endl;
-
-        cout << "Test2" << endl;
-        StringSet<CharString> test2ids;
-        StringSet<Dna5String> test2seqs;
-        SeqFileIn seqFileIntest2("test.fasta");
-        readRecords(test2ids, test2seqs, seqFileIntest2);
-        cout << "Test2 - complete" << endl;
-	*/
-
-
-
 	bool firsttime = true;
 
 	//read in reference sequence file
@@ -581,41 +409,27 @@ int main(int argc, char const ** argv)
 	StringSet<CharString> ids;
 	StringSet<Dna5String> seqs;
 
-	//cout << "nother test"<<endl;
-        //StringSet<CharString> testids;
-        //StringSet< String<Iupac> > testseqs;	
-	//SeqFileIn seqFileIntest("test.fasta");
-	//readRecords(testids, testseqs, seqFileIntest);
-
-	//cout << "bout to read ref" << endl;
-
 	//read in reference file
 	CharString referenceFileName;
 	getOptionValue(referenceFileName, parser, "reference-file");
 	SeqFileIn seqFileIn2(toCString(referenceFileName));
-	cout << "here???" << endl;
 	readRecords(ids, seqs, seqFileIn2);
-
-	cout << "here?" << endl;
 
 	//here, if the number of seq's in the reference file is < the number of top
 	//hits requested, set top hits to the number of seq's in the reference
 	if(length(ids) < nohits)
 		nohits = length(ids);
 
-	//this is all a bit of a trial
-	cout << "Creating " << length(ids) << " x " << length(kmers) << " array." << endl;
-
 	typedef array_type::index index;
 	typedef array_type2::index index;
 	array_type allrefcounts_new(boost::extents[length(ids)][length(kmers)]);
 	array_type2 allrefprobs_new(boost::extents[length(ids)][length(kmers)]);
 
-	cout << "boost::multi array created  " << endl;
-
 	//define datastructure to store all counts+markovs
 	int allrefcounts [0][0];
 	double allrefprobs [0][0];
+
+	double matrix [length(qids)][length(ids)];
 
 	cout << "Information " << endl;
 	cout << "Query fasta contains " << length(qids) << " seqs " << endl;
@@ -625,9 +439,7 @@ int main(int argc, char const ** argv)
 	//for each sequence in the query
 	for(int q = 0; q < length(qids); q++)
 	{
-
 		clock_t begin = clock();
-
 		CharString id = qids[q];
 		Dna5String seq = qseqs[q];
 
@@ -659,12 +471,12 @@ int main(int argc, char const ** argv)
 			hitpositions[i] = 0;
 		}
 
+		//define arrays to store data
+		int refcounts [length(kmers)];
+		double refMarkovProbs [length(kmers)];
+
 		//start querying reference
 		for(int i = 0; i < length(ids); i++){
-
-			//define arrays to store data
-			int refcounts [length(kmers)];
-			double refMarkovProbs [length(kmers)];
 
 			//if we do reverse compliment, so it here;
 			Dna5String allseq = seqs[i];
@@ -682,7 +494,9 @@ int main(int argc, char const ** argv)
 						allrefcounts_new[i][m] = refcounts[m];
 					}
 				}
-				recordall(nohits, hits, d2(allrefcounts_new, counts, length(kmers), i), i, hitpositions);
+				double dist = d2(allrefcounts_new, counts, length(kmers), i);
+				//recordall(nohits, hits, dist, i, hitpositions);
+				matrix[q][i] = dist;
 			}
 			else if (type == "kmer")
 			{
@@ -693,7 +507,9 @@ int main(int argc, char const ** argv)
 						allrefcounts_new[i][m] = refcounts[m];
                                         }
                                 }
-				recordall(nohits, hits, euler(allrefcounts_new, counts, length(kmers), i), i, hitpositions);				
+				double dist = euler(allrefcounts_new, counts, length(kmers), i);
+				//recordall(nohits, hits, dist, i, hitpositions);
+				matrix[q][i] = dist;
 			}
 			else if (type == "d2s")
 			{
@@ -706,7 +522,9 @@ int main(int argc, char const ** argv)
 						allrefprobs_new[i][m] = refMarkovProbs[m];
                                         }
                                 }
-				recordall(nohits, hits, d2s(allrefcounts_new, counts, length(kmers), allrefprobs_new, qryMarkovProbs, i), i, hitpositions);
+				double dist = d2s(allrefcounts_new, counts, length(kmers), allrefprobs_new, qryMarkovProbs, i);
+				//recordall(nohits, hits, dist, i, hitpositions);
+				matrix[q][i] = dist;
 			}
 			else if (type == "d2star")
 			{
@@ -719,7 +537,9 @@ int main(int argc, char const ** argv)
 						allrefprobs_new[i][m] = refMarkovProbs[m];
                                         }
                                 }
-				recordall(nohits, hits, d2star(allrefcounts_new, counts, length(kmers), allrefprobs_new, qryMarkovProbs, i), i, hitpositions);		
+				double dist = d2star(allrefcounts_new, counts, length(kmers), allrefprobs_new, qryMarkovProbs, i);
+				//recordall(nohits, hits, dist, i, hitpositions);	
+				matrix[q][i] = dist;
 			}
 			else 
 			{
@@ -735,14 +555,34 @@ int main(int argc, char const ** argv)
 		//print top hits
         	for(int i = 0; i < nohits; i++)
 		{
-        	        //std::cout << setprecision(50) << "	" << i << " " << hits[i] << " " << ids[hitpositions[i]] << " " << hitpositions[i] << std::endl;
                         std::cout << "      " << i << " " << hits[i] << " " << ids[hitpositions[i]] << " " << hitpositions[i] << std::endl;
-
 		}
 
 		clock_t end = clock();
 		cout << "Query " << q << " took " << double(end - begin) / CLOCKS_PER_SEC << " secs" << endl;
 
 	}
+
+	ofstream myfile;
+	myfile.open ("matrix.txt");
+	myfile << "Names ";
+	for(int i = 0; i < length(qids); i++)
+	{
+		myfile << "Contig_" << i << ",";
+	}
+	myfile << endl;
+	for(int i = 0; i < length(qids); i++)
+	{
+
+		myfile << ids[i] << ",";
+
+		for(int j = 0; j < length(ids); j++)
+		{
+			myfile << matrix[i][j] << ",";
+		}
+		myfile << endl;
+	}
+	myfile.close();
+
 	return 0;
 }
