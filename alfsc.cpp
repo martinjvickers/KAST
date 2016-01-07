@@ -1,5 +1,5 @@
 /*
- *	ALFSC - Alignment-free Sequence Comparion
+ *	ALFSC - Alignment-free Sequence Comparison
  *	Version 0.1
  *	Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
  *
@@ -362,7 +362,7 @@ int main(int argc, char const ** argv)
 	setValidValues(parser, "distance-type", "d2 kmer d2s d2star");
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
-	setShortDescription(parser, "Alignment-free comparison software.");
+	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.1");
 	setDate(parser, "September 2015");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
