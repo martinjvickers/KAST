@@ -1,9 +1,3 @@
-# README #
-
-This README would normally document whatever steps are necessary to get your application up and running.
-
-### What is this repository for? ###
-
 ### Quick summary ###
 This is alfsc - Alignment-free Sequence Comparsion (until maybe we can think of a better name).
 
