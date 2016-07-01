@@ -5,8 +5,6 @@
  *
  *	Todo:
  *	1) Ensure d2s and d2star are working as desired
- *	2) Create matrices outputs
- *	3) Create taxonomy outputs
  *	4) Improve performance of kmer/markovKmer lookup
  *		e.g. use hash tables
  *	5) Multithread the program, probably best bet is
@@ -14,6 +12,8 @@
  *	6) Create nice output files for the results
  *	   	Would be nice if they were compatible 
  *	   	with other software. e.g. blastoutputs
+ *	*) Memory management, need to ensure decent use of memory
+ *	*) sort out input to allow a single input fasta to work as a pairwise comparison.
  */
 
 #include <iostream>
@@ -50,6 +50,17 @@ namespace seqan {
 	};
 }
 
+struct ModifyStringOptions
+{
+        unsigned klen;
+        int nohits;
+        int markovOrder;
+        CharString type;
+        bool noreverse;
+        CharString queryFileName;
+	CharString referenceFileName;
+};
+
 String<Dna5String> defineKmers(int kmerlength)
 {
 	String<Dna5String> bases;
@@ -78,13 +89,16 @@ String<Dna5String> defineKmers(int kmerlength)
 		kmers = temp;
 		clear(temp);
 	}
+
 	return kmers;
 }
 
+//this isn't working correction. What's happening?
 void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 {
         typedef boost::unordered_map<string, int> unordered_map;
         unordered_map map;
+	//puts all the kmers into an unordered map
         for(int i = 0; i < length(kmers); i++)
         {
 		string meh;
@@ -105,6 +119,8 @@ void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 		assign(meh,kmers[i]);
 		counts[i] = (int)map[meh];
 	}
+
+	//cout << "arg " << length(kmers) << endl;
 }
 
 void markov(String<Dna5String> kmers, Dna5String seq, int klen, int counts[], int markovOrder, double kmerProb[])
@@ -207,6 +223,23 @@ double d2(array_type ref, int qry[], int nokmers, int val)
         double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
         return 0.5*(1-score);
 }
+
+double d2(int ref[], int qry[], int nokmers)
+{
+        double sumqCrC = 0.0;
+        double sumqC2 = 0.0;
+        double sumrC2 = 0.0;
+
+        for(int i = 0; i < nokmers; i++){
+                sumqCrC = sumqCrC + (qry[i] * ref[i]);
+                sumqC2 = sumqC2 + (qry[i] * qry[i]);
+                sumrC2 = sumrC2 + (ref[i] * ref[i]);
+        }
+
+        double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
+        return 0.5*(1-score);
+}
+
 
 double euler(array_type ref, int qry[], int nokmers, int val)
 {
@@ -344,20 +377,18 @@ Dna5String doRevCompl(Dna5String seq)
 	return allSeq;
 }
 
-int main(int argc, char const ** argv)
+seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
-	// Setup ArgumentParser.
 	seqan::ArgumentParser parser("alfsc");
 	addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "klen", "3");
 	addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the query file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
-	setRequired(parser, "query-file");
 	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the reference file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
-	setRequired(parser, "reference-file");
-        addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
-        setDefaultValue(parser, "markov-order", "1");
-        addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
-        setDefaultValue(parser, "num-hits", "10");	
+	setRequired(parser, "query-file");
+	addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
+	setDefaultValue(parser, "markov-order", "1");
+	addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
+	setDefaultValue(parser, "num-hits", "10");
 	addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
 	setValidValues(parser, "distance-type", "d2 kmer d2s d2star");
 	setDefaultValue(parser, "distance-type", "d2");
@@ -367,36 +398,145 @@ int main(int argc, char const ** argv)
 	setDate(parser, "September 2015");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
-
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
 	// If parsing was not successful then exit with code 1 if there were errors.
 	// Otherwise, exit with code 0 (e.g. help was printed).
 	if (res != seqan::ArgumentParser::PARSE_OK)
-		return res == seqan::ArgumentParser::PARSE_ERROR;
+		return res;
 
-	unsigned klen;
-	getOptionValue(klen, parser, "klen");
+        getOptionValue(options.klen, parser, "klen");
+        getOptionValue(options.nohits, parser, "num-hits");
+        getOptionValue(options.markovOrder, parser, "markov-order");
+        getOptionValue(options.type, parser, "distance-type");
+        options.noreverse = isSet(parser, "no-reverse");
+	getOptionValue(options.queryFileName, parser, "query-file");
+	getOptionValue(options.referenceFileName, parser, "reference-file");
 
-	int nohits;
-	getOptionValue(nohits, parser, "num-hits");
+	return seqan::ArgumentParser::PARSE_OK;
 
-        int markovOrder;
-        getOptionValue(markovOrder, parser, "markov-order");
+}
 
-	CharString type;
-	getOptionValue(type, parser, "distance-type");
+//this function does the work
+void workfunction(CharString input1, CharString input2, ModifyStringOptions & options)
+{
 
-	bool noreverse = false;
-	noreverse = isSet(parser, "no-reverse");
+	//make definitions
+	String<Dna5String> kmers = defineKmers(options.klen);
+	bool firsttime = true;
+	StringSet<CharString> queryids;
+        StringSet<Dna5String> queryseqs;
+        StringSet<CharString> refids;
+        StringSet<Dna5String> refseqs;
 
-	// define the kmers to be used
-	String<Dna5String> kmers = defineKmers(klen);
+	SeqFileIn queryFileIn(toCString(input1));
+	SeqFileIn refFileIn(toCString(input2));
+
+	//reads query file into RAM
+	readRecords(queryids, queryseqs, queryFileIn);
+
+	//reads reference into RAM
+	readRecords(refids, refseqs, refFileIn);
+
+        //for each sequence in the query
+        for(int q = 0; q < length(queryids); q++)
+        {
+		CharString queryid = queryids[q];
+		Dna5String queryseq = queryseqs[q];
+
+		if(options.noreverse != true)
+		{
+			queryseq = doRevCompl(queryseq);
+		}
+
+		//define counts array to be the same size as the kmers
+		int querycounts [length(kmers)];
+		double qryMarkovProbs [length(kmers)];
+
+		//return a kmer occurance histogram for the query sequence.
+		count(kmers, queryseq, options.klen, querycounts);
+
+		cout << "Query: ";
+		for (int i = 0; i < length(kmers); i++){
+			cout << querycounts[i] << " " << endl;
+		}
+		cout << endl;
+		
+
+		//if markov, do markov probability of the query sequence
+		if(options.type == "d2s" || options.type == "d2star")
+		{
+			markov(kmers, queryseq, options.klen, querycounts, options.markovOrder, qryMarkovProbs);
+		}      		
+
+		typedef array_type::index index;
+		array_type allrefcounts(boost::extents[length(refids)][length(kmers)]);
+
+		//start querying reference
+                for(int r = 0; r < length(refids); r++)
+		{
+
+			int refcounts [length(kmers)];
+			double refProbs [length(kmers)];
+
+			//if we do reverse compliment, so it here;
+			Dna5String refseq = refseqs[r];
+			if(options.noreverse != true && firsttime == true)
+			{
+				refseq = doRevCompl(refseqs[r]);
+			}
+
+			//now count 
+			if(options.type == "d2")
+			{
+                                if(firsttime){
+					count(kmers, refseq, options.klen, refcounts);
+                                        for(int m = 0; m < length(kmers); m++)
+                                        {
+                                                allrefcounts[r][m] = refcounts[m];
+                                        }
+                                }
+
+				cout << "Reference: ";
+				for (int i = 0; i < length(kmers); i++){
+					cout << refcounts[i] << " " << endl;
+				}
+				cout << endl;
+                        }
+
+		}
+
+		firsttime = false;
+	}
+}
+
+int main(int argc, char const ** argv)
+{
+
+	//parse our options
+	ModifyStringOptions options;
+	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
+
+	//decide if we're running pairwise or not
+        if(options.referenceFileName == "")
+        {
+		workfunction(options.queryFileName, options.queryFileName, options);
+		cout << "Doing pairwise" << endl;
+        }
+        else
+        {
+		workfunction(options.queryFileName, options.referenceFileName, options);
+		cout << "Standard" << endl;
+        }
+	
+
+	//workfunction(options);
+/*
+        //make definitions
+        String<Dna5String> kmers = defineKmers(options.klen);
 
 	//read in query sequence file
-	CharString queryFileName;
-	getOptionValue(queryFileName, parser, "query-file");
-	SeqFileIn seqFileIn(toCString(queryFileName));
+	SeqFileIn seqFileIn(toCString(options.queryFileName));
 	
 	StringSet<CharString> qids;
 	StringSet<Dna5String> qseqs;
@@ -409,16 +549,13 @@ int main(int argc, char const ** argv)
 	StringSet<CharString> ids;
 	StringSet<Dna5String> seqs;
 
-	//read in reference file
-	CharString referenceFileName;
-	getOptionValue(referenceFileName, parser, "reference-file");
-	SeqFileIn seqFileIn2(toCString(referenceFileName));
+	SeqFileIn seqFileIn2(toCString(options.referenceFileName));
 	readRecords(ids, seqs, seqFileIn2);
 
 	//here, if the number of seq's in the reference file is < the number of top
 	//hits requested, set top hits to the number of seq's in the reference
-	if(length(ids) < nohits)
-		nohits = length(ids);
+	if(length(ids) < options.nohits)
+		options.nohits = length(ids);
 
 	typedef array_type::index index;
 	typedef array_type2::index index;
@@ -434,7 +571,7 @@ int main(int argc, char const ** argv)
 	cout << "Information " << endl;
 	cout << "Query fasta contains " << length(qids) << " seqs " << endl;
 	cout << "Reference fasta contains " << length(ids) << " seqs " << endl;
-	cout << "With a Kmer size of " << klen << " there are " << length(kmers) << " kmers." << endl;
+	cout << "With a Kmer size of " << options.klen << " there are " << length(kmers) << " kmers." << endl;
 
 	//for each sequence in the query
 	for(int q = 0; q < length(qids); q++)
@@ -443,7 +580,7 @@ int main(int argc, char const ** argv)
 		CharString id = qids[q];
 		Dna5String seq = qseqs[q];
 
-	        if(noreverse != true)
+	        if(options.noreverse != true)
 	        {
 	                seq = doRevCompl(seq);
 	        }
@@ -452,20 +589,20 @@ int main(int argc, char const ** argv)
 		int counts [length(kmers)];
 
 		//return the number of occurances of a kmer in query
-		count(kmers, seq, klen, counts);
+		count(kmers, seq, options.klen, counts);
 
 		double qryMarkovProbs [length(kmers)];
 
 		//if markov, do markov
-		if(type == "d2s" || type == "d2star")
+		if(options.type == "d2s" || options.type == "d2star")
 		{
-			markov(kmers, seq, klen, counts, markovOrder, qryMarkovProbs);
+			markov(kmers, seq, options.klen, counts, options.markovOrder, qryMarkovProbs);
 		}	
 
 		//define arrays to record hits and zero them
-		double hits [nohits];
-		int hitpositions [nohits];
-		for(int i = 0; i < nohits; i++)
+		double hits [options.nohits];
+		int hitpositions [options.nohits];
+		for(int i = 0; i < options.nohits; i++)
 		{
 			hits[i] = 1.0;
 			hitpositions[i] = 0;
@@ -480,15 +617,15 @@ int main(int argc, char const ** argv)
 
 			//if we do reverse compliment, so it here;
 			Dna5String allseq = seqs[i];
-		        if(noreverse != true && firsttime == true)
+		        if(options.noreverse != true && firsttime == true)
 		        {
 		                allseq = doRevCompl(seqs[i]);
 		        }
 
-			if(type == "d2")
+			if(options.type == "d2")
 			{
 				if(firsttime){
-					count(kmers, allseq, klen, refcounts);
+					count(kmers, allseq, options.klen, refcounts);
 					for(int m = 0; m < length(kmers); m++)
 					{
 						allrefcounts_new[i][m] = refcounts[m];
@@ -498,10 +635,10 @@ int main(int argc, char const ** argv)
 				//recordall(nohits, hits, dist, i, hitpositions);
 				matrix[q][i] = dist;
 			}
-			else if (type == "kmer")
+			else if (options.type == "kmer")
 			{
                                 if(firsttime){
-                                        count(kmers, allseq, klen, refcounts);
+                                        count(kmers, allseq, options.klen, refcounts);
                                         for(int m = 0; m < length(kmers); m++)
                                         {
 						allrefcounts_new[i][m] = refcounts[m];
@@ -511,11 +648,11 @@ int main(int argc, char const ** argv)
 				//recordall(nohits, hits, dist, i, hitpositions);
 				matrix[q][i] = dist;
 			}
-			else if (type == "d2s")
+			else if (options.type == "d2s")
 			{
                                 if(firsttime){
-                                        count(kmers, allseq, klen, refcounts);
-					markov(kmers, allseq, klen, refcounts, markovOrder, refMarkovProbs);
+                                        count(kmers, allseq, options.klen, refcounts);
+					markov(kmers, allseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
                                         for(int m = 0; m < length(kmers); m++)
                                         {
 						allrefcounts_new[i][m] = refcounts[m];
@@ -526,11 +663,11 @@ int main(int argc, char const ** argv)
 				//recordall(nohits, hits, dist, i, hitpositions);
 				matrix[q][i] = dist;
 			}
-			else if (type == "d2star")
+			else if (options.type == "d2star")
 			{
                                 if(firsttime){
-                                        count(kmers, allseq, klen, refcounts);
-                                        markov(kmers, allseq, klen, refcounts, markovOrder, refMarkovProbs);
+                                        count(kmers, allseq, options.klen, refcounts);
+                                        markov(kmers, allseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
                                         for(int m = 0; m < length(kmers); m++)
                                         {
 						allrefcounts_new[i][m] = refcounts[m];
@@ -553,7 +690,7 @@ int main(int argc, char const ** argv)
 		std::cout << "------------ " << std::endl;
 
 		//print top hits
-        	for(int i = 0; i < nohits; i++)
+        	for(int i = 0; i < options.nohits; i++)
 		{
                         std::cout << "      " << i << " " << hits[i] << " " << ids[hitpositions[i]] << " " << hitpositions[i] << std::endl;
 		}
@@ -583,6 +720,6 @@ int main(int argc, char const ** argv)
 		myfile << endl;
 	}
 	myfile.close();
-
+*/
 	return 0;
 }
