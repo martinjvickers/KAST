@@ -11,6 +11,8 @@ project (alfsc-stable CXX)
 # Search for zlib as a dependency for SeqAn.
 find_package (ZLIB)
 
+find_package (Threads)
+
 # Load the SeqAn module and fail if not found.
 find_package (SeqAn REQUIRED)
 
@@ -29,4 +31,4 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 
 # Add executable and link against SeqAn dependencies.
 add_executable (alfsc-stable alfsc.cpp)
-target_link_libraries (alfsc-stable ${SEQAN_LIBRARIES})
+target_link_libraries (alfsc-stable ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

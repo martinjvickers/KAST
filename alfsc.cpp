@@ -31,13 +31,21 @@
 #include <cassert>
 #include <boost/unordered_map.hpp>
 #include <string>
-#include <pthread.h>
+#include <thread>
+#include <mutex>
+#include <chrono>
 
 using namespace seqan;
 using namespace std;
 
 typedef boost::multi_array<int, 2> array_type;
 typedef boost::multi_array<double, 2> array_type2;
+
+int num_threads;
+mutex m;
+queue<thread> thread_queue;
+SeqFileIn queryFileIn;
+
 
 //overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
 //the input file is checked against Iupac and any non-A/C/G/T is silently 
@@ -510,13 +518,77 @@ void workfunction(CharString input1, CharString input2, ModifyStringOptions & op
 	}
 }
 
+array_type calculateReference(String<Dna5String> kmers, ModifyStringOptions & options)
+{
+        StringSet<CharString> refids;
+        StringSet<Dna5String> refseqs;
+        SeqFileIn refFileIn(toCString(options.referenceFileName));
+        array_type allrefcounts(boost::extents[length(refids)][length(kmers)]);
+
+        //reads reference into RAM
+        readRecords(refids, refseqs, refFileIn);
+	
+	//start querying reference
+	for(int r = 0; r < length(refids); r++)
+	{
+		cout << r << endl;
+		int refcounts [length(kmers)];
+		double refProbs [length(kmers)];
+
+		//if we do reverse compliment, so it here;
+		Dna5String refseq = refseqs[r];
+		if(options.noreverse != true)
+		{
+			refseq = doRevCompl(refseqs[r]);
+		}
+
+		//now count 
+		if(options.type == "d2")
+		{
+			count(kmers, refseq, options.klen, refcounts);
+			for(int m = 0; m < length(kmers); m++)
+			{
+				allrefcounts[r][m] = refcounts[m];
+			}
+		}
+	}
+
+	cout << "Finished calculating reference" << endl;
+
+	return allrefcounts;
+}
+
+////i think the way this needs to work is as follows;
+//the function actually reads the next line since the file is the producer!!!!
+void worker(String<Dna5String> kmers, array_type reference_counts)
+{
+	while(1)
+	{
+		Dna5String queryseq;
+		CharString queryid;
+		m.lock();
+		if(!atEnd(queryFileIn))
+		{
+			readRecord(queryid, queryseq, queryFileIn);
+		} else 
+		{
+			m.unlock();
+			return;
+		}
+		m.unlock();
+		//workfunction(CharString input1, CharString input2, ModifyStringOptions & options);
+		
+		cout << "Thread ID " <<  this_thread::get_id() << " " << length(queryseq) << endl;
+	}
+}
+
 int main(int argc, char const ** argv)
 {
 
 	//parse our options
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
-
+/*
 	//decide if we're running pairwise or not
         if(options.referenceFileName == "")
         {
@@ -528,9 +600,32 @@ int main(int argc, char const ** argv)
 		workfunction(options.queryFileName, options.referenceFileName, options);
 		cout << "Standard" << endl;
         }
-	
+*/
+	cout << "Calculating K-mers." << endl;
+	//calculate kmers
+	String<Dna5String> kmers = defineKmers(options.klen);
 
-	//workfunction(options);
+	cout << "Creating reference counts" << endl;
+
+	//precalculate reference!!
+	typedef array_type::index index;
+	array_type reference_counts = calculateReference(kmers, options);
+
+	cout << "Processing" << endl;
+
+	open(queryFileIn, (toCString(options.queryFileName)));
+	num_threads = 4;
+	thread workers[num_threads];
+	for(int w = 0; w < num_threads; w++)
+	{
+		workers[w] = thread(worker, kmers, reference_counts);
+		cout << "thread " << w << " started." << endl;
+	}
+
+	for(int w = 0; w < num_threads; w++)
+	{
+		workers[w].join();
+	}
 /*
         //make definitions
         String<Dna5String> kmers = defineKmers(options.klen);
