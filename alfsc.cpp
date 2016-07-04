@@ -4,11 +4,7 @@
  *	Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
  *
  *	Todo:
- *	1) Ensure d2s and d2star are working as desired
- *	4) Improve performance of kmer/markovKmer lookup
- *		e.g. use hash tables
- *	5) Multithread the program, probably best bet is
- *	   to simply run each query input as a thread.
+ *	1) Write unit tests
  *	6) Create nice output files for the results
  *	   	Would be nice if they were compatible 
  *	   	with other software. e.g. blastoutputs
@@ -33,7 +29,6 @@
 #include <string>
 #include <thread>
 #include <mutex>
-#include <chrono>
 
 using namespace seqan;
 using namespace std;
@@ -41,11 +36,8 @@ using namespace std;
 typedef boost::multi_array<int, 2> array_type;
 typedef boost::multi_array<double, 2> array_type2;
 
-int num_threads;
 mutex m;
-queue<thread> thread_queue;
 SeqFileIn queryFileIn;
-
 
 //overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
 //the input file is checked against Iupac and any non-A/C/G/T is silently 
@@ -67,6 +59,7 @@ struct ModifyStringOptions
         bool noreverse;
         CharString queryFileName;
 	CharString referenceFileName;
+	int num_threads;
 };
 
 String<Dna5String> defineKmers(int kmerlength)
@@ -101,7 +94,6 @@ String<Dna5String> defineKmers(int kmerlength)
 	return kmers;
 }
 
-//this isn't working correction. What's happening?
 void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 {
         typedef boost::unordered_map<string, int> unordered_map;
@@ -127,9 +119,35 @@ void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 		assign(meh,kmers[i]);
 		counts[i] = (int)map[meh];
 	}
-
-	//cout << "arg " << length(kmers) << endl;
 }
+
+void count(String<Dna5String> kmers, Dna5String seq, int klen, long long int counts[])
+{
+        typedef boost::unordered_map<string, long long int> unordered_map;
+        unordered_map map;
+        //puts all the kmers into an unordered map
+        for(int i = 0; i < length(kmers); i++)
+        {
+                string meh;
+                assign(meh,kmers[i]);
+                map.emplace(meh, 0);
+        }
+
+        for(int i = 0; i <= length(seq)-klen; i++)
+        {
+                string meh;
+                assign(meh,infix(seq, i, i+klen));
+                map[meh]++;
+        }
+
+        for(int i = 0; i < length(kmers); i++)
+        {
+                string meh;
+                assign(meh,kmers[i]);
+                counts[i] = (long long int)map[meh];
+        }
+}
+
 
 void markov(String<Dna5String> kmers, Dna5String seq, int klen, int counts[], int markovOrder, double kmerProb[])
 {
@@ -232,7 +250,7 @@ double d2(array_type ref, int qry[], int nokmers, int val)
         return 0.5*(1-score);
 }
 
-double d2(int ref[], int qry[], int nokmers)
+double d2(long long int ref[], long long int qry[], int nokmers)
 {
         double sumqCrC = 0.0;
         double sumqC2 = 0.0;
@@ -401,6 +419,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setValidValues(parser, "distance-type", "d2 kmer d2s d2star");
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
+	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
+	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.1");
 	setDate(parser, "September 2015");
@@ -420,147 +440,15 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         options.noreverse = isSet(parser, "no-reverse");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
+	getOptionValue(options.num_threads, parser, "num-cores");
 
 	return seqan::ArgumentParser::PARSE_OK;
 
 }
 
-//this function does the work
-void workfunction(CharString input1, CharString input2, ModifyStringOptions & options)
-{
-
-	//make definitions
-	String<Dna5String> kmers = defineKmers(options.klen);
-	bool firsttime = true;
-	StringSet<CharString> queryids;
-        StringSet<Dna5String> queryseqs;
-        StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
-
-	SeqFileIn queryFileIn(toCString(input1));
-	SeqFileIn refFileIn(toCString(input2));
-
-	//reads query file into RAM
-	readRecords(queryids, queryseqs, queryFileIn);
-
-	//reads reference into RAM
-	readRecords(refids, refseqs, refFileIn);
-
-        //for each sequence in the query
-        for(int q = 0; q < length(queryids); q++)
-        {
-		CharString queryid = queryids[q];
-		Dna5String queryseq = queryseqs[q];
-
-		if(options.noreverse != true)
-		{
-			queryseq = doRevCompl(queryseq);
-		}
-
-		//define counts array to be the same size as the kmers
-		int querycounts [length(kmers)];
-		double qryMarkovProbs [length(kmers)];
-
-		//return a kmer occurance histogram for the query sequence.
-		count(kmers, queryseq, options.klen, querycounts);
-
-		cout << "Query: ";
-		for (int i = 0; i < length(kmers); i++){
-			cout << querycounts[i] << " " << endl;
-		}
-		cout << endl;
-		
-
-		//if markov, do markov probability of the query sequence
-		if(options.type == "d2s" || options.type == "d2star")
-		{
-			markov(kmers, queryseq, options.klen, querycounts, options.markovOrder, qryMarkovProbs);
-		}      		
-
-		typedef array_type::index index;
-		array_type allrefcounts(boost::extents[length(refids)][length(kmers)]);
-
-		//start querying reference
-                for(int r = 0; r < length(refids); r++)
-		{
-
-			int refcounts [length(kmers)];
-			double refProbs [length(kmers)];
-
-			//if we do reverse compliment, so it here;
-			Dna5String refseq = refseqs[r];
-			if(options.noreverse != true && firsttime == true)
-			{
-				refseq = doRevCompl(refseqs[r]);
-			}
-
-			//now count 
-			if(options.type == "d2")
-			{
-                                if(firsttime){
-					count(kmers, refseq, options.klen, refcounts);
-                                        for(int m = 0; m < length(kmers); m++)
-                                        {
-                                                allrefcounts[r][m] = refcounts[m];
-                                        }
-                                }
-
-				cout << "Reference: ";
-				for (int i = 0; i < length(kmers); i++){
-					cout << refcounts[i] << " " << endl;
-				}
-				cout << endl;
-                        }
-
-		}
-
-		firsttime = false;
-	}
-}
-
-array_type calculateReference(String<Dna5String> kmers, ModifyStringOptions & options)
-{
-        StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
-        SeqFileIn refFileIn(toCString(options.referenceFileName));
-        array_type allrefcounts(boost::extents[length(refids)][length(kmers)]);
-
-        //reads reference into RAM
-        readRecords(refids, refseqs, refFileIn);
-	
-	//start querying reference
-	for(int r = 0; r < length(refids); r++)
-	{
-		cout << r << endl;
-		int refcounts [length(kmers)];
-		double refProbs [length(kmers)];
-
-		//if we do reverse compliment, so it here;
-		Dna5String refseq = refseqs[r];
-		if(options.noreverse != true)
-		{
-			refseq = doRevCompl(refseqs[r]);
-		}
-
-		//now count 
-		if(options.type == "d2")
-		{
-			count(kmers, refseq, options.klen, refcounts);
-			for(int m = 0; m < length(kmers); m++)
-			{
-				allrefcounts[r][m] = refcounts[m];
-			}
-		}
-	}
-
-	cout << "Finished calculating reference" << endl;
-
-	return allrefcounts;
-}
-
 ////i think the way this needs to work is as follows;
 //the function actually reads the next line since the file is the producer!!!!
-void worker(String<Dna5String> kmers, array_type reference_counts)
+void worker(String<Dna5String> kmers, ModifyStringOptions options)
 {
 	while(1)
 	{
@@ -576,9 +464,28 @@ void worker(String<Dna5String> kmers, array_type reference_counts)
 			return;
 		}
 		m.unlock();
-		//workfunction(CharString input1, CharString input2, ModifyStringOptions & options);
-		
-		cout << "Thread ID " <<  this_thread::get_id() << " " << length(queryseq) << endl;
+	
+		//now that we've read off the new sequence, compare it to the reference
+		long long int querycounts [length(kmers)];
+		count(kmers, queryseq, options.klen, querycounts);
+
+		StringSet<CharString> refids;
+		StringSet<Dna5String> refseqs;
+		SeqFileIn refFileIn(toCString(options.referenceFileName));
+
+		//reads reference into RAM
+		readRecords(refids, refseqs, refFileIn);
+
+		for(int r = 0; r < length(refids); r++)
+		{
+			long long int refcounts [length(kmers)];
+			count(kmers, refseqs[r], options.klen, refcounts);
+			double dist = d2(refcounts, querycounts, length(kmers));
+			//cout << "Distance " << dist << endl;
+			m.lock();
+			cout << "Dist between " << queryid << " and " << refids[r] << " = " << dist << endl;
+			m.unlock();
+		}
 	}
 }
 
@@ -601,28 +508,17 @@ int main(int argc, char const ** argv)
 		cout << "Standard" << endl;
         }
 */
-	cout << "Calculating K-mers." << endl;
 	//calculate kmers
 	String<Dna5String> kmers = defineKmers(options.klen);
 
-	cout << "Creating reference counts" << endl;
-
-	//precalculate reference!!
-	typedef array_type::index index;
-	array_type reference_counts = calculateReference(kmers, options);
-
-	cout << "Processing" << endl;
-
 	open(queryFileIn, (toCString(options.queryFileName)));
-	num_threads = 4;
-	thread workers[num_threads];
-	for(int w = 0; w < num_threads; w++)
+	thread workers[options.num_threads];
+	for(int w = 0; w < options.num_threads; w++)
 	{
-		workers[w] = thread(worker, kmers, reference_counts);
-		cout << "thread " << w << " started." << endl;
+		workers[w] = thread(worker, kmers, options);
 	}
 
-	for(int w = 0; w < num_threads; w++)
+	for(int w = 0; w < options.num_threads; w++)
 	{
 		workers[w].join();
 	}
