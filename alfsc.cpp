@@ -89,8 +89,10 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 }
 
-////i think the way this needs to work is as follows;
-//the function actually reads the next line since the file is the producer!!!!
+/*
+ * This is the main body of work. Pop off the next sequence from the 
+ * query file and compare it to each sequence in the reference.
+ */
 void worker(String<Dna5String> kmers, ModifyStringOptions options)
 {
 	while(1)
@@ -194,26 +196,14 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
 
 int main(int argc, char const ** argv)
 {
-
 	//parse our options
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
-/*
-	//decide if we're running pairwise or not
-        if(options.referenceFileName == "")
-        {
-		workfunction(options.queryFileName, options.queryFileName, options);
-		cout << "Doing pairwise" << endl;
-        }
-        else
-        {
-		workfunction(options.queryFileName, options.referenceFileName, options);
-		cout << "Standard" << endl;
-        }
-*/
+	
 	//calculate kmers
 	String<Dna5String> kmers = defineKmers(options.klen);
 
+	//open file and launch threads
 	open(queryFileIn, (toCString(options.queryFileName)));
 	thread workers[options.num_threads];
 	for(int w = 0; w < options.num_threads; w++)
@@ -221,6 +211,7 @@ int main(int argc, char const ** argv)
 		workers[w] = thread(worker, kmers, options);
 	}
 
+	//do not exit until all the threads have finished
 	for(int w = 0; w < options.num_threads; w++)
 	{
 		workers[w].join();
