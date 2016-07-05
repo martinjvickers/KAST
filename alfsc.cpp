@@ -65,8 +65,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
-	setVersion(parser, "0.1");
-	setDate(parser, "September 2015");
+	setVersion(parser, "0.0.1");
+	setDate(parser, "July 2016");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
