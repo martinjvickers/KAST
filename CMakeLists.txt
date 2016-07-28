@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.0.0)
 
 # Name of project and that it is C++ only.
-project (alfsc-stable CXX)
+project (alfsc CXX)
 
 # ----------------------------------------------------------------------------
 # Dependencies
@@ -28,5 +28,5 @@ add_definitions (${SEQAN_DEFINITIONS})
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 
 # Add executable and link against SeqAn dependencies.
-add_executable (alfsc-stable alfsc.cpp distances.cpp utils.cpp)
-target_link_libraries (alfsc-stable ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable (alfsc alfsc.cpp distances.cpp utils.cpp)
+target_link_libraries (alfsc ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
