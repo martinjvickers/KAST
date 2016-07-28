@@ -14,7 +14,7 @@ Early Early Beta! 0.0.1 :-)
 
 * mkdir -p alfsc-build/release
 * cd alfsc-build/release
-* cmake ../../alfsc-stable -DCMAKE_MODULE_PATH=~/seqan/util/cmake -DSEQAN_INCLUDE_PATH=~/seqan/include -DCMAKE_CXX_FLAGS=-std=c++11 -DCMAKE_BUILD_TYPE=Release
+* cmake ../../alfsc-stable -DCMAKE_MODULE_PATH=~/seqan/util/cmake -DSEQAN_INCLUDE_PATH=~/seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 * make
 
 ### TODO ###
