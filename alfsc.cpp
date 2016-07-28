@@ -71,8 +71,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
-	// If parsing was not successful then exit with code 1 if there were errors.
-	// Otherwise, exit with code 0 (e.g. help was printed).
+	// Only extract  options if the program will continue after parseCommandLine()
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res;
 
@@ -200,6 +199,11 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 	
+	// If parsing was not successful then exit with code 1 if there were errors.
+	// Otherwise, exit with code 0 (e.g. help was printed).
+	if (res != seqan::ArgumentParser::PARSE_OK)
+		return res == seqan::ArgumentParser::PARSE_ERROR;
+
 	//calculate kmers
 	String<Dna5String> kmers = defineKmers(options.klen);
 
