@@ -52,6 +52,7 @@ String<Dna5String> defineKmers(int kmerlength)
                                 String<Dna> kmer = bases[m];
                                 kmer += kmers[k];
                                 appendValue(temp,kmer);
+				//cout << kmer << endl;
                         }
                 }
                 kmers = temp;
@@ -61,10 +62,38 @@ String<Dna5String> defineKmers(int kmerlength)
         return kmers;
 }
 
+/*
+This function will perform a new kind of count. Rather than predefining our kmers, it will simply store the counts of whatever exists in a target sequence and then....
+
+return a hash of this?
+
+
+*/
+void newcount(Dna5String seq, int klen, unordered_map<string, long long int> & map)
+{
+
+	//iterate over the sequence
+        for(int i = 0; i <= length(seq)-klen; i++)
+        {
+		//get our kmer
+                string meh;
+                assign(meh,infix(seq, i, i+klen));
+
+		//need to drop if there is an N in it
+		size_t found = meh.find("N");
+		if(found>meh.size()){
+			long long int count = map[meh];
+			map[meh] = count + 1;
+		}
+        }
+}
+
 void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
 {
         typedef boost::unordered_map<string, int> unordered_map;
         unordered_map map;
+	//unordered_map<string, int> unordered_map map;
+
         //puts all the kmers into an unordered map
         for(int i = 0; i < length(kmers); i++)
         {
@@ -115,6 +144,72 @@ void count(String<Dna5String> kmers, Dna5String seq, int klen, long long int cou
         }
 }
 
+/*need to decide what I'm storing and returning.
+
+maybe something like;
+
+unordered_map<string,<long long int, double>> ?? is this even possible?
+
+*/
+void newmarkov(Dna5String seq, int klen, int markovOrder, unordered_map<string,thingy> & markovthingy)
+{
+
+	//get out markov counts
+	int newmarkov = markovOrder + 1;
+	unordered_map<string, long long int> markovcounts;
+	newcount(seq, newmarkov, markovcounts);
+
+	//get out regular kmer counts
+	unordered_map<string, long long int> kmercounts;
+	newcount(seq, klen, kmercounts);
+
+	//calculate total number of markov kmers
+	int sumCounts = 0;
+	for(pair<string, long long int> p: markovcounts)
+	{
+		sumCounts = sumCounts + p.second;
+	}
+
+	//calculate frequency of kmers
+	unordered_map<string, double> markovFreq;
+	for(pair<string, long long int> p: markovcounts)
+        {
+		markovFreq[p.first] = (double)p.second / (double)sumCounts;
+        }
+
+	for(pair<string, long long int> p: kmercounts)
+	{
+		double prob = 1.0;
+		Dna5String kmer = p.first;
+		
+		for(int l = 0; l < length(kmer); l++)
+                {
+			int j = l + newmarkov;
+			string inf;
+			assign(inf,infix(kmer, l, j));
+
+			//this is where i need to decide the behaviour when nothing is returned
+			double freq = markovFreq[inf];
+                        if(freq != 0)
+                        {
+				prob = prob * freq;
+                        } else {
+                        }
+	
+			if(j == length(kmer))
+			{
+				break;
+			}
+
+		}
+		thingy meh;
+		meh.count = p.second;
+		meh.prob = prob;
+		markovthingy[p.first] = meh;
+	}
+}
+
+
 void markov(String<Dna5String> kmers, Dna5String seq, int klen, long long int counts[], int markovOrder, double kmerProb[])
 {
         //count the kmers using markov order
@@ -136,8 +231,6 @@ void markov(String<Dna5String> kmers, Dna5String seq, int klen, long long int co
         {
                 markovFreq[i] = (double)markovKcounts[i] / (double)sumCounts;
         }
-
-        double total = 0.0;
 
         //for each kmer in kmers
         for(int i = 0; i < length(kmers); i++)
@@ -165,7 +258,6 @@ void markov(String<Dna5String> kmers, Dna5String seq, int klen, long long int co
                         }
                 }
                 kmerProb[i] = prob;
-                total = total + prob;
         }
 }
 
