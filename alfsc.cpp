@@ -93,6 +93,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
  * query file and compare it to each sequence in the reference.
  */
 void worker(String<Dna5String> kmers, ModifyStringOptions options)
+//void worker(ModifyStringOptions options)
 {
 	while(1)
 	{
@@ -119,18 +120,40 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
 		long long int querycounts [length(kmers)];
 		count(kmers, queryseq, options.klen, querycounts);
 
+		//counting appears to work...now I need to redo one of the distance functions
+		unordered_map<string, long long int> countmap;
+		newcount(queryseq, options.klen, countmap);
+
+
+
+
 		StringSet<CharString> refids;
 		StringSet<Dna5String> refseqs;
 		SeqFileIn refFileIn(toCString(options.referenceFileName));
 
-                double qryMarkovProbs [length(kmers)];
-
+		double qryMarkovProbs [length(kmers)];
+		unordered_map<string,thingy> markovthingy;
+	
                 //if markov, do markov
                 if(options.type == "d2s" || options.type == "d2star")
                 {
-                        //markov(kmers, seq, options.klen, counts, options.markovOrder, qryMarkovProbs);
 			markov(kmers, queryseq, options.klen, querycounts, options.markovOrder, qryMarkovProbs);
+			newmarkov(queryseq, options.klen, options.markovOrder, markovthingy);
                 }       
+
+		/*
+		for(pair<string, thingy> p: markovthingy)
+		{
+			cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
+		}
+
+		cout << "OLD WAY "<< endl;
+
+		for(int i = 0; i < length(kmers); i++)
+		{
+			cout << kmers[i] << " " << querycounts[i] << " "<< qryMarkovProbs[i] << endl;
+		}
+		*/
 
 		//reads reference into RAM
 		readRecords(refids, refseqs, refFileIn);
@@ -158,25 +181,46 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
 
 			if (options.type == "d2")
 			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				dist = d2(refcounts, querycounts, length(kmers));
+				//old method
+			//	count(kmers, referenceseq, options.klen, refcounts);
+			//	dist = d2(refcounts, querycounts, length(kmers));
+				
+				unordered_map<string, long long int> refmap;
+				newcount(referenceseq, options.klen, refmap);
+				dist = newd2(refmap, countmap);
 			} 
 			else if(options.type == "kmer")
 			{
-                                count(kmers, referenceseq, options.klen, refcounts);
-                                dist = euler(refcounts, querycounts, length(kmers));
+
+                                //count(kmers, referenceseq, options.klen, refcounts);
+                                //dist = euler(refcounts, querycounts, length(kmers));
+                                unordered_map<string, long long int> refmap;
+                                newcount(referenceseq, options.klen, refmap);
+                                dist = neweuler(refmap, countmap);
+
 			}
+			
 			else if (options.type == "d2s")
 			{
 				count(kmers, referenceseq, options.klen, refcounts);
 				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
 				dist = d2s(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
+
+				unordered_map<string,thingy> refmarkovthingy;
+				newmarkov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
+				double newdist = newd2s(markovthingy, refmarkovthingy);
+				cout << "New "<< newdist << " old " << dist << endl;
+
 			}
 			else if (options.type == "d2star")
 			{
 				count(kmers, referenceseq, options.klen, refcounts);
 				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
 				dist = d2star(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
+
+				unordered_map<string,thingy> refmarkovthingy;
+				newmarkov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
+
 			}
 			recordall(options.nohits, hits, dist, r, hitpositions);
 		}
@@ -213,6 +257,7 @@ int main(int argc, char const ** argv)
 	for(int w = 0; w < options.num_threads; w++)
 	{
 		workers[w] = thread(worker, kmers, options);
+		//workers[w] = thread(worker, options);
 	}
 
 	//do not exit until all the threads have finished
