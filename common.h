@@ -10,12 +10,17 @@
 #include <vector>
 #include <ctime>
 #include "boost/multi_array.hpp"
-#include <cassert>
 #include <boost/unordered_map.hpp>
+#include <cassert>
 #include <string>
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 using namespace seqan;
 using namespace std;
 
-
+struct thingy
+{
+        long long int count;
+        double prob;
+};
