@@ -69,7 +69,7 @@ return a hash of this?
 
 
 */
-void newcount(Dna5String seq, int klen, unordered_map<string, long long int> & map)
+void count(Dna5String seq, int klen, unordered_map<string, long long int> & map)
 {
 
 	//iterate over the sequence
@@ -151,17 +151,17 @@ maybe something like;
 unordered_map<string,<long long int, double>> ?? is this even possible?
 
 */
-void newmarkov(Dna5String seq, int klen, int markovOrder, unordered_map<string,thingy> & markovthingy)
+void markov(Dna5String seq, int klen, int markovOrder, unordered_map<string,thingy> & markovthingy)
 {
 
 	//get out markov counts
 	int newmarkov = markovOrder + 1;
 	unordered_map<string, long long int> markovcounts;
-	newcount(seq, newmarkov, markovcounts);
+	count(seq, newmarkov, markovcounts);
 
 	//get out regular kmer counts
 	unordered_map<string, long long int> kmercounts;
-	newcount(seq, klen, kmercounts);
+	count(seq, klen, kmercounts);
 
 	//calculate total number of markov kmers
 	int sumCounts = 0;
