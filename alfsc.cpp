@@ -92,8 +92,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
  * This is the main body of work. Pop off the next sequence from the 
  * query file and compare it to each sequence in the reference.
  */
-void worker(String<Dna5String> kmers, ModifyStringOptions options)
-//void worker(ModifyStringOptions options)
+void worker(ModifyStringOptions options)
 {
 	while(1)
 	{
@@ -115,45 +114,20 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
                 	queryseq = doRevCompl(queryseq);
 		}
 		
-
-		//now that we've read off the new sequence, compare it to the reference
-		long long int querycounts [length(kmers)];
-		count(kmers, queryseq, options.klen, querycounts);
-
-		//counting appears to work...now I need to redo one of the distance functions
 		unordered_map<string, long long int> countmap;
-		newcount(queryseq, options.klen, countmap);
-
-
-
+		count(queryseq, options.klen, countmap);
 
 		StringSet<CharString> refids;
 		StringSet<Dna5String> refseqs;
 		SeqFileIn refFileIn(toCString(options.referenceFileName));
 
-		double qryMarkovProbs [length(kmers)];
 		unordered_map<string,thingy> markovthingy;
 	
                 //if markov, do markov
                 if(options.type == "d2s" || options.type == "d2star")
                 {
-			markov(kmers, queryseq, options.klen, querycounts, options.markovOrder, qryMarkovProbs);
-			newmarkov(queryseq, options.klen, options.markovOrder, markovthingy);
+			markov(queryseq, options.klen, options.markovOrder, markovthingy);
                 }       
-
-		/*
-		for(pair<string, thingy> p: markovthingy)
-		{
-			cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
-		}
-
-		cout << "OLD WAY "<< endl;
-
-		for(int i = 0; i < length(kmers); i++)
-		{
-			cout << kmers[i] << " " << querycounts[i] << " "<< qryMarkovProbs[i] << endl;
-		}
-		*/
 
 		//reads reference into RAM
 		readRecords(refids, refseqs, refFileIn);
@@ -161,7 +135,8 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
 		//to store the top hits from the reference
 		double hits [options.nohits];
 		int hitpositions [options.nohits];
-                for(int i = 0; i < options.nohits; i++)
+
+		for(int i = 0; i < options.nohits; i++)
                 {
                         hits[i] = 1.0;
                         hitpositions[i] = 0;
@@ -170,57 +145,38 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
 		for(int r = 0; r < length(refids); r++)
 		{
 			Dna5String referenceseq = refseqs[r];
-			long long int refcounts [length(kmers)];
-                        if(options.noreverse != true)
+                        
+			if(options.noreverse != true)
                         {
                                 referenceseq = doRevCompl(refseqs[r]);
                         }
 
 			double dist;
-			double refMarkovProbs [length(kmers)];
 
 			if (options.type == "d2")
 			{
-				//old method
-			//	count(kmers, referenceseq, options.klen, refcounts);
-			//	dist = d2(refcounts, querycounts, length(kmers));
-				
 				unordered_map<string, long long int> refmap;
-				newcount(referenceseq, options.klen, refmap);
-				dist = newd2(refmap, countmap);
+				count(referenceseq, options.klen, refmap);
+				dist = d2(refmap, countmap);
 			} 
 			else if(options.type == "kmer")
 			{
-
-                                //count(kmers, referenceseq, options.klen, refcounts);
-                                //dist = euler(refcounts, querycounts, length(kmers));
                                 unordered_map<string, long long int> refmap;
-                                newcount(referenceseq, options.klen, refmap);
-                                dist = neweuler(refmap, countmap);
-
+                                count(referenceseq, options.klen, refmap);
+                                dist = euler(refmap, countmap);
 			}
 			
 			else if (options.type == "d2s")
 			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
-				dist = d2s(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
-
 				unordered_map<string,thingy> refmarkovthingy;
-				newmarkov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
-				double newdist = newd2s(markovthingy, refmarkovthingy);
-				cout << "New "<< newdist << " old " << dist << endl;
-
+				markov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
+				dist = d2s(markovthingy, refmarkovthingy);
 			}
 			else if (options.type == "d2star")
 			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
-				dist = d2star(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
-
 				unordered_map<string,thingy> refmarkovthingy;
-				newmarkov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
-
+				markov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
+				dist = d2star(markovthingy, refmarkovthingy);
 			}
 			recordall(options.nohits, hits, dist, r, hitpositions);
 		}
@@ -248,16 +204,12 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
-	//calculate kmers
-	String<Dna5String> kmers = defineKmers(options.klen);
-
 	//open file and launch threads
 	open(queryFileIn, (toCString(options.queryFileName)));
 	thread workers[options.num_threads];
 	for(int w = 0; w < options.num_threads; w++)
 	{
-		workers[w] = thread(worker, kmers, options);
-		//workers[w] = thread(worker, options);
+		workers[w] = thread(worker, options);
 	}
 
 	//do not exit until all the threads have finished
