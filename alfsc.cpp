@@ -30,9 +30,6 @@ SOFTWARE.
 #include "distances.h"
 #include "utils.h"
 
-typedef boost::multi_array<int, 2> array_type;
-typedef boost::multi_array<double, 2> array_type2;
-
 mutex m;
 mutex n;
 SeqFileIn queryFileIn;
