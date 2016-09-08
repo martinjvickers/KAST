@@ -76,14 +76,14 @@ void count(Dna5String seq, int klen, unordered_map<string, long long int> & map)
         for(int i = 0; i <= length(seq)-klen; i++)
         {
 		//get our kmer
-                string meh;
-                assign(meh,infix(seq, i, i+klen));
+                string kmer;
+                assign(kmer,infix(seq, i, i+klen));
 
 		//need to drop if there is an N in it
-		size_t found = meh.find("N");
-		if(found>meh.size()){
-			long long int count = map[meh];
-			map[meh] = count + 1;
+		size_t found = kmer.find("N");
+		if(found>kmer.size()){
+			long long int count = map[kmer];
+			map[kmer] = count + 1;
 		}
         }
 }
