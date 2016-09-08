@@ -26,19 +26,21 @@ SOFTWARE.
 #include "common.h"
 #include "utils.h"
 
-Dna getRevCompl(Dna const & nucleotide)
+/**/
+Iupac getRevCompl(Iupac const & nucleotide)
 {
-        if (nucleotide == (Dna)'A')
-                return (Dna)'T';
-        if (nucleotide == (Dna)'T')
-                return (Dna)'A';
-        if (nucleotide == (Dna)'C')
-                return (Dna)'G';
-        if (nucleotide == (Dna)'G')
-                return (Dna)'C';
-        return (Dna)'N';
+        if (nucleotide == 'A')
+                return 'T';
+        if (nucleotide == 'T')
+                return 'A';
+        if (nucleotide == 'C')
+                return 'G';
+        if (nucleotide == 'G')
+                return 'C';
+        return 'N';
 }
 
+/**/
 Dna5String doRevCompl(Dna5String seq)
 {
         Dna5String allSeq;
@@ -54,44 +56,7 @@ Dna5String doRevCompl(Dna5String seq)
         return allSeq;
 }
 
-String<Dna5String> defineKmers(int kmerlength)
-{
-        String<Dna5String> bases;
-        appendValue(bases, "A");
-        appendValue(bases, "G");
-        appendValue(bases, "C");
-        appendValue(bases, "T");
-
-        String<Dna5String> kmers;
-
-        kmers = bases;
-
-        for(int j = 0; j < kmerlength-1; j++)
-        {
-                String<Dna5String> temp;
-
-                for(int k = 0; k < length(kmers); k++)
-                {
-                        for(int m = 0; m < length(bases); m++)
-                        {
-                                String<Dna> kmer = bases[m];
-                                kmer += kmers[k];
-                                appendValue(temp,kmer);
-				//cout << kmer << endl;
-                        }
-                }
-                kmers = temp;
-                clear(temp);
-        }
-
-        return kmers;
-}
-
 /*
-This function will perform a new kind of count. Rather than predefining our kmers, it will simply store the counts of whatever exists in a target sequence and then....
-
-return a hash of this?
-
 
 */
 void count(Dna5String seq, int klen, unordered_map<string, long long int> & map)
