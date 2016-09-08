@@ -71,7 +71,7 @@ double euler(unordered_map<string, long long int> refmap, unordered_map<string, 
 
   When comparing sm1.fasta/sm2.fasta results you get a very similar score as there are very few N's.
 */
-double d2s(unordered_map<string,thingy> qrymarkovthingy, unordered_map<string,thingy> refmarkovthingy)
+double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
 {
         double score = 0.0;
         double D2S = 0.0;
@@ -82,24 +82,24 @@ double d2s(unordered_map<string,thingy> qrymarkovthingy, unordered_map<string,th
         double rtot = 0.0;
         double qtot = 0.0;
 
-	for(pair<string, thingy> p: qrymarkovthingy)
+	for(pair<string, markov_dat> p: qrymarkovthingy)
 	{
 		qN = qN + p.second.count;
 		qtot = qtot + p.second.prob;
 	}
-        for(pair<string, thingy> p: refmarkovthingy)
+        for(pair<string, markov_dat> p: refmarkovthingy)
         {
 		rN = rN + p.second.count;
 		rtot = rtot + p.second.prob;
         }
 
-        unordered_map<string, thingy> ourkmers;
+        unordered_map<string, markov_dat> ourkmers;
         ourkmers = refmarkovthingy;
         ourkmers.insert(qrymarkovthingy.begin(),qrymarkovthingy.end());
 
 	//this loop is the difficult one because we don't know about kmers that were never in our data
 	//but this just shouldn't matter. Why is it different? 
-	for(pair<string, thingy> p: ourkmers)
+	for(pair<string, markov_dat> p: ourkmers)
 	{
 
                 double qC = qrymarkovthingy[p.first].count;
@@ -131,7 +131,7 @@ double d2s(unordered_map<string,thingy> qrymarkovthingy, unordered_map<string,th
 	return score;
 }
 
-double d2star(unordered_map<string,thingy> qrymarkovthingy, unordered_map<string,thingy> refmarkovthingy)
+double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
 {
 
         double score = 0.0;
@@ -141,22 +141,22 @@ double d2star(unordered_map<string,thingy> qrymarkovthingy, unordered_map<string
         double qN = 0.0;
         double rN = 0.0;
 	
-        for(pair<string, thingy> p: qrymarkovthingy)
+        for(pair<string, markov_dat> p: qrymarkovthingy)
         {
                 qN = qN + p.second.count;
         }
-        for(pair<string, thingy> p: refmarkovthingy)
+        for(pair<string, markov_dat> p: refmarkovthingy)
         {
                 rN = rN + p.second.count;
         }
 
 	//make a superset of unordered maps so we know all of our kmers
-	unordered_map<string, thingy> ourkmers;
+	unordered_map<string, markov_dat> ourkmers;
 	ourkmers = refmarkovthingy;
 	ourkmers.insert(qrymarkovthingy.begin(),qrymarkovthingy.end());
 
 	//now iterate through it
-        for(pair<string, thingy> p: ourkmers)
+        for(pair<string, markov_dat> p: ourkmers)
         {
 
                 double qC = qrymarkovthingy[p.first].count;
