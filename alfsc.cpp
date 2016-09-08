@@ -61,6 +61,7 @@ struct ModifyStringOptions
         CharString queryFileName;
 	CharString referenceFileName;
 	int num_threads;
+	bool debug;
 };
 
 /*
@@ -71,6 +72,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	seqan::ArgumentParser parser("alfsc");
 	addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "klen", "3");
+	addOption(parser, seqan::ArgParseOption("d", "debug", "Debug Messages."));
 	addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the query file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the reference file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "query-file");
@@ -86,7 +88,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.0.1");
-	setDate(parser, "July 2016");
+	setDate(parser, "September 2016");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -100,6 +102,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.markovOrder, parser, "markov-order");
         getOptionValue(options.type, parser, "distance-type");
         options.noreverse = isSet(parser, "no-reverse");
+	options.debug = isSet(parser, "debug");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
@@ -150,7 +153,7 @@ void worker(ModifyStringOptions options)
                 if(options.type == "d2s" || options.type == "d2star")
                 {
 			markov(queryseq, options.klen, options.markovOrder, query_markovmap);
-                } else if(options.type == "euler" || options.type == "kmer")
+                } else if(options.type == "d2" || options.type == "kmer")
 		{
 			count(queryseq, options.klen, query_countmap);
 		}      
@@ -188,6 +191,25 @@ void worker(ModifyStringOptions options)
 				unordered_map<string, long long int> refmap;
 				count(referenceseq, options.klen, refmap);
 				dist = d2(refmap, query_countmap);
+        	
+		                //debug messages
+	                        if(options.debug == true){
+                               		cout << "Comparing query seq :" << endl;
+                                	cout << queryseq << endl;
+               		                for(pair<string, long long int> p: query_countmap)
+               	        	        {
+        	                                cout << p.first << " " << p.second << endl;
+        	                        }
+	
+                        	        cout << "with ref seq :" << endl;
+                        	        cout << referenceseq << endl;
+                        	        for(pair<string, long long int> p: refmap)
+       			                {
+	                                        cout << p.first << " " << p.second << endl;
+	                                }
+	                                cout << dist << endl;
+	                        }
+
 			} 
 			else if(options.type == "kmer")
 			{
@@ -208,6 +230,7 @@ void worker(ModifyStringOptions options)
 				markov(referenceseq, options.klen, options.markovOrder, ref_markovmap);
 				dist = d2star(query_markovmap, ref_markovmap);
 			}
+
 			recordall(options.nohits, hits, dist, r, hitpositions);
 		}
 
