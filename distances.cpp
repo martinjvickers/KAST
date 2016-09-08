@@ -119,11 +119,7 @@ double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<strin
 
                 D2S = D2S + ( ( qCt * rCt ) / dist );
                 sum1 = sum1 + ( ( qCt * qCt ) / dist );
-	//	cout << p.first <<" " << sum1 <<" + (("<< qCt << " * "<< qCt <<" ) /" << dist << " ) "<< endl;
                 sum2 = sum2 + ( ( rCt * rCt ) / dist );
-
-	//	cout << "New " <<  D2S << " " << sum1 << " " << sum2 << endl;
-
 	}
 
 	score = 0.5 * (1 - ( (D2S) / (sqrt(sum1)*sqrt(sum2)) ) );
