@@ -88,70 +88,10 @@ void count(Dna5String seq, int klen, unordered_map<string, long long int> & map)
         }
 }
 
-void count(String<Dna5String> kmers, Dna5String seq, int klen, int counts[])
-{
-        typedef boost::unordered_map<string, int> unordered_map;
-        unordered_map map;
-	//unordered_map<string, int> unordered_map map;
-
-        //puts all the kmers into an unordered map
-        for(int i = 0; i < length(kmers); i++)
-        {
-                string meh;
-                assign(meh,kmers[i]);
-                map.emplace(meh, 0);
-        }
-
-        for(int i = 0; i <= length(seq)-klen; i++)
-        {
-                string meh;
-                assign(meh,infix(seq, i, i+klen));
-                map[meh]++;
-        }
-
-        for(int i = 0; i < length(kmers); i++)
-        {
-                string meh;
-                assign(meh,kmers[i]);
-                counts[i] = (int)map[meh];
-        }
-}
-
-void count(String<Dna5String> kmers, Dna5String seq, int klen, long long int counts[])
-{
-        typedef boost::unordered_map<string, long long int> unordered_map;
-        unordered_map map;
-        //puts all the kmers into an unordered map
-        for(int i = 0; i < length(kmers); i++)
-        {
-                string meh;
-                assign(meh,kmers[i]);
-                map.emplace(meh, 0);
-        }
-
-        for(int i = 0; i <= length(seq)-klen; i++)
-        {
-                string meh;
-                assign(meh,infix(seq, i, i+klen));
-                map[meh]++;
-        }
-
-        for(int i = 0; i < length(kmers); i++)
-        {
-                string meh;
-                assign(meh,kmers[i]);
-                counts[i] = (long long int)map[meh];
-        }
-}
-
-/*need to decide what I'm storing and returning.
-
-maybe something like;
-
-unordered_map<string,<long long int, double>> ?? is this even possible?
+/*
 
 */
-void markov(Dna5String seq, int klen, int markovOrder, unordered_map<string,thingy> & markovthingy)
+void markov(Dna5String seq, int klen, int markovOrder, unordered_map<string,markov_dat> & markovmap)
 {
 
 	//get out markov counts
@@ -202,63 +142,11 @@ void markov(Dna5String seq, int klen, int markovOrder, unordered_map<string,thin
 			}
 
 		}
-		thingy meh;
-		meh.count = p.second;
-		meh.prob = prob;
-		markovthingy[p.first] = meh;
+		markov_dat dat;
+		dat.count = p.second;
+		dat.prob = prob;
+		markovmap[p.first] = dat;
 	}
-}
-
-
-void markov(String<Dna5String> kmers, Dna5String seq, int klen, long long int counts[], int markovOrder, double kmerProb[])
-{
-        //count the kmers using markov order
-        int newmarkov = markovOrder + 1;
-        String<Dna5String> markovKmers = defineKmers(newmarkov);
-
-        //count the occurances of the markov kmers
-        int markovKcounts [length(markovKmers)];
-        count(markovKmers, seq, newmarkov, markovKcounts);
-
-        //sum the total number of kmers
-        int sumCounts = 0;
-        for(int i = 0; i < length(markovKmers); i++)
-                sumCounts = sumCounts + markovKcounts[i];
-
-        //calculate frequency of kmers
-        double markovFreq [length(markovKmers)];
-        for(int i = 0; i < length(markovKmers); i++)
-        {
-                markovFreq[i] = (double)markovKcounts[i] / (double)sumCounts;
-        }
-
-        //for each kmer in kmers
-        for(int i = 0; i < length(kmers); i++)
-        {
-                double prob = 1.0;
-                Dna5String kmer = kmers[i];
-
-                for(int l = 0; l < length(kmer); l++)
-                {
-                        int j = l + markovOrder + 1;
-                        Infix<Dna5String>::Type inf = infix(kmer,l,j);
-
-                        for(int m = 0; m < length(markovKmers); m++)
-                        {
-                                if(inf == markovKmers[m])
-                                {
-                                        prob = prob * markovFreq[m];
-                                } else {
-                                }
-                        }
-
-                        if(j == length(kmer))
-                        {
-                                break;
-                        }
-                }
-                kmerProb[i] = prob;
-        }
 }
 
 //I want it to return an array with element 0 is the smallest
@@ -291,4 +179,3 @@ void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitp
                 }
         }
 }
-

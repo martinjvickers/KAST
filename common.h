@@ -19,7 +19,12 @@
 using namespace seqan;
 using namespace std;
 
-struct thingy
+/*
+For a given kmer when calculating d2s and d2star you'll store 
+the counts of that kmer in the sequence as well as the markov
+probability. markov_dat is this data structure.
+*/
+struct markov_dat
 {
         long long int count;
         double prob;

@@ -1,15 +1,29 @@
 /*
- *	ALFSC - Alignment-free Sequence Comparison
- *	Version 0.1
- *	Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
- *
- *	Todo:
- *	1) Write unit tests
- *	6) Create nice output files for the results
- *	   	Would be nice if they were compatible 
- *	   	with other software. e.g. blastoutputs
- *	*) Memory management, need to ensure decent use of memory
- *	*) sort out input to allow a single input fasta to work as a pairwise comparison.
+ALFSC - Alignment-free Sequence Comparison
+Version 0.0.1
+Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
+
+MIT License
+
+Copyright (c) 2016 Martin James Vickers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
  */
 
 #include "common.h"
@@ -23,9 +37,12 @@ mutex m;
 mutex n;
 SeqFileIn queryFileIn;
 
-//overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
-//the input file is checked against Iupac and any non-A/C/G/T is silently 
-//converted into a N.
+/*
+Overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
+the input file is checked against Iupac and any non-A/C/G/T is silently 
+converted into a N.
+Idea put forward by h-2 in issue https://github.com/seqan/seqan/issues/1196
+*/
 namespace seqan {
 	template <typename TString, typename TSSetSpec, typename TSpec>
 	struct SeqFileBuffer_<StringSet<TString, TSSetSpec>, TSpec>
@@ -34,6 +51,9 @@ namespace seqan {
 	};
 }
 
+/*
+User defined options struct
+*/
 struct ModifyStringOptions
 {
         unsigned klen;
@@ -46,6 +66,9 @@ struct ModifyStringOptions
 	int num_threads;
 };
 
+/*
+Parse our commandline options
+*/
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
 	seqan::ArgumentParser parser("alfsc");
@@ -96,6 +119,7 @@ void worker(ModifyStringOptions options)
 {
 	while(1)
 	{
+		//gets the next queryseq off from the file
 		Dna5String queryseq;
 		CharString queryid;
 		m.lock();
@@ -114,34 +138,43 @@ void worker(ModifyStringOptions options)
                 	queryseq = doRevCompl(queryseq);
 		}
 		
-		unordered_map<string, long long int> countmap;
-		count(queryseq, options.klen, countmap);
+		//stores our query counts information
+		unordered_map<string, long long int> query_countmap;
 
+                //stores our query markov information
+                unordered_map<string,markov_dat> query_markovmap;
+
+		//begin to read in the file
 		StringSet<CharString> refids;
 		StringSet<Dna5String> refseqs;
 		SeqFileIn refFileIn(toCString(options.referenceFileName));
-
-		unordered_map<string,thingy> markovthingy;
 	
                 //if markov, do markov
                 if(options.type == "d2s" || options.type == "d2star")
                 {
-			markov(queryseq, options.klen, options.markovOrder, markovthingy);
-                }       
+			markov(queryseq, options.klen, options.markovOrder, query_markovmap);
+                } else if(options.type == "euler" || options.type == "kmer")
+		{
+			count(queryseq, options.klen, query_countmap);
+		}      
 
 		//reads reference into RAM
+		//This could increase RAM consumption if lots of threads are running. Also, is
+		//this even worth it time wise?
 		readRecords(refids, refseqs, refFileIn);
 
 		//to store the top hits from the reference
 		double hits [options.nohits];
 		int hitpositions [options.nohits];
 
+		//preload our top hits. This is nasty, must be a better way.
 		for(int i = 0; i < options.nohits; i++)
                 {
                         hits[i] = 1.0;
                         hitpositions[i] = 0;
                 }
 
+		//go through everything in our reference and compare to our query, record the best hits
 		for(int r = 0; r < length(refids); r++)
 		{
 			Dna5String referenceseq = refseqs[r];
@@ -157,26 +190,26 @@ void worker(ModifyStringOptions options)
 			{
 				unordered_map<string, long long int> refmap;
 				count(referenceseq, options.klen, refmap);
-				dist = d2(refmap, countmap);
+				dist = d2(refmap, query_countmap);
 			} 
 			else if(options.type == "kmer")
 			{
                                 unordered_map<string, long long int> refmap;
                                 count(referenceseq, options.klen, refmap);
-                                dist = euler(refmap, countmap);
+                                dist = euler(refmap, query_countmap);
 			}
 			
 			else if (options.type == "d2s")
 			{
-				unordered_map<string,thingy> refmarkovthingy;
+				unordered_map<string,markov_dat> refmarkovthingy;
 				markov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
-				dist = d2s(markovthingy, refmarkovthingy);
+				dist = d2s(query_markovmap, refmarkovthingy);
 			}
 			else if (options.type == "d2star")
 			{
-				unordered_map<string,thingy> refmarkovthingy;
-				markov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
-				dist = d2star(markovthingy, refmarkovthingy);
+				unordered_map<string,markov_dat> ref_markovmap;
+				markov(referenceseq, options.klen, options.markovOrder, ref_markovmap);
+				dist = d2star(query_markovmap, ref_markovmap);
 			}
 			recordall(options.nohits, hits, dist, r, hitpositions);
 		}
@@ -217,6 +250,6 @@ int main(int argc, char const ** argv)
 	{
 		workers[w].join();
 	}
-	
+
 	return 0;
 }
