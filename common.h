@@ -54,3 +54,21 @@ struct markov_dat
         long long int count;
         double prob;
 };
+
+/*
+User defined options struct
+*/
+struct ModifyStringOptions
+{
+        unsigned klen;
+        int nohits;
+        int markovOrder;
+        CharString type;
+        bool noreverse;
+        CharString queryFileName;
+        CharString referenceFileName;
+        int num_threads;
+        bool debug;
+        bool useram;
+};
+

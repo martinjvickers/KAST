@@ -25,6 +25,7 @@ SOFTWARE.
 
 #include "common.h"
 #include "utils.h"
+#include "distances.h"
 
 /**/
 Iupac getRevCompl(Iupac const & nucleotide)
@@ -168,4 +169,239 @@ void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitp
                         i--;
                 }
         }
+}
+
+/*
+This function searches through the reference and gets our top hits.
+
+This version will be low memory, i.e. it will read each line of the reference from file
+
+This version is only for d2 and kmer
+*/
+void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countmap, CharString queryid)
+{
+
+	//begin to read in the file
+	StringSet<CharString> refids;
+	StringSet<Dna5String> refseqs;
+	SeqFileIn refFileIn(toCString(options.referenceFileName));
+
+	readRecords(refids, refseqs, refFileIn);
+
+	//to store the top hits from the reference
+	double hits [options.nohits];
+	int hitpositions [options.nohits];
+
+	//preload our top hits. This is nasty, must be a better way.
+	for(int i = 0; i < options.nohits; i++)
+	{
+		hits[i] = 1.0;
+		hitpositions[i] = 0;
+	}
+
+	//go through everything in our reference and compare to our query, record the best hits
+	for(int r = 0; r < length(refids); r++)
+	{
+		Dna5String referenceseq = refseqs[r];
+
+		if(options.noreverse != true)
+		{
+			referenceseq = doRevCompl(refseqs[r]);
+		}
+
+		double dist;
+
+		unordered_map<string, long long int> refmap;
+		count(referenceseq, options.klen, refmap);
+
+
+		if (options.type == "d2")
+		{
+			dist = d2(refmap, query_countmap);
+		} else if (options.type == "kmer")
+		{
+                        dist = euler(refmap, query_countmap);
+		}
+
+		recordall(options.nohits, hits, dist, r, hitpositions);
+	
+	}
+
+        //print out the top hits 
+	//this all needs to be changed as it'll be all over the place without mutex's with multithreading.
+        std::cout << "Top Hits for " << queryid << std::endl;
+        std::cout << "------------ " << std::endl;
+        for(int i = 0; i < options.nohits; i++)
+        {
+        	cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+        }
+
+
+}
+
+/*
+This function searches through the reference and gets our top hits.
+
+This version will be low memory, i.e. it will read each line of the reference from file
+
+This version is only for d2s and d2star
+*/
+void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> query_markovmap, CharString queryid)
+{
+
+	//begin to read in the file
+	StringSet<CharString> refids;
+	StringSet<Dna5String> refseqs;
+	SeqFileIn refFileIn(toCString(options.referenceFileName));
+
+	readRecords(refids, refseqs, refFileIn);
+
+	//to store the top hits from the reference
+	double hits [options.nohits];
+	int hitpositions [options.nohits];
+
+	//preload our top hits. This is nasty, must be a better way.
+	for(int i = 0; i < options.nohits; i++)
+	{
+		hits[i] = 1.0;
+		hitpositions[i] = 0;
+	}
+
+	//go through everything in our reference and compare to our query, record the best hits
+	for(int r = 0; r < length(refids); r++)
+	{
+		Dna5String referenceseq = refseqs[r];
+
+		if(options.noreverse != true)
+		{
+			referenceseq = doRevCompl(refseqs[r]);
+		}
+
+		double dist;
+
+		unordered_map<string,markov_dat> ref_markovmap;
+		markov(referenceseq, options.klen, options.markovOrder, ref_markovmap);
+
+		if (options.type == "d2s")
+		{
+			dist = d2s(ref_markovmap, query_markovmap);
+		} else if (options.type == "d2star")
+		{
+                        dist = d2star(ref_markovmap, query_markovmap);
+		}
+
+		recordall(options.nohits, hits, dist, r, hitpositions);
+	
+	}
+
+        //print out the top hits 
+	//this all needs to be changed as it'll be all over the place without mutex's with multithreading.
+        std::cout << "Top Hits for " << queryid << std::endl;
+        std::cout << "------------ " << std::endl;
+        for(int i = 0; i < options.nohits; i++)
+        {
+        	cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+        }
+
+
+}
+
+void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> query_markovmap, CharString queryid, vector<unordered_map<string,markov_dat>> reference_markov_vec)
+{
+
+        //to store the top hits from the reference
+        double hits [options.nohits];
+        int hitpositions [options.nohits];
+
+        //preload our top hits. This is nasty, must be a better way.
+        for(int i = 0; i < options.nohits; i++)
+        {
+                hits[i] = 1.0;
+                hitpositions[i] = 0;
+        }
+
+        //begin to read in the file
+        StringSet<CharString> refids;
+        StringSet<Dna5String> refseqs;
+        SeqFileIn refFileIn(toCString(options.referenceFileName));
+
+        readRecords(refids, refseqs, refFileIn);
+
+        int count = 0;
+
+        for(auto const& p: reference_markov_vec)
+        {
+                double dist;
+                if (options.type == "d2s")
+                {
+                        dist = d2s(p, query_markovmap);
+                } else if (options.type == "d2star")
+                {
+                        dist = d2star(p, query_markovmap);
+                }
+
+                recordall(options.nohits, hits, dist, count, hitpositions);
+                count++;
+
+        }
+
+        //print out the top hits 
+        //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
+        std::cout << "Top Hits for " << queryid << std::endl;
+        std::cout << "------------ " << std::endl;
+        for(int i = 0; i < options.nohits; i++)
+        {
+                cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+        }
+
+}
+void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countsmap, CharString queryid, vector<unordered_map<string,long long int>> reference_counts_vec)
+{
+
+        //to store the top hits from the reference
+        double hits [options.nohits];
+        int hitpositions [options.nohits];
+
+        //preload our top hits. This is nasty, must be a better way.
+        for(int i = 0; i < options.nohits; i++)
+        {
+                hits[i] = 1.0;
+                hitpositions[i] = 0;
+        }
+
+        //begin to read in the file
+        StringSet<CharString> refids;
+        StringSet<Dna5String> refseqs;
+        SeqFileIn refFileIn(toCString(options.referenceFileName));
+
+        readRecords(refids, refseqs, refFileIn);
+
+	int count = 0;
+
+	for(auto const& p: reference_counts_vec)
+	{
+		double dist;
+                if (options.type == "d2")
+                {
+                        dist = d2(p, query_countsmap);
+                } else if (options.type == "kmer")
+                {
+                        dist = euler(p, query_countsmap);
+                }
+		
+		recordall(options.nohits, hits, dist, count, hitpositions);
+		count++;
+
+	}
+
+        //print out the top hits 
+        //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
+        std::cout << "Top Hits for " << queryid << std::endl;
+        std::cout << "------------ " << std::endl;
+        for(int i = 0; i < options.nohits; i++)
+        {
+                cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+        }
+
+
 }

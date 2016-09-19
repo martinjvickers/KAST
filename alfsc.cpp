@@ -33,6 +33,8 @@ SOFTWARE.
 mutex m;
 mutex n;
 SeqFileIn queryFileIn;
+vector<unordered_map<string,long long int>> reference_counts_vec;
+vector<unordered_map<string,markov_dat>> reference_markov_vec;
 
 /*
 Overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
@@ -40,6 +42,7 @@ the input file is checked against Iupac and any non-A/C/G/T is silently
 converted into a N.
 Idea put forward by h-2 in issue https://github.com/seqan/seqan/issues/1196
 */
+/*
 namespace seqan {
 	template <typename TString, typename TSSetSpec, typename TSpec>
 	struct SeqFileBuffer_<StringSet<TString, TSSetSpec>, TSpec>
@@ -47,22 +50,7 @@ namespace seqan {
 		typedef String<Iupac> Type;
 	};
 }
-
-/*
-User defined options struct
 */
-struct ModifyStringOptions
-{
-        unsigned klen;
-        int nohits;
-        int markovOrder;
-        CharString type;
-        bool noreverse;
-        CharString queryFileName;
-	CharString referenceFileName;
-	int num_threads;
-	bool debug;
-};
 
 /*
 Parse our commandline options
@@ -85,6 +73,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
+	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.0.1");
@@ -103,6 +92,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.type, parser, "distance-type");
         options.noreverse = isSet(parser, "no-reverse");
 	options.debug = isSet(parser, "debug");
+	options.useram = isSet(parser, "use-ram");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
@@ -143,107 +133,62 @@ void worker(ModifyStringOptions options)
 
                 //stores our query markov information
                 unordered_map<string,markov_dat> query_markovmap;
-
-		//begin to read in the file
-		StringSet<CharString> refids;
-		StringSet<Dna5String> refseqs;
-		SeqFileIn refFileIn(toCString(options.referenceFileName));
 	
                 //if markov, do markov
                 if(options.type == "d2s" || options.type == "d2star")
                 {
 			markov(queryseq, options.klen, options.markovOrder, query_markovmap);
+			if(options.useram == true)
+			{
+				gettophits(options, query_markovmap, queryid, reference_markov_vec);
+			} else {
+				gettophits(options, query_markovmap, queryid);
+			}
                 } else if(options.type == "d2" || options.type == "kmer")
 		{
 			count(queryseq, options.klen, query_countmap);
+			if(options.useram == true)
+			{
+				gettophits(options, query_countmap, queryid, reference_counts_vec);
+			} else 
+			{
+				gettophits(options, query_countmap, queryid);
+			}
 		}      
-
-		//reads reference into RAM
-		//This could increase RAM consumption if lots of threads are running. Also, is
-		//this even worth it time wise?
-		readRecords(refids, refseqs, refFileIn);
-
-		//to store the top hits from the reference
-		double hits [options.nohits];
-		int hitpositions [options.nohits];
-
-		//preload our top hits. This is nasty, must be a better way.
-		for(int i = 0; i < options.nohits; i++)
-                {
-                        hits[i] = 1.0;
-                        hitpositions[i] = 0;
-                }
-
-		//go through everything in our reference and compare to our query, record the best hits
-		for(int r = 0; r < length(refids); r++)
-		{
-			Dna5String referenceseq = refseqs[r];
-                        
-			if(options.noreverse != true)
-                        {
-                                referenceseq = doRevCompl(refseqs[r]);
-                        }
-
-			double dist;
-
-			if (options.type == "d2")
-			{
-				unordered_map<string, long long int> refmap;
-				count(referenceseq, options.klen, refmap);
-				dist = d2(refmap, query_countmap);
-        	
-		                //debug messages
-	                        if(options.debug == true){
-                               		cout << "Comparing query seq :" << endl;
-                                	cout << queryseq << endl;
-               		                for(pair<string, long long int> p: query_countmap)
-               	        	        {
-        	                                cout << p.first << " " << p.second << endl;
-        	                        }
-	
-                        	        cout << "with ref seq :" << endl;
-                        	        cout << referenceseq << endl;
-                        	        for(pair<string, long long int> p: refmap)
-       			                {
-	                                        cout << p.first << " " << p.second << endl;
-	                                }
-	                                cout << dist << endl;
-	                        }
-
-			} 
-			else if(options.type == "kmer")
-			{
-                                unordered_map<string, long long int> refmap;
-                                count(referenceseq, options.klen, refmap);
-                                dist = euler(refmap, query_countmap);
-			}
-			
-			else if (options.type == "d2s")
-			{
-				unordered_map<string,markov_dat> refmarkovthingy;
-				markov(referenceseq, options.klen, options.markovOrder, refmarkovthingy);
-				dist = d2s(query_markovmap, refmarkovthingy);
-			}
-			else if (options.type == "d2star")
-			{
-				unordered_map<string,markov_dat> ref_markovmap;
-				markov(referenceseq, options.klen, options.markovOrder, ref_markovmap);
-				dist = d2star(query_markovmap, ref_markovmap);
-			}
-
-			recordall(options.nohits, hits, dist, r, hitpositions);
-		}
-
-		//print out the top hits
-		n.lock();
-                std::cout << "Top Hits for " << queryid << std::endl;
-                std::cout << "------------ " << std::endl;
-                for(int i = 0; i < options.nohits; i++)
-                {
-			cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
-                }
-		n.unlock();
 	}
+}
+
+void precompute(ModifyStringOptions options)
+{
+	//begin to read in the file
+	StringSet<CharString> refids;
+	StringSet<Dna5String> refseqs;
+	SeqFileIn refFileIn(toCString(options.referenceFileName));
+	readRecords(refids, refseqs, refFileIn);
+
+	for(int r = 0; r < length(refids); r++)
+	{
+		Dna5String referenceseq = refseqs[r];
+		if(options.noreverse != true)
+                {
+                	referenceseq = doRevCompl(refseqs[r]);
+                }
+
+		//if markov, do markov
+                if(options.type == "d2s" || options.type == "d2star")
+                {
+			unordered_map<string, markov_dat> refmap; //store our current count
+			markov(referenceseq, options.klen, options.markovOrder, refmap); //count!
+			reference_markov_vec.push_back(refmap); //insert results to global store
+
+                } else if(options.type == "d2" || options.type == "kmer")
+                {
+			unordered_map<string, long long int> refmap; //store our current count
+			count(referenceseq, options.klen, refmap); //count!
+			reference_counts_vec.push_back(refmap); //insert results to global store
+                }
+	}
+
 }
 
 int main(int argc, char const ** argv)
@@ -256,6 +201,12 @@ int main(int argc, char const ** argv)
 	// Otherwise, exit with code 0 (e.g. help was printed).
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
+
+	//precompute the reference
+	if(options.useram == true)
+	{
+		precompute(options);
+	}
 
 	//open file and launch threads
 	open(queryFileIn, (toCString(options.queryFileName)));

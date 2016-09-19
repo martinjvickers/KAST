@@ -132,8 +132,12 @@ double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<strin
                 double qP = qrymarkovthingy[p.first].prob;
                 double rP = refmarkovthingy[p.first].prob;
 
-                double qCt = qC - (qN * qP);
-                double rCt = rC - (rN * rP);
+		//i think this is wrong...
+                //double qCt = qC - (qN * qP);
+                //double rCt = rC - (rN * rP);
+		//it should be
+		double qCt = qC - (qtot * qP);
+                double rCt = rC - (rtot * rP);
 
                 double dist = sqrt(( qCt * qCt )+( rCt * rCt ));
 
