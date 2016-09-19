@@ -1,31 +1,48 @@
 /*
- *	ALFSC - Alignment-free Sequence Comparison
- *	Version 0.1
- *	Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
- *
- *	Todo:
- *	1) Write unit tests
- *	6) Create nice output files for the results
- *	   	Would be nice if they were compatible 
- *	   	with other software. e.g. blastoutputs
- *	*) Memory management, need to ensure decent use of memory
- *	*) sort out input to allow a single input fasta to work as a pairwise comparison.
+ALFSC - Alignment-free Sequence Comparison
+Version 0.0.1
+Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
+
+MIT License
+
+Copyright (c) 2016 Martin James Vickers
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
  */
 
 #include "common.h"
 #include "distances.h"
 #include "utils.h"
 
-typedef boost::multi_array<int, 2> array_type;
-typedef boost::multi_array<double, 2> array_type2;
-
 mutex m;
 mutex n;
 SeqFileIn queryFileIn;
+vector<unordered_map<string,long long int>> reference_counts_vec;
+vector<unordered_map<string,markov_dat>> reference_markov_vec;
 
-//overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
-//the input file is checked against Iupac and any non-A/C/G/T is silently 
-//converted into a N.
+/*
+Overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
+the input file is checked against Iupac and any non-A/C/G/T is silently 
+converted into a N.
+Idea put forward by h-2 in issue https://github.com/seqan/seqan/issues/1196
+*/
+/*
 namespace seqan {
 	template <typename TString, typename TSSetSpec, typename TSpec>
 	struct SeqFileBuffer_<StringSet<TString, TSSetSpec>, TSpec>
@@ -33,24 +50,17 @@ namespace seqan {
 		typedef String<Iupac> Type;
 	};
 }
+*/
 
-struct ModifyStringOptions
-{
-        unsigned klen;
-        int nohits;
-        int markovOrder;
-        CharString type;
-        bool noreverse;
-        CharString queryFileName;
-	CharString referenceFileName;
-	int num_threads;
-};
-
+/*
+Parse our commandline options
+*/
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
 	seqan::ArgumentParser parser("alfsc");
 	addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "klen", "3");
+	addOption(parser, seqan::ArgParseOption("d", "debug", "Debug Messages."));
 	addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the query file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the reference file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setRequired(parser, "query-file");
@@ -63,10 +73,11 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
+	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.0.1");
-	setDate(parser, "July 2016");
+	setDate(parser, "September 2016");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -80,6 +91,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.markovOrder, parser, "markov-order");
         getOptionValue(options.type, parser, "distance-type");
         options.noreverse = isSet(parser, "no-reverse");
+	options.debug = isSet(parser, "debug");
+	options.useram = isSet(parser, "use-ram");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
@@ -92,10 +105,11 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
  * This is the main body of work. Pop off the next sequence from the 
  * query file and compare it to each sequence in the reference.
  */
-void worker(String<Dna5String> kmers, ModifyStringOptions options)
+void worker(ModifyStringOptions options)
 {
 	while(1)
 	{
+		//gets the next queryseq off from the file
 		Dna5String queryseq;
 		CharString queryid;
 		m.lock();
@@ -114,83 +128,67 @@ void worker(String<Dna5String> kmers, ModifyStringOptions options)
                 	queryseq = doRevCompl(queryseq);
 		}
 		
+		//stores our query counts information
+		unordered_map<string, long long int> query_countmap;
 
-		//now that we've read off the new sequence, compare it to the reference
-		long long int querycounts [length(kmers)];
-		count(kmers, queryseq, options.klen, querycounts);
-
-		StringSet<CharString> refids;
-		StringSet<Dna5String> refseqs;
-		SeqFileIn refFileIn(toCString(options.referenceFileName));
-
-                double qryMarkovProbs [length(kmers)];
-
+                //stores our query markov information
+                unordered_map<string,markov_dat> query_markovmap;
+	
                 //if markov, do markov
                 if(options.type == "d2s" || options.type == "d2star")
                 {
-                        //markov(kmers, seq, options.klen, counts, options.markovOrder, qryMarkovProbs);
-			markov(kmers, queryseq, options.klen, querycounts, options.markovOrder, qryMarkovProbs);
-                }       
-
-		//reads reference into RAM
-		readRecords(refids, refseqs, refFileIn);
-
-		//to store the top hits from the reference
-		double hits [options.nohits];
-		int hitpositions [options.nohits];
-                for(int i = 0; i < options.nohits; i++)
-                {
-                        hits[i] = 1.0;
-                        hitpositions[i] = 0;
-                }
-
-		for(int r = 0; r < length(refids); r++)
+			markov(queryseq, options.klen, options.markovOrder, query_markovmap);
+			if(options.useram == true)
+			{
+				gettophits(options, query_markovmap, queryid, reference_markov_vec);
+			} else {
+				gettophits(options, query_markovmap, queryid);
+			}
+                } else if(options.type == "d2" || options.type == "kmer")
 		{
-			Dna5String referenceseq = refseqs[r];
-			long long int refcounts [length(kmers)];
-                        if(options.noreverse != true)
-                        {
-                                referenceseq = doRevCompl(refseqs[r]);
-                        }
-
-			double dist;
-			double refMarkovProbs [length(kmers)];
-
-			if (options.type == "d2")
+			count(queryseq, options.klen, query_countmap);
+			if(options.useram == true)
 			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				dist = d2(refcounts, querycounts, length(kmers));
-			} 
-			else if(options.type == "kmer")
+				gettophits(options, query_countmap, queryid, reference_counts_vec);
+			} else 
 			{
-                                count(kmers, referenceseq, options.klen, refcounts);
-                                dist = euler(refcounts, querycounts, length(kmers));
+				gettophits(options, query_countmap, queryid);
 			}
-			else if (options.type == "d2s")
-			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
-				dist = d2s(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
-			}
-			else if (options.type == "d2star")
-			{
-				count(kmers, referenceseq, options.klen, refcounts);
-				markov(kmers, referenceseq, options.klen, refcounts, options.markovOrder, refMarkovProbs);
-				dist = d2star(refcounts, querycounts, length(kmers), refMarkovProbs, qryMarkovProbs);
-			}
-			recordall(options.nohits, hits, dist, r, hitpositions);
-		}
-
-		//print out the top hits
-		n.lock();
-                std::cout << "Top Hits for " << queryid << std::endl;
-                std::cout << "------------ " << std::endl;
-                for(int i = 0; i < options.nohits; i++)
-                {
-			cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
-                }
-		n.unlock();
+		}      
 	}
+}
+
+void precompute(ModifyStringOptions options)
+{
+	//begin to read in the file
+	StringSet<CharString> refids;
+	StringSet<Dna5String> refseqs;
+	SeqFileIn refFileIn(toCString(options.referenceFileName));
+	readRecords(refids, refseqs, refFileIn);
+
+	for(int r = 0; r < length(refids); r++)
+	{
+		Dna5String referenceseq = refseqs[r];
+		if(options.noreverse != true)
+                {
+                	referenceseq = doRevCompl(refseqs[r]);
+                }
+
+		//if markov, do markov
+                if(options.type == "d2s" || options.type == "d2star")
+                {
+			unordered_map<string, markov_dat> refmap; //store our current count
+			markov(referenceseq, options.klen, options.markovOrder, refmap); //count!
+			reference_markov_vec.push_back(refmap); //insert results to global store
+
+                } else if(options.type == "d2" || options.type == "kmer")
+                {
+			unordered_map<string, long long int> refmap; //store our current count
+			count(referenceseq, options.klen, refmap); //count!
+			reference_counts_vec.push_back(refmap); //insert results to global store
+                }
+	}
+
 }
 
 int main(int argc, char const ** argv)
@@ -204,15 +202,18 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
-	//calculate kmers
-	String<Dna5String> kmers = defineKmers(options.klen);
+	//precompute the reference
+	if(options.useram == true)
+	{
+		precompute(options);
+	}
 
 	//open file and launch threads
 	open(queryFileIn, (toCString(options.queryFileName)));
 	thread workers[options.num_threads];
 	for(int w = 0; w < options.num_threads; w++)
 	{
-		workers[w] = thread(worker, kmers, options);
+		workers[w] = thread(worker, options);
 	}
 
 	//do not exit until all the threads have finished
@@ -220,6 +221,6 @@ int main(int argc, char const ** argv)
 	{
 		workers[w].join();
 	}
-	
+
 	return 0;
 }
