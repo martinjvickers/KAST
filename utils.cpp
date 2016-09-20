@@ -178,7 +178,7 @@ This version will be low memory, i.e. it will read each line of the reference fr
 
 This version is only for d2 and kmer
 */
-void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countmap, CharString queryid)
+void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countsmap, CharString queryid)
 {
 
 	//begin to read in the file
@@ -214,14 +214,22 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 		unordered_map<string, long long int> refmap;
 		count(referenceseq, options.klen, refmap);
 
+                if (options.type == "d2")
+                {
+                        dist = d2(refmap, query_countsmap);
+                } else if (options.type == "kmer")
+                {
+                        dist = euler(refmap, query_countsmap);
+                } else if (options.type == "manhattan")
+                {
+                        dist = manhattan(refmap, query_countsmap);
+                } else if (options.type == "chebyshev")
+                {
+                        dist = chebyshev(refmap, query_countsmap);
+                } else {
+                        cout << "Warning: Distance measure not implemented" << endl;
+                }
 
-		if (options.type == "d2")
-		{
-			dist = d2(refmap, query_countmap);
-		} else if (options.type == "kmer")
-		{
-                        dist = euler(refmap, query_countmap);
-		}
 
 		recordall(options.nohits, hits, dist, r, hitpositions);
 	
@@ -287,8 +295,16 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 			dist = d2s(ref_markovmap, query_markovmap);
 		} else if (options.type == "d2star")
 		{
-                        dist = d2star(ref_markovmap, query_markovmap);
-		}
+                        dist = d2star_check(ref_markovmap, query_markovmap);
+		} else if (options.type == "hao")
+                {
+                        dist = hao(ref_markovmap, query_markovmap);
+                } else if (options.type == "dai")
+                {
+                        dist = dAI(ref_markovmap, query_markovmap);
+                } else {
+                        cout << "Warning: Distance measure not implemented" << endl;
+                }
 
 		recordall(options.nohits, hits, dist, r, hitpositions);
 	
@@ -337,7 +353,15 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
                         dist = d2s(p, query_markovmap);
                 } else if (options.type == "d2star")
                 {
-                        dist = d2star(p, query_markovmap);
+                        dist = d2star_check(p, query_markovmap);
+                } else if (options.type == "hao")
+                {
+                        dist = hao(p, query_markovmap);
+                } else if (options.type == "dai")
+                {
+                        dist = dAI(p, query_markovmap);
+                } else {
+                        cout << "Warning: Distance measure not implemented" << endl;
                 }
 
                 recordall(options.nohits, hits, dist, count, hitpositions);
@@ -355,6 +379,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
         }
 
 }
+
 void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countsmap, CharString queryid, vector<unordered_map<string,long long int>> reference_counts_vec)
 {
 
@@ -380,15 +405,26 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	for(auto const& p: reference_counts_vec)
 	{
-		double dist;
+
+		double dist;		
+
                 if (options.type == "d2")
                 {
                         dist = d2(p, query_countsmap);
                 } else if (options.type == "kmer")
                 {
                         dist = euler(p, query_countsmap);
+                } else if (options.type == "manhattan")
+                {
+                        dist = manhattan(p, query_countsmap);
+                } else if (options.type == "chebyshev")
+                {
+                        dist = chebyshev(p, query_countsmap);
+                } else {
+                        cout << "Warning: Distance measure not implemented" << endl;
                 }
-		
+
+
 		recordall(options.nohits, hits, dist, count, hitpositions);
 		count++;
 

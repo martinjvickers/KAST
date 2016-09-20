@@ -2,7 +2,7 @@
 This is alfsc - Alignment-free Sequence Comparsion (until maybe we can think of a better name).
 
 ### Version ###
-Early Early Beta! 0.0.1 :-)
+Early Early Beta! 0.0.2 :-)
 
 ### How do I get set up on Ubuntu 16.04? ###
 
