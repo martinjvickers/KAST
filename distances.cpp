@@ -27,11 +27,6 @@ SOFTWARE.
 #include "distances.h"
 
 /*
-	HANG ON, there are no N's in the test files. WHY ARE THE RESULTS DIFFERENT?
-
-
-	This way works, and works really well (better if i could tidy that nasty bit about having to reiterate a bunch of times). 
-
 */
 double d2(unordered_map<string, long long int> refmap, unordered_map<string, long long int> querymap)
 {
@@ -107,23 +102,26 @@ double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<strin
         double rtot = 0.0;
         double qtot = 0.0;
 
+	//An improvement would be to store the total number of k-mers for the sample
+	//when originally doing the count. It would speed the distance measure up probably
+	//by a factor of 2
 	for(pair<string, markov_dat> p: qrymarkovthingy)
 	{
-		qN = qN + p.second.count;
+		//qN = qN + p.second.count;
 		qtot = qtot + p.second.prob;
 	}
         for(pair<string, markov_dat> p: refmarkovthingy)
         {
-		rN = rN + p.second.count;
+		//rN = rN + p.second.count;
 		rtot = rtot + p.second.prob;
         }
 
+	//This is not the nicest bit, combining the kmers so that we have a list of all of the unique kmers within the 
+	//two maps. 
         unordered_map<string, markov_dat> ourkmers;
         ourkmers = refmarkovthingy;
         ourkmers.insert(qrymarkovthingy.begin(),qrymarkovthingy.end());
 
-	//this loop is the difficult one because we don't know about kmers that were never in our data
-	//but this just shouldn't matter. Why is it different? 
 	for(pair<string, markov_dat> p: ourkmers)
 	{
 
@@ -132,10 +130,6 @@ double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<strin
                 double qP = qrymarkovthingy[p.first].prob;
                 double rP = refmarkovthingy[p.first].prob;
 
-		//i think this is wrong...
-                //double qCt = qC - (qN * qP);
-                //double rCt = rC - (rN * rP);
-		//it should be
 		double qCt = qC - (qtot * qP);
                 double rCt = rC - (rtot * rP);
 
@@ -163,7 +157,7 @@ double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<st
         double D2Star = 0.0;
         double sum1 = 0.0;
         double sum2 = 0.0;
-        double qN = 0.0;
+	double qN = 0.0;
         double rN = 0.0;
 	
         for(pair<string, markov_dat> p: qrymarkovthingy)
@@ -208,4 +202,200 @@ double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<st
 
         score = 0.5 * (1 - ( (D2Star) / (sqrt(sum1)*sqrt(sum2)) ) );
         return score;
+}
+
+double d2star_check(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
+{
+        double nX = 0.0;
+        double nY = 0.0;
+
+        for(pair<string, markov_dat> p: qrymarkovthingy)
+        {
+                nX = nX + p.second.count;
+        }
+        for(pair<string, markov_dat> p: refmarkovthingy)
+        {
+                nY = nY + p.second.count;
+        }
+
+
+        //make a superset of unordered maps so we know all of our kmers
+        unordered_map<string, markov_dat> ourkmers;
+        ourkmers = refmarkovthingy;
+        ourkmers.insert(qrymarkovthingy.begin(),qrymarkovthingy.end());
+
+        double D_2Star = 0.0;
+        double tempX = 0.0;
+        double tempY = 0.0;
+
+        //now iterate through it
+        for(pair<string, markov_dat> p: ourkmers)
+        {
+
+		double cXi = qrymarkovthingy[p.first].count;
+                double cYi = refmarkovthingy[p.first].count;
+                double pXi = qrymarkovthingy[p.first].prob;
+                double pYi = refmarkovthingy[p.first].prob;
+		double temp1 = nX * pXi;
+		double temp2 = nY * pYi;
+		double cXi_bar = cXi - temp1;
+                double cYi_bar = cYi - temp2;
+		double temp3 = sqrt(temp1*temp2);
+
+		//avoid div by zero
+		if(temp1 == 0)
+		{
+			temp1 = 1.0;
+			temp3 = 1.0;
+		}
+		if(temp2 == 0)
+		{
+			temp2 = 1.0;
+			temp3 = 1.0;
+		}
+
+		D_2Star += cXi_bar * cYi_bar / temp3;
+		tempX += cXi_bar * cXi_bar / temp1;
+		tempY += cYi_bar * cYi_bar / temp2;
+
+	}
+
+	double temp = D_2Star / (sqrt(tempX) * sqrt(tempY));
+	return 0.5 * (1 - temp);
+
+}
+
+double hao(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
+{
+
+        double nX = 0.0;
+        double nY = 0.0;
+
+        for(pair<string, markov_dat> p: qrymarkovthingy)
+        {
+                nX = nX + p.second.count;
+        }
+        for(pair<string, markov_dat> p: refmarkovthingy)
+        {
+                nY = nY + p.second.count;
+        }
+
+
+        //make a superset of unordered maps so we know all of our kmers
+        unordered_map<string, markov_dat> ourkmers;
+        ourkmers = refmarkovthingy;
+        ourkmers.insert(qrymarkovthingy.begin(),qrymarkovthingy.end());
+
+        double tempX = 0.0;
+        double tempY = 0.0;
+	double tempXY = 0.0;
+
+        //now iterate through it
+        for(pair<string, markov_dat> p: ourkmers)
+        {
+
+                double cXi = qrymarkovthingy[p.first].count;
+                double cYi = refmarkovthingy[p.first].count;
+                double pXi = qrymarkovthingy[p.first].prob;
+                double pYi = refmarkovthingy[p.first].prob;
+		double fXi = cXi / nX;
+		double fYi = cYi / nY;
+		double temp1;
+		double temp2;
+
+		if(pXi == 0)
+		{
+			temp1 = -1;
+		} 
+		else 
+		{
+			temp1 = (fXi / pXi) - 1.0;
+		}
+		
+                if(pYi == 0)
+                {
+			temp2 = -1;
+                } 
+                else    
+                {
+			temp2 = (fYi / pYi) - 1.0;
+                }
+
+		tempXY += temp1 * temp2;
+		tempX += temp1 * temp1;
+		tempY += temp2 * temp2;
+
+	}
+
+	double temp = tempXY / (sqrt(tempX) * sqrt(tempY));
+
+	return (1 - temp) / 2;
+}
+
+double manhattan(unordered_map<string, long long int> refmap, unordered_map<string, long long int> querymap)
+{
+
+        double score = 0.0;
+        double rN = 0.0;
+        double qN = 0.0;
+
+
+        //i need to iterate over all unique keys from both refmap and querymap..
+        unordered_map<string, long long int> ourkmers;
+        ourkmers = refmap;
+        ourkmers.insert(querymap.begin(),querymap.end());
+
+	//count the total number of counts for query and reference
+        for(pair<string, long long int> p: ourkmers)
+        {
+                rN = rN + refmap[p.first];
+                qN = qN + querymap[p.first];
+        }
+
+        for(pair<string, long long int> p: ourkmers)
+        {
+                double rF = refmap[p.first] / rN;
+                double qF = querymap[p.first] / qN;
+                score = score + (abs(rF - qF));
+        }
+
+        return pow(score, 0.5);
+
+}
+
+double chebyshev(unordered_map<string, long long int> refmap, unordered_map<string, long long int> querymap)
+{
+        double score = 0.0;
+        double rN = 0.0;
+        double qN = 0.0;
+
+        //i need to iterate over all unique keys from both refmap and querymap..
+        unordered_map<string, long long int> ourkmers;
+        ourkmers = refmap;
+        ourkmers.insert(querymap.begin(),querymap.end());
+
+        //count the total number of counts for query and reference
+        for(pair<string, long long int> p: ourkmers)
+        {
+                rN = rN + refmap[p.first];
+                qN = qN + querymap[p.first];
+        }
+
+        for(pair<string, long long int> p: ourkmers)
+        {
+                double rF = refmap[p.first] / rN;
+                double qF = querymap[p.first] / qN;
+                double temp = abs(rF - qF);
+		if(temp > score)
+		{
+			score = temp;
+		}
+        }
+
+        return score;
+}
+
+double dAI(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
+{
+	return 0.0;
 }
