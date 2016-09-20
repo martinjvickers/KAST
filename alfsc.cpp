@@ -80,7 +80,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
-	setVersion(parser, "0.0.1");
+	setVersion(parser, "0.0.2");
 	setDate(parser, "September 2016");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
 	addUsageLine(parser, "-p mydata.fasta [\\fIOPTIONS\\fP] ");
