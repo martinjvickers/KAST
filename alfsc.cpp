@@ -61,15 +61,19 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "klen", "3");
 	addOption(parser, seqan::ArgParseOption("d", "debug", "Debug Messages."));
-	addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the query file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
-	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the reference file", seqan::ArgParseArgument::INPUT_FILE, "IN"));
-	setRequired(parser, "query-file");
+	addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the file containing your query sequence data.\n", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+	setValidValues(parser, "query-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
+	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the file containing your reference sequence data.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+	setValidValues(parser, "reference-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
+	//setRequired(parser, "query-file");
+	addOption(parser, seqan::ArgParseOption("p", "pairwise-file", "Path to the file containing your sequence data which you will perform pairwise comparison on.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+	setValidValues(parser, "pairwise-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
 	addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "markov-order", "1");
 	addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "num-hits", "10");
 	addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
-	setValidValues(parser, "distance-type", "d2 kmer d2s d2star");
+	setValidValues(parser, "distance-type", "d2 kmer d2s d2star manhattan chebyshev hao dai");
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
@@ -79,13 +83,16 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setVersion(parser, "0.0.1");
 	setDate(parser, "September 2016");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
+	addUsageLine(parser, "-p mydata.fasta [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
+
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
-	// Only extract  options if the program will continue after parseCommandLine()
+	// Only extract options if the program will continue after parseCommandLine()
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res;
 
+	//begin extracting options
         getOptionValue(options.klen, parser, "klen");
         getOptionValue(options.nohits, parser, "num-hits");
         getOptionValue(options.markovOrder, parser, "markov-order");
@@ -95,11 +102,91 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	options.useram = isSet(parser, "use-ram");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
+	getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
+
+	if(isSet(parser, "pairwise-file")){
+		if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
+		{
+			cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p)." << endl;
+			return seqan::ArgumentParser::PARSE_ERROR;
+		}
+	}
+
+	if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
+	{
+		cerr << "You have specified a reference (-r) file but not a query (-q) file." << endl;
+		return seqan::ArgumentParser::PARSE_ERROR;
+	}
+
+	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
+        {
+                cerr << "You have specified a query (-q) file but not a reference (-r) file." << endl;
+                return seqan::ArgumentParser::PARSE_ERROR;
+        }
+
+	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
+	{
+		cerr << "You have not specifed any input file." << endl;
+                return seqan::ArgumentParser::PARSE_ERROR;
+	}
 
 	return seqan::ArgumentParser::PARSE_OK;
 
 }
+
+void pairwise(ModifyStringOptions options)
+{
+	//if we do this with markov
+	if(options.type == "d2s" || options.type == "d2star" || options.type == "hao" || options.type == "dai")
+	{
+		//iterate through reference_markov_vec
+		for(auto const& p: reference_markov_vec)
+        	{
+			for(auto const& q: reference_markov_vec)
+        		{
+				if(options.type == "d2s")
+					cout << d2s(p,q) << " ";
+				else if(options.type == "d2star")
+					cout << d2star(p,q) << " ";
+				else if(options.type == "hao")
+					cout << hao(p,q) << " ";
+				else if(options.type == "dai")
+					cout << dAI(p,q) << " ";
+				else
+					cerr << "Error: distance type not defined!" << endl;
+			}
+
+			cout << endl;
+
+		}
+	} 
+	else if(options.type == "d2" || options.type == "kmer" || options.type == "manhatten" || options.type == "chebyshev")
+	{
+                //iterate through reference_markov_vec
+                for(auto const& p: reference_counts_vec)
+                {
+                        for(auto const& q: reference_counts_vec)
+                        {
+				if(options.type == "d2")
+					cout << d2(p,q) << " ";
+				else if(options.type == "kmer")
+					cout << euler(p,q) << " ";
+				else if(options.type == "manhattan")
+                                        cout << manhattan(p,q) << " ";
+				else if(options.type == "chebyshev")
+                                        cout << chebyshev(p,q) << " ";
+				else
+					cerr << "Error: distance type not defined!" << endl;
+                        }
+			cout << endl;
+                }
+	}
+	else {
+		cerr << "Error: How'd that happen?" << endl;
+	}
+}
+
 
 /*
  * This is the main body of work. Pop off the next sequence from the 
@@ -135,7 +222,7 @@ void worker(ModifyStringOptions options)
                 unordered_map<string,markov_dat> query_markovmap;
 	
                 //if markov, do markov
-                if(options.type == "d2s" || options.type == "d2star")
+                if(options.type == "d2s" || options.type == "d2star" || options.type == "hao" || options.type == "dai")
                 {
 			markov(queryseq, options.klen, options.markovOrder, query_markovmap);
 			if(options.useram == true)
@@ -144,7 +231,7 @@ void worker(ModifyStringOptions options)
 			} else {
 				gettophits(options, query_markovmap, queryid);
 			}
-                } else if(options.type == "d2" || options.type == "kmer")
+                } else if(options.type == "d2" || options.type == "kmer" || options.type == "manhattan" || options.type == "chebyshev")
 		{
 			count(queryseq, options.klen, query_countmap);
 			if(options.useram == true)
@@ -154,16 +241,19 @@ void worker(ModifyStringOptions options)
 			{
 				gettophits(options, query_countmap, queryid);
 			}
-		}      
+		} else 
+		{
+			cout << "WARNING: distance measure specified is not implemented" << endl;
+		}
 	}
 }
 
-void precompute(ModifyStringOptions options)
+void precompute(ModifyStringOptions options, CharString reference)
 {
 	//begin to read in the file
 	StringSet<CharString> refids;
 	StringSet<Dna5String> refseqs;
-	SeqFileIn refFileIn(toCString(options.referenceFileName));
+	SeqFileIn refFileIn(toCString(reference));
 	readRecords(refids, refseqs, refFileIn);
 
 	for(int r = 0; r < length(refids); r++)
@@ -175,18 +265,20 @@ void precompute(ModifyStringOptions options)
                 }
 
 		//if markov, do markov
-                if(options.type == "d2s" || options.type == "d2star")
+                if(options.type == "d2s" || options.type == "d2star" || options.type == "hao" || options.type == "dai")
                 {
 			unordered_map<string, markov_dat> refmap; //store our current count
 			markov(referenceseq, options.klen, options.markovOrder, refmap); //count!
 			reference_markov_vec.push_back(refmap); //insert results to global store
 
-                } else if(options.type == "d2" || options.type == "kmer")
+                } else if(options.type == "d2" || options.type == "kmer" || options.type == "manhattan" || options.type == "chebyshev")
                 {
 			unordered_map<string, long long int> refmap; //store our current count
 			count(referenceseq, options.klen, refmap); //count!
 			reference_counts_vec.push_back(refmap); //insert results to global store
-                }
+                } else {
+			cout << "WARNING: distance measure specified is not implemented" << endl;
+		}
 	}
 
 }
@@ -202,24 +294,37 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
-	//precompute the reference
-	if(options.useram == true)
+	//if we are doing a pairwise comparison
+	if(options.pairwiseFileName != NULL)
 	{
-		precompute(options);
-	}
+		cout << "Performing a pairwise comparison." << endl;
+		precompute(options, options.pairwiseFileName);
+		//can't really multithread pairwise at this point (maybe we can do this in the future)
+		pairwise(options);
+	} 
+	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
+	{
+		cout << "Performing a query/reference based search" << endl;
 
-	//open file and launch threads
-	open(queryFileIn, (toCString(options.queryFileName)));
-	thread workers[options.num_threads];
-	for(int w = 0; w < options.num_threads; w++)
-	{
-		workers[w] = thread(worker, options);
-	}
+		//precompute the reference
+		if(options.useram == true)
+		{
+			precompute(options, options.referenceFileName);
+		}
 
-	//do not exit until all the threads have finished
-	for(int w = 0; w < options.num_threads; w++)
-	{
-		workers[w].join();
+		//open file and launch threads
+		open(queryFileIn, (toCString(options.queryFileName)));
+		thread workers[options.num_threads];
+		for(int w = 0; w < options.num_threads; w++)
+		{
+			workers[w] = thread(worker, options);
+		}
+
+		//do not exit until all the threads have finished
+		for(int w = 0; w < options.num_threads; w++)
+		{
+			workers[w].join();
+		}
 	}
 
 	return 0;
