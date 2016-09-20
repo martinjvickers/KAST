@@ -108,26 +108,26 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	if(isSet(parser, "pairwise-file")){
 		if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
 		{
-			cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p)." << endl;
+			cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p). See alfsc -h for details." << endl;
 			return seqan::ArgumentParser::PARSE_ERROR;
 		}
 	}
 
 	if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
 	{
-		cerr << "You have specified a reference (-r) file but not a query (-q) file." << endl;
+		cerr << "You have specified a reference (-r) file but not a query (-q) file. See alfsc -h for details." << endl;
 		return seqan::ArgumentParser::PARSE_ERROR;
 	}
 
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
         {
-                cerr << "You have specified a query (-q) file but not a reference (-r) file." << endl;
+                cerr << "You have specified a query (-q) file but not a reference (-r) file. See alfsc -h for details." << endl;
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
 
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
 	{
-		cerr << "You have not specifed any input file." << endl;
+		cerr << "You have not specifed any input file. See alfsc -h for details." << endl;
                 return seqan::ArgumentParser::PARSE_ERROR;
 	}
 
