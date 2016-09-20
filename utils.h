@@ -28,8 +28,9 @@ Dna5String doRevCompl(Dna5String seq);
 void count(Dna5String seq, int klen, unordered_map<string, long long int> & map);
 void markov(Dna5String seq, int klen, int markovOrder, unordered_map<string,markov_dat> & markovmap);
 void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitpos[]);
-void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countmap, CharString queryid);
+//these are for low memory mode
+void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countsmap, CharString queryid);
 void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> query_markovmap, CharString queryid);
-
+//these are for reference in RAM mode
 void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> query_markovmap, CharString queryid, vector<unordered_map<string,markov_dat>> reference_markov_vec);
 void gettophits(ModifyStringOptions options, unordered_map<string, long long int> query_countsmap, CharString queryid, vector<unordered_map<string,long long int>> reference_counts_vec);

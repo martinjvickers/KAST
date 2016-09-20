@@ -65,8 +65,9 @@ struct ModifyStringOptions
         int markovOrder;
         CharString type;
         bool noreverse;
-        CharString queryFileName;
-        CharString referenceFileName;
+        CharString queryFileName = NULL;
+        CharString referenceFileName = NULL;
+	CharString pairwiseFileName = NULL;
         int num_threads;
         bool debug;
         bool useram;
