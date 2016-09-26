@@ -26,6 +26,27 @@ SOFTWARE.
 #include "common.h"
 #include "utils.h"
 #include "distances.h"
+#include <mutex>
+
+mutex n;
+
+void printHits(double hits[], int hitpositions[], StringSet<CharString> refids, CharString queryid, int num_hits)
+{
+
+	n.lock();
+
+        //print out the top hits 
+        //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
+        std::cout << "Top Hits for " << queryid << std::endl;
+        std::cout << "------------ " << std::endl;
+        for(int i = 0; i < num_hits; i++)
+        {
+                cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+        }
+
+	n.unlock();
+
+}
 
 /**/
 Iupac getRevCompl(Iupac const & nucleotide)
@@ -235,15 +256,17 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 	
 	}
 
+	printHits(hits, hitpositions, refids, queryid, options.nohits);
+
         //print out the top hits 
 	//this all needs to be changed as it'll be all over the place without mutex's with multithreading.
-        std::cout << "Top Hits for " << queryid << std::endl;
+     /*   std::cout << "Top Hits for " << queryid << std::endl;
         std::cout << "------------ " << std::endl;
         for(int i = 0; i < options.nohits; i++)
         {
         	cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
         }
-
+*/
 
 }
 
@@ -310,15 +333,17 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 	
 	}
 
+	printHits(hits, hitpositions, refids, queryid, options.nohits);
+
         //print out the top hits 
 	//this all needs to be changed as it'll be all over the place without mutex's with multithreading.
-        std::cout << "Top Hits for " << queryid << std::endl;
+/*        std::cout << "Top Hits for " << queryid << std::endl;
         std::cout << "------------ " << std::endl;
         for(int i = 0; i < options.nohits; i++)
         {
         	cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
         }
-
+*/
 
 }
 
@@ -369,14 +394,17 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
         }
 
+	printHits(hits, hitpositions, refids, queryid, options.nohits);
+
         //print out the top hits 
         //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
-        std::cout << "Top Hits for " << queryid << std::endl;
+/*        std::cout << "Top Hits for " << queryid << std::endl;
         std::cout << "------------ " << std::endl;
         for(int i = 0; i < options.nohits; i++)
         {
                 cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
         }
+*/
 
 }
 
@@ -430,14 +458,16 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	}
 
+	printHits(hits, hitpositions, refids, queryid, options.nohits);
+
         //print out the top hits 
         //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
-        std::cout << "Top Hits for " << queryid << std::endl;
+/*        std::cout << "Top Hits for " << queryid << std::endl;
         std::cout << "------------ " << std::endl;
         for(int i = 0; i < options.nohits; i++)
         {
                 cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
         }
-
+*/
 
 }
