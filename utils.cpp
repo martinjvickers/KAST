@@ -30,19 +30,23 @@ SOFTWARE.
 
 mutex n;
 
-void printHits(double hits[], int hitpositions[], StringSet<CharString> refids, CharString queryid, int num_hits)
+void printHits(double hits[], int hitpositions[], StringSet<CharString> refids, CharString queryid, int num_hits, ModifyStringOptions options)
 {
 
 	n.lock();
 
+	std::ofstream outfile;
+	outfile.open(toCString(options.outputFileName), std::ios_base::app);
+
         //print out the top hits 
         //this all needs to be changed as it'll be all over the place without mutex's with multithreading.
-        std::cout << "Top Hits for " << queryid << std::endl;
-        std::cout << "------------ " << std::endl;
+        outfile << "Top Hits for " << queryid << std::endl;
+        outfile << "------------ " << std::endl;
         for(int i = 0; i < num_hits; i++)
         {
-                cout << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
+                outfile << "      " << i << " " << hits[i] << " " << refids[hitpositions[i]] << " " << hitpositions[i] << endl;
         }
+
 
 	n.unlock();
 
@@ -256,7 +260,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 	
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits);
+	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
 
 }
 
@@ -323,7 +327,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 	
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits);
+	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
 
 }
 
@@ -374,7 +378,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
         }
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits);
+	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
 
 }
 
@@ -428,6 +432,6 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits);
+	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
 
 }
