@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 
+void printHits(double hits[], int hitpositions[]);
 Iupac getRevCompl(Iupac const & nucleotide);
 Dna5String doRevCompl(Dna5String seq);
 void count(Dna5String seq, int klen, unordered_map<string, long long int> & map);

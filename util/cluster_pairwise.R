@@ -1,0 +1,6 @@
+pdf(file="dendrogram.pdf", height=30, width=30)
+x=read.table("test.txt", row.names=1)
+hc = hclust(dist(x))
+#plot(as.dendrogram(hc), cex = 2, horiz=T)
+plot(as.dendrogram(hc), cex = 4)
+dev.off()
