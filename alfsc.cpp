@@ -24,14 +24,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
+*/
 
 #include "common.h"
 #include "distances.h"
 #include "utils.h"
 
+//mutex n;
 mutex m;
-mutex n;
 SeqFileIn queryFileIn;
 vector<unordered_map<string,long long int>> reference_counts_vec;
 vector<unordered_map<string,markov_dat>> reference_markov_vec;
@@ -311,7 +311,7 @@ int main(int argc, char const ** argv)
 		{
 			precompute(options, options.referenceFileName);
 		}
-
+cout << "precomputed" << endl;
 		//open file and launch threads
 		open(queryFileIn, (toCString(options.queryFileName)));
 		thread workers[options.num_threads];
