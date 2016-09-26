@@ -69,6 +69,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("p", "pairwise-file", "Path to the file containing your sequence data which you will perform pairwise comparison on.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setValidValues(parser, "pairwise-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
 	addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
+	addOption(parser, seqan::ArgParseOption("o", "output-file", "Output file.", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
+	setRequired(parser, "output-file");
 	setDefaultValue(parser, "markov-order", "1");
 	addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "num-hits", "10");
@@ -103,6 +105,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
+	getOptionValue(options.outputFileName, parser, "output-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
 
 	if(isSet(parser, "pairwise-file")){
@@ -294,6 +297,11 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
+	//if the output file already exists, remove it
+	if( remove(toCString(options.outputFileName)) == 0 )
+		cout << toCString(options.outputFileName) << " already exists, file will be overwritten." << endl;
+		
+
 	//if we are doing a pairwise comparison
 	if(options.pairwiseFileName != NULL)
 	{
@@ -308,10 +316,12 @@ int main(int argc, char const ** argv)
 
 		//precompute the reference
 		if(options.useram == true)
-		{
+		{	
+			cout << "Precomputing reference to store in memory." << endl;
 			precompute(options, options.referenceFileName);
+			cout << "Reference counts computed." << endl;
 		}
-cout << "precomputed" << endl;
+
 		//open file and launch threads
 		open(queryFileIn, (toCString(options.queryFileName)));
 		thread workers[options.num_threads];

@@ -71,5 +71,6 @@ struct ModifyStringOptions
         int num_threads;
         bool debug;
         bool useram;
+	CharString outputFileName = NULL;
 };
 
