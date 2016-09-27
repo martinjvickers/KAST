@@ -42,7 +42,6 @@ the input file is checked against Iupac and any non-A/C/G/T is silently
 converted into a N.
 Idea put forward by h-2 in issue https://github.com/seqan/seqan/issues/1196
 */
-/*
 namespace seqan {
 	template <typename TString, typename TSSetSpec, typename TSpec>
 	struct SeqFileBuffer_<StringSet<TString, TSSetSpec>, TSpec>
@@ -50,7 +49,6 @@ namespace seqan {
 		typedef String<Iupac> Type;
 	};
 }
-*/
 
 /*
 Parse our commandline options
@@ -77,15 +75,18 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
 	setValidValues(parser, "distance-type", "d2 kmer d2s d2star manhattan chebyshev hao dai");
 	setDefaultValue(parser, "distance-type", "d2");
+	addOption(parser, seqan::ArgParseOption("f", "output-format", ".", seqan::ArgParseArgument::STRING, "STR"));
+	setValidValues(parser, "output-format", "tabular");
+        setDefaultValue(parser, "output-format", "tabular");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
 	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
-	setVersion(parser, "0.0.2");
+	setVersion(parser, "0.0.3");
 	setDate(parser, "September 2016");
-	addUsageLine(parser, "-q query.fasta -r reference.fasta [\\fIOPTIONS\\fP] ");
-	addUsageLine(parser, "-p mydata.fasta [\\fIOPTIONS\\fP] ");
+	addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
+	addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
 
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
@@ -107,6 +108,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
 	getOptionValue(options.outputFileName, parser, "output-file");
 	getOptionValue(options.num_threads, parser, "num-cores");
+	getOptionValue(options.output_format, parser, "output-format");
 
 	if(isSet(parser, "pairwise-file")){
 		if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
@@ -119,18 +121,21 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
 	{
 		cerr << "You have specified a reference (-r) file but not a query (-q) file. See alfsc -h for details." << endl;
+		printHelp(parser);
 		return seqan::ArgumentParser::PARSE_ERROR;
 	}
 
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
         {
                 cerr << "You have specified a query (-q) file but not a reference (-r) file. See alfsc -h for details." << endl;
+		printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
 
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
 	{
 		cerr << "You have not specifed any input file. See alfsc -h for details." << endl;
+		printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
 	}
 
@@ -140,54 +145,85 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 void pairwise(ModifyStringOptions options)
 {
+
+	//read file so that we can output the contig id's
+        StringSet<CharString> refids;
+        StringSet<Dna5String> refseqs;
+        SeqFileIn refFileIn(toCString(options.pairwiseFileName));
+        readRecords(refids, refseqs, refFileIn);
+
+        //output file stream
+        std::ofstream outfile;
+        outfile.open(toCString(options.outputFileName), std::ios_base::app);
+/*
+	for(int i = 0; i < length(refids); i++)
+	{
+		outfile << "\"" << refids[i] << "\" ";
+	}
+	outfile << endl;
+*/
 	//if we do this with markov
 	if(options.type == "d2s" || options.type == "d2star" || options.type == "hao" || options.type == "dai")
 	{
+
+		int count = 0;
+
 		//iterate through reference_markov_vec
 		for(auto const& p: reference_markov_vec)
         	{
+
+			outfile << "\"" << refids[count] << "\" ";
+
 			for(auto const& q: reference_markov_vec)
         		{
 				if(options.type == "d2s")
-					cout << d2s(p,q) << " ";
+					outfile << d2s(p,q) << " ";
 				else if(options.type == "d2star")
-					cout << d2star(p,q) << " ";
+					outfile << d2star(p,q) << " ";
 				else if(options.type == "hao")
-					cout << hao(p,q) << " ";
+					outfile << hao(p,q) << " ";
 				else if(options.type == "dai")
-					cout << dAI(p,q) << " ";
+					outfile << dAI(p,q) << " ";
 				else
 					cerr << "Error: distance type not defined!" << endl;
 			}
 
-			cout << endl;
+			outfile << endl;
+
+			count++;
 
 		}
 	} 
 	else if(options.type == "d2" || options.type == "kmer" || options.type == "manhatten" || options.type == "chebyshev")
 	{
+		int count = 0;
+
                 //iterate through reference_markov_vec
                 for(auto const& p: reference_counts_vec)
                 {
+			outfile << "\"" << refids[count] << "\" ";
+
                         for(auto const& q: reference_counts_vec)
                         {
 				if(options.type == "d2")
-					cout << d2(p,q) << " ";
+					outfile << d2(p,q) << " ";
 				else if(options.type == "kmer")
-					cout << euler(p,q) << " ";
+					outfile << euler(p,q) << " ";
 				else if(options.type == "manhattan")
-                                        cout << manhattan(p,q) << " ";
+                                        outfile << manhattan(p,q) << " ";
 				else if(options.type == "chebyshev")
-                                        cout << chebyshev(p,q) << " ";
+                                        outfile << chebyshev(p,q) << " ";
 				else
 					cerr << "Error: distance type not defined!" << endl;
                         }
-			cout << endl;
+			outfile << endl;
+			count++;
                 }
 	}
 	else {
 		cerr << "Error: How'd that happen?" << endl;
 	}
+
 }
 
 
