@@ -227,7 +227,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	//begin to read in the file
 	StringSet<CharString> refids;
-	StringSet<Dna5String> refseqs;
+	//StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
 	SeqFileIn refFileIn(toCString(options.referenceFileName));
 
 	readRecords(refids, refseqs, refFileIn);
@@ -298,7 +299,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
 	//begin to read in the file
 	StringSet<CharString> refids;
-	StringSet<Dna5String> refseqs;
+	//StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
 	SeqFileIn refFileIn(toCString(options.referenceFileName));
 
 	readRecords(refids, refseqs, refFileIn);
@@ -334,7 +336,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 			dist = d2s(ref_markovmap, query_markovmap);
 		} else if (options.type == "d2star")
 		{
-                        dist = d2star_check(ref_markovmap, query_markovmap);
+                        dist = d2star(ref_markovmap, query_markovmap);
 		} else if (options.type == "hao")
                 {
                         dist = hao(ref_markovmap, query_markovmap);
@@ -372,7 +374,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
         //begin to read in the file
         StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
+        //StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
         SeqFileIn refFileIn(toCString(options.referenceFileName));
 
         readRecords(refids, refseqs, refFileIn);
@@ -387,7 +390,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
                         dist = d2s(p, query_markovmap);
                 } else if (options.type == "d2star")
                 {
-                        dist = d2star_check(p, query_markovmap);
+                        dist = d2star(p, query_markovmap);
                 } else if (options.type == "hao")
                 {
                         dist = hao(p, query_markovmap);
@@ -426,7 +429,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
         //begin to read in the file
         StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
+        //StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
         SeqFileIn refFileIn(toCString(options.referenceFileName));
 
         readRecords(refids, refseqs, refFileIn);
