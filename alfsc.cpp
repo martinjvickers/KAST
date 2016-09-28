@@ -37,20 +37,6 @@ vector<unordered_map<string,long long int>> reference_counts_vec;
 vector<unordered_map<string,markov_dat>> reference_markov_vec;
 
 /*
-Overload the SeqFileBuffer_ so that it uses Iupac String. In this way 
-the input file is checked against Iupac and any non-A/C/G/T is silently 
-converted into a N.
-Idea put forward by h-2 in issue https://github.com/seqan/seqan/issues/1196
-*/
-namespace seqan {
-	template <typename TString, typename TSSetSpec, typename TSpec>
-	struct SeqFileBuffer_<StringSet<TString, TSSetSpec>, TSpec>
-	{
-		typedef String<Iupac> Type;
-	};
-}
-
-/*
 Parse our commandline options
 */
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
@@ -63,7 +49,6 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setValidValues(parser, "query-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
 	addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the file containing your reference sequence data.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setValidValues(parser, "reference-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
-	//setRequired(parser, "query-file");
 	addOption(parser, seqan::ArgParseOption("p", "pairwise-file", "Path to the file containing your sequence data which you will perform pairwise comparison on.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
 	setValidValues(parser, "pairwise-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
 	addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
@@ -148,30 +133,22 @@ void pairwise(ModifyStringOptions options)
 
 	//read file so that we can output the contig id's
         StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
+        StringSet<IupacString> refseqs;
         SeqFileIn refFileIn(toCString(options.pairwiseFileName));
         readRecords(refids, refseqs, refFileIn);
 
         //output file stream
         std::ofstream outfile;
         outfile.open(toCString(options.outputFileName), std::ios_base::app);
-/*
-	for(int i = 0; i < length(refids); i++)
-	{
-		outfile << "\"" << refids[i] << "\" ";
-	}
-	outfile << endl;
-*/
+
 	//if we do this with markov
 	if(options.type == "d2s" || options.type == "d2star" || options.type == "hao" || options.type == "dai")
 	{
-
 		int count = 0;
 
 		//iterate through reference_markov_vec
 		for(auto const& p: reference_markov_vec)
         	{
-
 			outfile << "\"" << refids[count] << "\" ";
 
 			for(auto const& q: reference_markov_vec)
@@ -236,13 +213,16 @@ void worker(ModifyStringOptions options)
 	while(1)
 	{
 		//gets the next queryseq off from the file
-		Dna5String queryseq;
+		//Dna5String queryseq;
+		IupacString queryseq;
 		CharString queryid;
 		m.lock();
+		cout << "I'm here"<<endl;
 		if(!atEnd(queryFileIn))
 		{
 			readRecord(queryid, queryseq, queryFileIn);
-		} else 
+		} 
+		else 
 		{
 			m.unlock();
 			return;
@@ -291,7 +271,8 @@ void precompute(ModifyStringOptions options, CharString reference)
 {
 	//begin to read in the file
 	StringSet<CharString> refids;
-	StringSet<Dna5String> refseqs;
+	//StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
 	SeqFileIn refFileIn(toCString(reference));
 	readRecords(refids, refseqs, refFileIn);
 
