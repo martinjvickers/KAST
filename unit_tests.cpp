@@ -30,12 +30,45 @@ SOFTWARE.
 #include "distances.h"
 #include "utils.h"
 
+void testd2starN()
+{
+        cout << "d2star test"<<endl;
+        int klen = 3;
+        int markovorder = 1;
+        Dna5String qryseq = doRevCompl("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
+        Dna5String refseq = doRevCompl("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
+
+        unordered_map<string, markov_dat> refmap;
+        markov(refseq, klen, markovorder, refmap);
+
+        cout << "Comparing seq : " << refseq << endl;
+        for(pair<string, markov_dat> p: refmap)
+        {
+                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
+        }
+
+        unordered_map<string, markov_dat> querymap;
+        markov(qryseq, klen, markovorder, querymap);
+
+        cout << "Comparing seq : " << qryseq << endl;
+        for(pair<string, markov_dat> p: querymap)
+        {
+                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
+        }
+
+        double result = d2star(refmap, querymap);
+
+        cout << result << endl;
+
+}
+
+
 void testd2star()
 {
 	cout << "d2star test"<<endl;
         int klen = 3;
 	int markovorder = 1;
-        Dna5String qryseq = doRevCompl("GATTGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
+        Dna5String qryseq = doRevCompl("gattGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
         Dna5String refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
 
         unordered_map<string, markov_dat> refmap;
@@ -204,5 +237,7 @@ int main(int argc, char const ** argv)
 
 	testd2s();
 	testd2star();
+
+	testd2starN();
 	return 0;
 }
