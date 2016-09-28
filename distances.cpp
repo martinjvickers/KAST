@@ -150,6 +150,7 @@ double d2s(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<strin
 	return score;
 }
 
+/*
 double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
 {
 
@@ -203,8 +204,9 @@ double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<st
         score = 0.5 * (1 - ( (D2Star) / (sqrt(sum1)*sqrt(sum2)) ) );
         return score;
 }
+*/
 
-double d2star_check(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
+double d2star(unordered_map<string,markov_dat> qrymarkovthingy, unordered_map<string,markov_dat> refmarkovthingy)
 {
         double nX = 0.0;
         double nY = 0.0;
@@ -261,6 +263,7 @@ double d2star_check(unordered_map<string,markov_dat> qrymarkovthingy, unordered_
 	}
 
 	double temp = D_2Star / (sqrt(tempX) * sqrt(tempY));
+
 	return 0.5 * (1 - temp);
 
 }
