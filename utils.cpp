@@ -52,6 +52,25 @@ void printHits(double hits[], int hitpositions[], StringSet<CharString> refids, 
 
 }
 
+void printTabularHits(double hits[], int hitpositions[], StringSet<CharString> refids, CharString queryid, int num_hits, ModifyStringOptions options)
+{
+
+        n.lock();
+
+        std::ofstream outfile;
+        outfile.open(toCString(options.outputFileName), std::ios_base::app);
+
+        //print out the top hits in tabluar form
+	for(int i = 0; i < num_hits; i++)
+	{
+		outfile << queryid << "\t" << refids[hitpositions[i]] << "\t" << hits[i] << "\t" << hitpositions[i] << endl;
+	}
+
+        n.unlock();
+
+}
+
+
 /**/
 Iupac getRevCompl(Iupac const & nucleotide)
 {
@@ -208,7 +227,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	//begin to read in the file
 	StringSet<CharString> refids;
-	StringSet<Dna5String> refseqs;
+	//StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
 	SeqFileIn refFileIn(toCString(options.referenceFileName));
 
 	readRecords(refids, refseqs, refFileIn);
@@ -260,7 +280,10 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 	
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
+	if(options.output_format == "tabular")
+	{
+		printTabularHits(hits, hitpositions, refids, queryid, options.nohits,options);
+	}
 
 }
 
@@ -276,7 +299,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
 	//begin to read in the file
 	StringSet<CharString> refids;
-	StringSet<Dna5String> refseqs;
+	//StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
 	SeqFileIn refFileIn(toCString(options.referenceFileName));
 
 	readRecords(refids, refseqs, refFileIn);
@@ -312,7 +336,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 			dist = d2s(ref_markovmap, query_markovmap);
 		} else if (options.type == "d2star")
 		{
-                        dist = d2star_check(ref_markovmap, query_markovmap);
+                        dist = d2star(ref_markovmap, query_markovmap);
 		} else if (options.type == "hao")
                 {
                         dist = hao(ref_markovmap, query_markovmap);
@@ -327,7 +351,10 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 	
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        if(options.output_format == "tabular")
+        {
+                printTabularHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        }
 
 }
 
@@ -347,7 +374,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
         //begin to read in the file
         StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
+        //StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
         SeqFileIn refFileIn(toCString(options.referenceFileName));
 
         readRecords(refids, refseqs, refFileIn);
@@ -362,7 +390,7 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
                         dist = d2s(p, query_markovmap);
                 } else if (options.type == "d2star")
                 {
-                        dist = d2star_check(p, query_markovmap);
+                        dist = d2star(p, query_markovmap);
                 } else if (options.type == "hao")
                 {
                         dist = hao(p, query_markovmap);
@@ -378,7 +406,10 @@ void gettophits(ModifyStringOptions options, unordered_map<string, markov_dat> q
 
         }
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        if(options.output_format == "tabular")
+        {
+                printTabularHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        }
 
 }
 
@@ -398,7 +429,8 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
         //begin to read in the file
         StringSet<CharString> refids;
-        StringSet<Dna5String> refseqs;
+        //StringSet<Dna5String> refseqs;
+	StringSet<IupacString> refseqs;
         SeqFileIn refFileIn(toCString(options.referenceFileName));
 
         readRecords(refids, refseqs, refFileIn);
@@ -432,6 +464,9 @@ void gettophits(ModifyStringOptions options, unordered_map<string, long long int
 
 	}
 
-	printHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        if(options.output_format == "tabular")
+        {
+                printTabularHits(hits, hitpositions, refids, queryid, options.nohits,options);
+        }
 
 }

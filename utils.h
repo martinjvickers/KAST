@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 void printHits(double hits[], int hitpositions[]);
+void printTabularHits(double hits[], int hitpositions[], StringSet<CharString> refids, CharString queryid, int num_hits, ModifyStringOptions options);
 Iupac getRevCompl(Iupac const & nucleotide);
 Dna5String doRevCompl(Dna5String seq);
 void count(Dna5String seq, int klen, unordered_map<string, long long int> & map);
