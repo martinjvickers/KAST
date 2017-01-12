@@ -11,6 +11,7 @@ class Seq {
 		int getTotalCounts(int klen); //return total counts
 		int getTotalMarkov(int klen, int markov);
 		double getSumProb(int klen, int markov);
+		double missing(Dna5String kmer, int markovOrder);
 		unordered_map<string, long long int> getCounts(int klen);
 		unordered_map<string,markov_dat> getMarkov(int klen, int markov);
 		//printers
@@ -262,114 +263,55 @@ count_obj Seq::count(int klen)
 	return obj;
 }
 
+double Seq::missing(Dna5String kmer, int markovOrder)
+{
+	count_obj markovcounts = Seq::count(markovOrder);
+	double prob = 1.0;
+	double tot = markovcounts.total;
+	for(int l = 0; l < (length(kmer)); l++)
+	{
+		int j = l + markovOrder;
+                string inf;
+                assign(inf,infix(kmer, l, j));
+                prob = prob * (markovcounts.kmer_counts[inf] / tot);
+	}
+	return prob;
+}
+
 markov_obj Seq::markov(int klen, int markovOrder)
 {
 	unordered_map<string,markov_dat> markovmap;
-
-	//get the counts for the markovOrder
-	count_obj markovcounts = Seq::count(markovOrder+1);
-
-	//calculate frequency of kmers
-	unordered_map<string, double> markovFreq;
-	for(pair<string, long long int> p: markovcounts.kmer_counts)
-        {
-		markovFreq[p.first] = (double)p.second / (double)markovcounts.total;
-	}
-
 	double sum_prob = 0.0;
 	int total_count = 0;
 
-        //print
-	/*
-        for(auto const& p: markovmap)
-        {
-                cout << p.first << " " << p.second.count << " " << p.second.prob <<  endl;
-        }
-        for(auto const& p: r_count)
-        {
-                cout << p.first << " " << p.second << endl;
-        }
-	for(auto const& p: r1_count)
-        {
-                cout << p.first << " " << p.second << endl;
-        }
-	*/
+	count_obj markovcounts = Seq::count(markovOrder);
+	double tot = markovcounts.total;
 
 	for(pair<string, long long int> p: kmer_count_map)
         {
 		double prob = 1.0;
-                Dna5String kmer = p.first;
+		Dna5String kmer = p.first;
 
-		string w_start;
-		assign(w_start,infix(kmer, 0, markovOrder));
-		
-		//meh
-		double p_temp = (float)r_count[w_start] / (float)r_total;
-		
-		//cout << "wstart " << w_start << " rcount " << r_count[w_start] << " rtotal " << r_total << " r1total " << r1_total << " " << p_temp << endl;
-
-		for(int l = 0; l < (length(kmer)) - markovOrder; l++)
+		for(int l = 0; l < (length(kmer)); l++)
                 {
-			int j = l + markovOrder + 1;
-                        string inf;
-                        assign(inf,infix(kmer, l, j));
-
-			int m = l + markovOrder;
-                        string inf2;
-                        assign(inf2,infix(kmer, l, m));
-
-			double freq = markovFreq[inf];
-		//	cout << p.first << " " << l << " " << length(kmer) << " " <<  j << " " << markovOrder << endl;
-		//	cout << p.first << " " << inf << " " << freq << " " << markovcounts.kmer_counts[inf]<< endl;
-		//	if(freq != 0)
-                //        {
-                	prob = prob * freq;
-                //        } else {
-                //        }
-        
-                //        if(j == length(kmer))
-                //        {
-                //                break;
-                //        }
-
-
-			//cout << p.first << " " << inf << " " << prob << " " << freq << " " <<markovFreq[inf] << endl;
-			string w2A;
-			w2A.append(inf2+"A");
-			string w2C;
-                        w2C.append(inf2+"C");
-			string w2G;
-                        w2G.append(inf2+"G");
-			string w2T;
-                        w2T.append(inf2+"T");
-			
-			//cout << p.second[w2A] << " " << p.second[w2C] << " " << p.second[w2G] << " " << p.second[w2T] << endl;
-			//cout << p.second << endl;
-			//cout << r1_count[w2A] << " " << r1_count[w2C] << " " << r1_count[w2G] << " " << r1_count[w2T] << endl;
-	
-			double nk1 = r1_count[inf];
-			double nk2 = r1_count[w2A] + r1_count[w2C] + r1_count[w2G] + r1_count[w2T];
-			//cout << "nk1 " << nk1 << " nk2 " << nk2 <<  endl;
-			p_temp = p_temp * ((float)nk1/(float)nk2);
-			
+			int j = l + markovOrder;
+        	        string inf;
+			assign(inf,infix(kmer, l, j));
+			prob = prob * (markovcounts.kmer_counts[inf] / tot);
 		}
 		markov_dat dat;
-                dat.count = p.second;
-                dat.prob = p_temp;
-                markovmap[p.first] = dat;
-
+		dat.count = p.second;
+		dat.prob = prob;
 		sum_prob = sum_prob + prob;
-		total_count = total_count + dat.count;
+		markovmap[p.first] = dat;
 	}
 
 	markov_obj obj;
 	obj.markov_counts = markovmap;
 	obj.total_count = total_count;
 	obj.sum_prob = sum_prob;
-
-	//cout << obj.total_count << " " << obj.sum_prob << endl;
-
 	return obj;
+
 }
 
 /**/

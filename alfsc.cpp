@@ -29,6 +29,7 @@ SOFTWARE.
 #include "common.h"
 #include "seq.cpp"
 #include "utils.cpp"
+#include <limits>
 mutex m; //read query mutex
 mutex n; //write to console mutex
 SeqFileIn queryFileIn;
@@ -158,9 +159,10 @@ void mainloop(ModifyStringOptions options)
 
 			double eures = euler(refseqobj, qryseqobj, options);
 			double d2res = d2(refseqobj, qryseqobj, options);
-			double d2sres = d2s(refseqobj, qryseqobj, options);
+			double d2sres = d2snew(refseqobj, qryseqobj, options);
 
 			n.lock();
+			cout.precision(6);
 			cout << "KMER: " << eures << endl;
 			cout << "D2: " << d2res << endl;
 			cout << "D2S: " << d2sres << endl;
