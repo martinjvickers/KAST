@@ -29,6 +29,9 @@ SOFTWARE.
 #include "common.h"
 #include "seq.cpp"
 #include "utils.cpp"
+mutex m; //read query mutex
+mutex n; //write to console mutex
+SeqFileIn queryFileIn;
 
 /*
 Parse our commandline options
@@ -120,37 +123,51 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 //this is where we do stuff
 void mainloop(ModifyStringOptions options)
 {
-	IupacString queryseq;
-	CharString queryid;
-	SeqFileIn queryFileIn;
-	open(queryFileIn, (toCString(options.queryFileName)));
 
-        CharString refid;
-        IupacString refseq;
-        SeqFileIn refFileIn;
-	open(refFileIn, (toCString(options.referenceFileName)));
-
-	while(!atEnd(queryFileIn))
+	while(1)
 	{
-		readRecord(queryid, queryseq, queryFileIn);
+
+		//get the next query record
+		IupacString queryseq;
+		CharString queryid;
+
+		m.lock();
+		if(!atEnd(queryFileIn))
+		{
+			readRecord(queryid, queryseq, queryFileIn);
+		}
+		else
+		{
+			m.unlock();
+			return;
+		}
+		m.unlock();
+
 		Seq qryseqobj(queryseq, queryid, options.noreverse);
+
+		//now go through each reference seq
+                CharString refid;
+                IupacString refseq;
+                SeqFileIn refFileIn;
+                open(refFileIn, (toCString(options.referenceFileName)));
 
 		while(!atEnd(refFileIn))
 		{
 			readRecord(refid, refseq, refFileIn);
 			Seq refseqobj(refseq, refid, options.noreverse);
-	
-		//	qryseqobj.printMarkov(options.klen, options.markovOrder);
-		//	refseqobj.printMarkov(options.klen, options.markovOrder);
-	
-			cout << "KMER: " << euler(refseqobj, qryseqobj, options) << endl;
-			cout << "D2: " << d2(refseqobj, qryseqobj, options) << endl;
-			cout << "D2S: " << d2s(refseqobj, qryseqobj, options) << endl;
 
-		//	refseqobj.printMarkov(options.klen, options.markovOrder);
-		//	qryseqobj.printMarkov(options.klen, options.markovOrder);
+			double eures = euler(refseqobj, qryseqobj, options);
+			double d2res = d2(refseqobj, qryseqobj, options);
+			double d2sres = d2s(refseqobj, qryseqobj, options);
+
+			n.lock();
+			cout << "KMER: " << eures << endl;
+			cout << "D2: " << d2res << endl;
+			cout << "D2S: " << d2sres << endl;
+			n.unlock();
 		}
 	}
+
 }
 
 int main(int argc, char const ** argv)
@@ -170,7 +187,19 @@ int main(int argc, char const ** argv)
 		//if we have the RAM to precompute, then we can store the reference objects, but if not, we just count every time
 		//multithread this actual counts and calculations rather than the number of comparisons at any one time. Maybe we can do both but will see.
 
-	mainloop(options);
+	open(queryFileIn, (toCString(options.queryFileName)));
+	thread workers[options.num_threads];
+	for(int w = 0; w < options.num_threads; w++)
+	{
+		//mainloop(options);
+		workers[w] = thread(mainloop, options);
+	}
+
+	//do not exit until all the threads have finished
+	for(int w = 0; w < options.num_threads; w++)
+	{
+		workers[w].join();
+	}
 
 	return 0;
 }
