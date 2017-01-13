@@ -1,18 +1,41 @@
 #include <unordered_map>
 
+/**/
+Iupac getRevCompl(Iupac const & nucleotide)
+{
+        if (nucleotide == 'A')
+                return 'T';
+        if (nucleotide == 'T')
+                return 'A';
+        if (nucleotide == 'C')
+                return 'G';
+        if (nucleotide == 'G')
+                return 'C';
+        return 'N';
+}
+
+/**/
+Dna5String doRevCompl(Dna5String seq)
+{
+        Dna5String allSeq;
+        append(allSeq,seq);
+        allSeq += "NNN";
+        Dna5String revComplGenome;
+        resize(revComplGenome, length(seq));
+        for (unsigned i = 0; i < length(seq); ++i)
+        {
+                revComplGenome[length(seq) - 1 - i] = getRevCompl(seq[i]);
+        }
+        allSeq += revComplGenome;
+        return allSeq;
+}
+
 //calculate the counts
 //BUG!!! I need a check that if the klen is longer than the sequence, it should fall out gracefully
 count_obj count(int klen, IupacString sequence)
 {
         int total = 0;
         unordered_map<string, long long int> map;
-
-        /*
-        if(klen==1)
-        {
-                cout << "testing count k=1 " << endl;
-        }
-        */
 
         //iterate over the sequence
         for(int i = 0; i <= length(sequence)-klen; i++)
@@ -27,21 +50,102 @@ count_obj count(int klen, IupacString sequence)
                 if(found > kmer.size()){
                         long long int count = map[kmer];
                         map[kmer] = count + 1;
-                /*      if(klen==1)
-                        {
-                                cout << kmer << " " << kmer.size() << " " << count << endl;
-                        }
-                */
                         total++;
                 }
         }
-
         count_obj obj;
         obj.kmer_counts = map;
         obj.total = total;
         return obj;
 }
 
+/*Will need to look at good ways of speeding this up*/
+map<string,bool> makeall(ModifyStringOptions options)
+{
+        SeqFileIn refFileIn;
+        CharString refid;
+        IupacString refseq;
+        open(refFileIn, (toCString(options.referenceFileName)));
+
+        map<string,bool> kmermap;
+
+        while(!atEnd(refFileIn))
+        {
+                if(kmermap.size() != pow(4,options.klen))
+                {
+                        readRecord(refid, refseq, refFileIn);
+
+			Dna5String sequence;
+			if(options.noreverse==1)
+			{
+				sequence = refseq;
+			} else
+			{
+				sequence = doRevCompl(refseq);
+			}
+
+                        //iterate over the sequence
+                        for(int i = 0; i <= length(sequence)-options.klen; i++)
+                        {
+                                string kmer;
+                                assign(kmer,infix(sequence, i, i+options.klen));
+
+                                //need to drop if there is an N in it
+                                size_t found = kmer.find("N");
+
+                                if(found > kmer.size())
+                                {
+                                        kmermap[kmer] = true;
+                                }
+                        }
+                } else {
+			cout << "There should be no more kmers to find." << endl;
+			break;
+		}
+        }
+
+        SeqFileIn qryFileIn;
+        CharString qryid;
+        IupacString qryseq;
+        open(qryFileIn, (toCString(options.queryFileName)));
+
+        while(!atEnd(qryFileIn))
+        {
+                if(kmermap.size() != pow(4,options.klen))
+                {
+                        readRecord(qryid, qryseq, qryFileIn);
+
+                        Dna5String sequence;
+                        if(options.noreverse==1)
+                        {
+                                sequence = qryseq;
+                        } else
+                        {
+                                sequence = doRevCompl(qryseq);
+                        }
+
+
+                        //iterate over the sequence
+                        for(int i = 0; i <= length(sequence)-options.klen; i++)
+                        {
+                                string kmer;
+                                assign(kmer,infix(sequence, i, i+options.klen));
+
+                                //need to drop if there is an N in it
+                                size_t found = kmer.find("N");
+
+                                if(found > kmer.size())
+                                {
+                                        kmermap[kmer] = true;
+                                }
+                        }
+                } else {
+			cout << "There should be no more kmers to find " << endl;
+			break;
+		}
+        }
+        return kmermap;
+}
 
 double euler(Seq ref, Seq query, ModifyStringOptions options)
 {
@@ -96,51 +200,8 @@ double d2(Seq ref, Seq query, ModifyStringOptions options)
 
 double d2s(Seq ref, Seq query, ModifyStringOptions options)
 {
-	double score = 0.0;
-        double D2Star = 0.0;
-        double sum1 = 0.0;
-        double sum2 = 0.0;
-
-	unordered_map<string,markov_dat> qrymarkov = query.getMarkov(options.klen, options.markovOrder);
-	unordered_map<string,markov_dat> refmarkov = ref.getMarkov(options.klen, options.markovOrder);
-
-	//create union of the two maps
-        unordered_map<string, markov_dat> ourkmers;
-        ourkmers = refmarkov;
-        ourkmers.insert(qrymarkov.begin(),qrymarkov.end());
-
-	for(pair<string, markov_dat> p: ourkmers)
-        {
-		double qC = qrymarkov[p.first].count;
-                double rC = refmarkov[p.first].count;
-                double qP = qrymarkov[p.first].prob;
-                double rP = refmarkov[p.first].prob;
-
-		double q_np = query.getTotalMarkov(options.klen, options.markovOrder) * qP;
-		double r_np = ref.getTotalMarkov(options.klen, options.markovOrder) * rP;
-		double qCt = (double)qC - q_np;
-		double rCt = (double)rC - r_np;
-
-		double dist = sqrt(( qCt * qCt )+( rCt * rCt ));
-
-		D2Star = D2Star + ( ( qCt * rCt ) / dist );
-		sum1 = sum1 + ( ( qCt * qCt ) / dist );
-                sum2 = sum2 + ( ( rCt * rCt ) / dist );
-
-		cout << "QRY: " << p.first << " " << qC << " " << qP << " " << q_np << " " << qCt << " " << dist << " " << D2Star << " " << sum1 << " " << sum2 << endl;
-		cout << "REF: " << p.first << " " << rC << " " << rP << " " << r_np << " " << rCt << " " << dist << " " << D2Star << " " << sum1 << " " << sum2 << endl;
-	}
-
-	score = 0.5 * (1 - ( (D2Star) / (sqrt(sum1)*sqrt(sum2)) ) );
-	return score;
-}
-
-double d2snew(Seq ref, Seq query, ModifyStringOptions options)
-{
 	int rN = ref.getTotalCounts(options.klen);
 	int qN = query.getTotalCounts(options.klen);
-	//double rN = ref.getSumProb(options.klen, options.markovOrder);
-	//double qN = query.getSumProb(options.klen, options.markovOrder);
 	double score = 0.0;
 	double D2S = 0.0;
 	double sum1 = 0.0;
@@ -160,9 +221,6 @@ double d2snew(Seq ref, Seq query, ModifyStringOptions options)
 
 	for(pair<string, markov_dat> p: ourkmers)
         {
-
-//		double qC = qrymarkov[p.first].count;
-//                double rC = refmarkov[p.first].count;
 		double qC = querykmers[p.first];
 		double qP;
 		if(qC==0.0)
@@ -181,28 +239,62 @@ double d2snew(Seq ref, Seq query, ModifyStringOptions options)
 			rP = refmarkov[p.first].prob;
 		}
 
-		
-
 		double qCt = qC - (qN*qP);
 		double rCt = rC - (rN*rP);
-		//cout << p.first << " Q " << qCt << " from " << qC << ":" << qN << " " << qP << " " << (qN*qP) << endl;
-		//cout << p.first << " R " << rCt << " from " << rC << ":" << rN << " " << rP << " " << (rN*rP) << endl;
 		double dist = sqrt(qCt*qCt + rCt*rCt);
 
 		D2S = D2S + (qCt*rCt / dist);
 		sum1 = sum1 + (qCt*qCt / dist);
 		sum2 = sum2 + (rCt*rCt / dist);
 	}
-
-	//cout << "rN,qN" << rN << " " << qN << endl;
-	//cout << "rtot,qtot" << rtot << " " << qtot << endl;
 	score = 0.5 * (1 - D2S/( sqrt(sum1)*sqrt(sum2) ));
 	return score;
 }
 
-/*
-double d2star(Seq ref, Seq query, ModifyStringOptions options)
+double d2sopt(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ourkmers)
 {
-	
+        int rN = ref.getTotalCounts(options.klen);
+        int qN = query.getTotalCounts(options.klen);
+        double score = 0.0;
+        double D2S = 0.0;
+        double sum1 = 0.0;
+        double sum2 = 0.0;
+
+        //get my markov maps
+        unordered_map<string,markov_dat> qrymarkov = query.getMarkov(options.klen, options.markovOrder);
+        unordered_map<string,markov_dat> refmarkov = ref.getMarkov(options.klen, options.markovOrder);
+
+        unordered_map<string, long long int> querykmers = query.getCounts(options.klen);
+        unordered_map<string, long long int> refkmers = ref.getCounts(options.klen);
+
+        for(pair<string, bool> p: ourkmers)
+        {
+                double qC = querykmers[p.first];
+                double qP;
+                if(qC==0.0)
+                {
+                        qP = query.missing(p.first,options.markovOrder);
+                } else {
+                        qP = qrymarkov[p.first].prob;
+                }
+
+                double rC = refkmers[p.first];
+                double rP;
+                if(rC==0.0)
+                {
+                        rP = ref.missing(p.first,options.markovOrder);
+                } else {
+                        rP = refmarkov[p.first].prob;
+                }
+
+                double qCt = qC - (qN*qP);
+                double rCt = rC - (rN*rP);
+                double dist = sqrt(qCt*qCt + rCt*rCt);
+
+                D2S = D2S + (qCt*rCt / dist);
+                sum1 = sum1 + (qCt*qCt / dist);
+                sum2 = sum2 + (rCt*rCt / dist);
+        }
+        score = 0.5 * (1 - D2S/( sqrt(sum1)*sqrt(sum2) ));
+        return score;
 }
-*/

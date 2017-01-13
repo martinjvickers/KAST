@@ -124,6 +124,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 //this is where we do stuff
 void mainloop(ModifyStringOptions options)
 {
+	map<string,bool> kmermap = makeall(options);
 
 	while(1)
 	{
@@ -159,13 +160,17 @@ void mainloop(ModifyStringOptions options)
 
 			double eures = euler(refseqobj, qryseqobj, options);
 			double d2res = d2(refseqobj, qryseqobj, options);
-			double d2sres = d2snew(refseqobj, qryseqobj, options);
+			double d2sres = d2s(refseqobj, qryseqobj, options);
+			double d2soptres = d2sopt(refseqobj, qryseqobj, options, kmermap);
 
 			n.lock();
+			cout << "###########" << queryid << " " << refid << endl;
 			cout.precision(6);
 			cout << "KMER: " << eures << endl;
 			cout << "D2: " << d2res << endl;
 			cout << "D2S: " << d2sres << endl;
+			cout << "D2S-opt: " << d2soptres << endl;			
+
 			n.unlock();
 		}
 	}
@@ -183,17 +188,10 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
-	//THE PLAN
-
-	//I need an object/class which can store the sequence and do some operations on it
-		//if we have the RAM to precompute, then we can store the reference objects, but if not, we just count every time
-		//multithread this actual counts and calculations rather than the number of comparisons at any one time. Maybe we can do both but will see.
-
 	open(queryFileIn, (toCString(options.queryFileName)));
 	thread workers[options.num_threads];
 	for(int w = 0; w < options.num_threads; w++)
 	{
-		//mainloop(options);
 		workers[w] = thread(mainloop, options);
 	}
 
