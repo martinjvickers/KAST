@@ -29,10 +29,12 @@ SOFTWARE.
 #include "common.h"
 #include "seq.cpp"
 #include "utils.cpp"
+#include "distances.cpp"
 #include <limits>
 mutex m; //read query mutex
 mutex n; //write to console mutex
 SeqFileIn queryFileIn;
+map<string,bool> kmermap;
 
 /*
 Parse our commandline options
@@ -56,7 +58,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
 	setDefaultValue(parser, "num-hits", "10");
 	addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
-	setValidValues(parser, "distance-type", "d2 kmer d2s d2star manhattan chebyshev hao dai");
+	setValidValues(parser, "distance-type", "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai");
 	setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("f", "output-format", ".", seqan::ArgParseArgument::STRING, "STR"));
 	setValidValues(parser, "output-format", "tabular");
@@ -124,11 +126,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 //this is where we do stuff
 void mainloop(ModifyStringOptions options)
 {
-	map<string,bool> kmermap = makeall(options);
-
 	while(1)
 	{
-
 		//get the next query record
 		IupacString queryseq;
 		CharString queryid;
@@ -158,19 +157,21 @@ void mainloop(ModifyStringOptions options)
 			readRecord(refid, refseq, refFileIn);
 			Seq refseqobj(refseq, refid, options.noreverse);
 
-			double eures = euler(refseqobj, qryseqobj, options);
-			double d2res = d2(refseqobj, qryseqobj, options);
-			double d2sres = d2s(refseqobj, qryseqobj, options);
-			double d2soptres = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			double dist;
+	
+			if(options.type == "kmer")
+				dist = euler(refseqobj, qryseqobj, options);
+			else if(options.type == "d2")
+				dist = d2(refseqobj, qryseqobj, options);
+			else if(options.type == "d2s")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "d2s-opt")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 
 			n.lock();
 			cout << "###########" << queryid << " " << refid << endl;
 			cout.precision(6);
-			cout << "KMER: " << eures << endl;
-			cout << "D2: " << d2res << endl;
-			cout << "D2S: " << d2sres << endl;
-			cout << "D2S-opt: " << d2soptres << endl;			
-
+			cout << options.type << " " << dist << endl;
 			n.unlock();
 		}
 	}
@@ -187,6 +188,14 @@ int main(int argc, char const ** argv)
 	// Otherwise, exit with code 0 (e.g. help was printed).
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
+
+	if(options.type == "d2s-opt")
+	{
+		kmermap = makeall(options);
+	} else if(options.type == "d2s")
+	{
+		kmermap = makecomplete(options);
+	}
 
 	open(queryFileIn, (toCString(options.queryFileName)));
 	thread workers[options.num_threads];
