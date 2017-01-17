@@ -183,16 +183,45 @@ map<string,bool> makecomplete(ModifyStringOptions options)
 		assign(kmer2,infix(kmers[i], 0, length(kmers[i])));
 		finkmers[kmer2] = true;
 	}
-//	Dna5String meh = "AGCT";
-//	string kmer2;
-  //      assign(kmer2,infix(meh, 0, length(meh)));
-//	cout << kmer2 << endl;
-//	finkmers[kmer2] = true;
+	cout << "All kmers created " << finkmers.size() << " kmers." << endl;
 	return finkmers;
 }
 
-/*Record*/
-void record(ModifyStringOptions options)
-{
 
+
+//I want it to return an array with element 0 is the smallest
+void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitpos[])
+{
+	cout << nohits << " " << value << " " << seqcurrpos << endl;
+
+        //if value is smaller than the current largest, lets knock it off
+        if(value < hits[nohits-1]){
+
+		cout << value << " is lower than " << hits[nohits-1] << endl;
+
+                hits[nohits-1] = value;
+                hitpos[nohits-1] = seqcurrpos; //copy position move
+                int j;
+                double temp;
+                int temppos;
+
+		cout << "here" << endl;
+
+                //now, lets see if our new value is smaller than any of the others
+                //iterate through the rest of the elements
+                int i = nohits-1;
+                while(i >= 0 && hits[i] < hits[i-1])
+                {
+                        temp = hits[i-1];
+                        temppos = hitpos[i-1];
+
+                        hits[i-1] = hits[i];
+                        hitpos[i-1] = hitpos[i];
+
+                        hits[i] = temp;
+                        hitpos[i] = temppos;
+
+                        i--;
+                }
+        }
 }

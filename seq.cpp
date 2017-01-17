@@ -5,9 +5,10 @@
 class Seq {
 
 	public:
-		Seq(IupacString seq, CharString seqid, bool noreverse); // constructor
+		Seq(IupacString seq, CharString seqid, bool noreverse, int klen, int markovOrder); // constructor
 		~Seq(); // destructor
 		IupacString getSeq(void); // return sequence
+		CharString getID(void);
 		int getTotalCounts(int klen); //return total counts
 		int getTotalMarkov(int klen, int markov);
 		double getSumProb(int klen, int markov);
@@ -42,8 +43,9 @@ class Seq {
 //PUBLIC
 
 //constructor, requires the sequence
-Seq::Seq(IupacString seq, CharString seqid, bool noreverse)
+Seq::Seq(IupacString seq, CharString seqid, bool noreverse, int klen, int markovOrder)
 {
+	id = seqid;
 	orig_sequence = seq;
 	if(noreverse==1)
 	{
@@ -53,6 +55,13 @@ Seq::Seq(IupacString seq, CharString seqid, bool noreverse)
 		sequence = Seq::doRevCompl(seq);
 	}
 	id = seqid;
+	count_obj obj = Seq::count(klen);
+	tot = obj.total;
+	kmer_count_map = obj.kmer_counts;
+	/*markov_obj obj = Seq::markov(klen, markovOrder);
+	markovmap = obj.markov_counts;
+	markov_total = obj.total_count;
+	markov_sum = obj.sum_prob;*/
 }
 
 //destructor
@@ -66,15 +75,24 @@ IupacString Seq::getSeq(void)
 	return sequence;
 }
 
+//returns the sequence
+CharString Seq::getID(void)
+{
+        return id;
+}
+
 //returns the total count
 int Seq::getTotalCounts(int klen)
 {
 	//you can't return total counts if you've not done the counting
 	if(tot < 0)
 	{
+	//	cout << "I'm doing this the first time for " << id << endl;
 		count_obj obj = Seq::count(klen);
 		tot = obj.total;
 		kmer_count_map = obj.kmer_counts;
+	} else {
+	//	cout << "I've already done this for " << id << endl;
 	}
 
 	return tot;

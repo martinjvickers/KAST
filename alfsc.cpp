@@ -31,10 +31,12 @@ SOFTWARE.
 #include "utils.cpp"
 #include "distances.cpp"
 #include <limits>
+#include <ctime>
 mutex m; //read query mutex
 mutex n; //write to console mutex
 SeqFileIn queryFileIn;
 map<string,bool> kmermap;
+vector<Seq> v;
 
 /*
 Parse our commandline options
@@ -144,38 +146,73 @@ void mainloop(ModifyStringOptions options)
 		}
 		m.unlock();
 
-		Seq qryseqobj(queryseq, queryid, options.noreverse);
+		Seq qryseqobj(queryseq, queryid, options.noreverse, options.klen, options.markovOrder);
 
-		//now go through each reference seq
-                CharString refid;
-                IupacString refseq;
-                SeqFileIn refFileIn;
-                open(refFileIn, (toCString(options.referenceFileName)));
+		clock_t begin = clock();
 
-		while(!atEnd(refFileIn))
-		{
-			readRecord(refid, refseq, refFileIn);
-			Seq refseqobj(refseq, refid, options.noreverse);
-
-			double dist;
+		map<double,string> results;
 	
-			if(options.type == "kmer")
-				dist = euler(refseqobj, qryseqobj, options);
-			else if(options.type == "d2")
-				dist = d2(refseqobj, qryseqobj, options);
-			else if(options.type == "d2s")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
-			else if(options.type == "d2s-opt")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+		if(options.useram == true)
+		{
+			for(int i = 0; i < v.size(); i++)
+			{
+				double dist;
+				if(options.type == "kmer")
+                                        dist = euler(v[i], qryseqobj, options);
+                                else if(options.type == "d2")
+                                        dist = d2(v[i], qryseqobj, options);
+                                else if(options.type == "d2s")
+                                        dist = d2sopt(v[i], qryseqobj, options, kmermap);
+                                else if(options.type == "d2s-opt")
+                                        dist = d2sopt(v[i], qryseqobj, options, kmermap);
 
-			n.lock();
-			cout << "###########" << queryid << " " << refid << endl;
-			cout.precision(6);
-			cout << options.type << " " << dist << endl;
-			n.unlock();
+				//record
+				results[dist] = toCString(v[i].getID());
+				//cout << toCString(v[i].getID()) << endl;
+			}
+		} else {
+			//now go through each reference seq
+        	        CharString refid;
+                	IupacString refseq;
+	                SeqFileIn refFileIn;
+        	        open(refFileIn, (toCString(options.referenceFileName)));
+
+			while(!atEnd(refFileIn))
+			{
+				readRecord(refid, refseq, refFileIn);
+				Seq refseqobj(refseq, refid, options.noreverse, options.klen, options.markovOrder);
+
+				double dist;
+	
+				if(options.type == "kmer")
+					dist = euler(refseqobj, qryseqobj, options);
+				else if(options.type == "d2")
+					dist = d2(refseqobj, qryseqobj, options);
+				else if(options.type == "d2s")
+					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				else if(options.type == "d2s-opt")
+					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+		
+				//record
+				results[dist] = toCString(refseqobj.getID());
+				
+			}
 		}
-	}
 
+		clock_t end = clock();
+		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+		n.lock();
+		cout << "############################ " << queryid << " took " << elapsed_secs << endl;
+		int c = 0;
+		for(auto const& p: results)
+		{
+			cout << p.first << " " << p.second << endl;
+			c++;
+			if(c > options.nohits)
+				break;
+		}
+		n.unlock();
+	}
 }
 
 int main(int argc, char const ** argv)
@@ -188,6 +225,27 @@ int main(int argc, char const ** argv)
 	// Otherwise, exit with code 0 (e.g. help was printed).
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
+
+	//only do this if we want to do it
+	if(options.useram == true)
+	{
+		cout << " reading in reference objects " << endl;
+
+                //now go through each reference seq
+                CharString refid;
+                IupacString refseq;
+                SeqFileIn refFileIn;
+                open(refFileIn, (toCString(options.referenceFileName)));
+		while(!atEnd(refFileIn))
+                {
+			readRecord(refid, refseq, refFileIn);
+                        Seq refseqobj(refseq, refid, options.noreverse, options.klen, options.markovOrder);
+			refseqobj.getCounts(options.klen);
+			refseqobj.getTotalMarkov(options.klen, options.markovOrder);
+			v.push_back(refseqobj);
+		}
+		cout << v.size() << endl;
+	}
 
 	if(options.type == "d2s-opt")
 	{
