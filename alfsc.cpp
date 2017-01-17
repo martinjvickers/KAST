@@ -125,6 +125,11 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	return seqan::ArgumentParser::PARSE_OK;
 }
 
+void pairwise(ModifyStringOptions options)
+{
+	cout << "I'm doing bugger all." << endl;
+}
+
 //this is where we do stuff
 void mainloop(ModifyStringOptions options)
 {
@@ -151,7 +156,8 @@ void mainloop(ModifyStringOptions options)
 		clock_t begin = clock();
 
 		map<double,string> results;
-	
+		map<string,double> results2;
+
 		if(options.useram == true)
 		{
 			for(int i = 0; i < v.size(); i++)
@@ -168,6 +174,7 @@ void mainloop(ModifyStringOptions options)
 
 				//record
 				results[dist] = toCString(v[i].getID());
+				results2[toCString(v[i].getID())] = dist;
 				//cout << toCString(v[i].getID()) << endl;
 			}
 		} else {
@@ -195,6 +202,7 @@ void mainloop(ModifyStringOptions options)
 		
 				//record
 				results[dist] = toCString(refseqobj.getID());
+				results2[toCString(refseqobj.getID())] = dist;
 				
 			}
 		}
@@ -204,7 +212,7 @@ void mainloop(ModifyStringOptions options)
 		n.lock();
 		cout << "############################ " << queryid << " took " << elapsed_secs << endl;
 		int c = 0;
-		for(auto const& p: results)
+		for(auto const& p: results2)
 		{
 			cout << p.first << " " << p.second << endl;
 			c++;
@@ -226,46 +234,58 @@ int main(int argc, char const ** argv)
 	if (res != seqan::ArgumentParser::PARSE_OK)
 		return res == seqan::ArgumentParser::PARSE_ERROR;
 
-	//only do this if we want to do it
-	if(options.useram == true)
+	//if we are doing a pairwise comparison
+	if(options.pairwiseFileName != NULL)
 	{
-		cout << " reading in reference objects " << endl;
+		cout << "Performing a pairwise comparison." << endl;
+		//can't really multithread pairwise at this point (maybe we can do this in the future)
+		pairwise(options);
+	}
+	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
+	{
 
-                //now go through each reference seq
-                CharString refid;
-                IupacString refseq;
-                SeqFileIn refFileIn;
-                open(refFileIn, (toCString(options.referenceFileName)));
-		while(!atEnd(refFileIn))
-                {
-			readRecord(refid, refseq, refFileIn);
-                        Seq refseqobj(refseq, refid, options.noreverse, options.klen, options.markovOrder);
-			refseqobj.getCounts(options.klen);
-			refseqobj.getTotalMarkov(options.klen, options.markovOrder);
-			v.push_back(refseqobj);
+		//only do this if we want to do it
+		if(options.useram == true)
+		{
+			cout << " reading in reference objects " << endl;
+
+        	        //now go through each reference seq
+        	        CharString refid;
+        	        IupacString refseq;
+        	        SeqFileIn refFileIn;
+               		open(refFileIn, (toCString(options.referenceFileName)));
+			while(!atEnd(refFileIn))
+        	        {
+				readRecord(refid, refseq, refFileIn);
+                        	Seq refseqobj(refseq, refid, options.noreverse, options.klen, options.markovOrder);
+				refseqobj.getCounts(options.klen);
+				refseqobj.getTotalMarkov(options.klen, options.markovOrder);
+				v.push_back(refseqobj);
+				cout << sizeof(refseqobj) << endl;
+			}
+			cout << v.size() << endl;
 		}
-		cout << v.size() << endl;
-	}
 
-	if(options.type == "d2s-opt")
-	{
-		kmermap = makeall(options);
-	} else if(options.type == "d2s")
-	{
-		kmermap = makecomplete(options);
-	}
+		if(options.type == "d2s-opt")
+		{
+			kmermap = makeall(options);
+		} else if(options.type == "d2s")
+		{
+			kmermap = makecomplete(options);
+		}
 
-	open(queryFileIn, (toCString(options.queryFileName)));
-	thread workers[options.num_threads];
-	for(int w = 0; w < options.num_threads; w++)
-	{
-		workers[w] = thread(mainloop, options);
-	}
+		open(queryFileIn, (toCString(options.queryFileName)));
+		thread workers[options.num_threads];
+		for(int w = 0; w < options.num_threads; w++)
+		{
+			workers[w] = thread(mainloop, options);
+		}
 
-	//do not exit until all the threads have finished
-	for(int w = 0; w < options.num_threads; w++)
-	{
-		workers[w].join();
+		//do not exit until all the threads have finished
+		for(int w = 0; w < options.num_threads; w++)
+		{
+			workers[w].join();
+		}
 	}
 
 	return 0;

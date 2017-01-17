@@ -58,10 +58,6 @@ Seq::Seq(IupacString seq, CharString seqid, bool noreverse, int klen, int markov
 	count_obj obj = Seq::count(klen);
 	tot = obj.total;
 	kmer_count_map = obj.kmer_counts;
-	/*markov_obj obj = Seq::markov(klen, markovOrder);
-	markovmap = obj.markov_counts;
-	markov_total = obj.total_count;
-	markov_sum = obj.sum_prob;*/
 }
 
 //destructor
@@ -87,12 +83,10 @@ int Seq::getTotalCounts(int klen)
 	//you can't return total counts if you've not done the counting
 	if(tot < 0)
 	{
-	//	cout << "I'm doing this the first time for " << id << endl;
 		count_obj obj = Seq::count(klen);
 		tot = obj.total;
 		kmer_count_map = obj.kmer_counts;
 	} else {
-	//	cout << "I've already done this for " << id << endl;
 	}
 
 	return tot;
