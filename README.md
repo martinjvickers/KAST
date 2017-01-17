@@ -2,7 +2,7 @@
 This is a rewrite
 
 ### Version ###
-Early Early Beta! 0.0.2 :-)
+Early Early Beta! 0.0.3 :-)
 
 ### How do I get set up on Ubuntu 16.04? ###
 

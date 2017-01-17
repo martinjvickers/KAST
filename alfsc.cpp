@@ -1,6 +1,6 @@
 /*
 ALFSC - Alignment-free Sequence Comparison
-Version 0.0.1
+Version 0.0.3
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
