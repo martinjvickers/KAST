@@ -74,7 +74,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDate(parser, "January 2017");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
-	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from two fasta files.");
+	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
 
 	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
 
