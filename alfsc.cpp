@@ -318,7 +318,12 @@ int main(int argc, char const ** argv)
 			kmermap = makecomplete(options);
 		}
 
-		open(queryFileIn, (toCString(options.queryFileName)));
+		if(!open(queryFileIn, (toCString(options.queryFileName))))
+		{
+			cerr << "Error: could not open file " << toCString(options.queryFileName) << endl;
+			return 1;
+		}
+
 		thread workers[options.num_threads];
 		for(int w = 0; w < options.num_threads; w++)
 		{
