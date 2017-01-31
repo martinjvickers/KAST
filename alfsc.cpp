@@ -127,7 +127,48 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 void pairwise(ModifyStringOptions options)
 {
-	cout << "I'm doing bugger all." << endl;
+	SeqFileIn pairwiseFileIn;
+	StringSet<IupacString> pairwiseseq;
+        StringSet<CharString> pairwiseid;
+	open(pairwiseFileIn, (toCString(options.pairwiseFileName)));
+
+	readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);	
+
+	const int size = length(pairwiseid);
+	double array[size][size];
+	int last = 1;
+
+	for(int i = 0; i < length(pairwiseid); i++)
+	{
+		Seq refseqobj(pairwiseseq[i], pairwiseid[i], options.noreverse, options.klen, options.markovOrder);
+
+		for(int j = 0; j < last; j++)
+        	{
+			Seq qryseqobj(pairwiseseq[j], pairwiseid[j], options.noreverse, options.klen, options.markovOrder);
+
+			double dist;
+			if(options.type == "kmer")
+				dist = euler(refseqobj, qryseqobj, options);
+			else if(options.type == "d2")
+				dist = d2(refseqobj, qryseqobj, options);
+			else if(options.type == "d2s")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "d2s-opt")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			array[i][j] = dist;
+			array[j][i] = dist;
+		}
+		last++;
+	}
+
+	for(int i = 0; i < length(pairwiseid); i++)
+	{
+		for(int j = 0; j < length(pairwiseid); j++)
+		{
+			cout << array[i][j] << " ";
+		}
+		cout << endl;
+	}
 }
 
 //this is where we do stuff
@@ -237,7 +278,6 @@ int main(int argc, char const ** argv)
 	//if we are doing a pairwise comparison
 	if(options.pairwiseFileName != NULL)
 	{
-		cout << "Performing a pairwise comparison." << endl;
 		//can't really multithread pairwise at this point (maybe we can do this in the future)
 		pairwise(options);
 	}
