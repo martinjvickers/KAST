@@ -2,7 +2,7 @@
 This is a rewrite
 
 ### Version ###
-Early Early Beta! 0.0.3 :-)
+Early Early Beta! 0.0.4 :-)
 
 ### How do I get set up on Ubuntu 16.04? ###
 
@@ -18,7 +18,13 @@ make
 ### Quick run test ###
 
 ```
-/usr/bin/time -v ./alfsc -q example_data/SRR042642_1.fastq.gz -r example_data/yeast.fasta -k 3 -c 4
+/usr/bin/time -v ./alfsc -q example_data/SRR042642_1.fastq.gz -r example_data/yeast.fasta -k 3 -c 4 -o output.txt
+```
+
+If you wish to do pairwise comparison the following command;
+
+```
+./alfsc -r example_data/yeast.fasta -o test.txt
 ```
 
 ### Binary Release ###
