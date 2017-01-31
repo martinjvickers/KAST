@@ -97,6 +97,12 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	getOptionValue(options.num_threads, parser, "num-cores");
 	getOptionValue(options.output_format, parser, "output-format");
 
+	if((options.markovOrder < 1) || (options.markovOrder > 3))
+	{
+		cerr << "Markov Order --markov-order should be an integer 1, 2 or 3." << endl;
+		return seqan::ArgumentParser::PARSE_ERROR;
+	}
+
 	if(isSet(parser, "pairwise-file")){
 		if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
 		{
