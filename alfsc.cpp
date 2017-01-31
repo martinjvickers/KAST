@@ -1,6 +1,6 @@
 /*
 ALFSC - Alignment-free Sequence Comparison
-Version 0.0.4
+Version 0.0.5
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
@@ -70,7 +70,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
-	setVersion(parser, "0.0.4");
+	setVersion(parser, "0.0.5");
 	setDate(parser, "January 2017");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -125,12 +125,17 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	return seqan::ArgumentParser::PARSE_OK;
 }
 
-void pairwise(ModifyStringOptions options)
+int pairwise(ModifyStringOptions options)
 {
 	SeqFileIn pairwiseFileIn;
 	StringSet<IupacString> pairwiseseq;
         StringSet<CharString> pairwiseid;
-	open(pairwiseFileIn, (toCString(options.pairwiseFileName)));
+	
+	if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
+	{
+		cerr << "Error: could not open file " << toCString(options.pairwiseFileName) << endl;
+		return 1;
+	}
 
 	readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);	
 
@@ -169,10 +174,12 @@ void pairwise(ModifyStringOptions options)
 		}
 		cout << endl;
 	}
+
+	return 0;
 }
 
 //this is where we do stuff
-void mainloop(ModifyStringOptions options)
+int mainloop(ModifyStringOptions options)
 {
 	while(1)
 	{
@@ -188,7 +195,7 @@ void mainloop(ModifyStringOptions options)
 		else
 		{
 			m.unlock();
-			return;
+			return 0;
 		}
 		m.unlock();
 
@@ -266,6 +273,8 @@ void mainloop(ModifyStringOptions options)
 		}
 		n.unlock();
 	}
+
+	return 0;
 }
 
 int main(int argc, char const ** argv)
