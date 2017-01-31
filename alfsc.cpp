@@ -293,7 +293,11 @@ int main(int argc, char const ** argv)
         	        CharString refid;
         	        IupacString refseq;
         	        SeqFileIn refFileIn;
-               		open(refFileIn, (toCString(options.referenceFileName)));
+			if(!open(refFileIn, (toCString(options.referenceFileName))))
+			{
+				cerr << "Error: could not open file " << toCString(options.referenceFileName) << endl;
+				return 1;
+			}
 			while(!atEnd(refFileIn))
         	        {
 				readRecord(refid, refseq, refFileIn);
