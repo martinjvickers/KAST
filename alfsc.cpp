@@ -172,13 +172,16 @@ int pairwise(ModifyStringOptions options)
 		last++;
 	}
 
+	ofstream outfile;
+	outfile.open(toCString(options.outputFileName), std::ios_base::app);
+
 	for(int i = 0; i < length(pairwiseid); i++)
 	{
 		for(int j = 0; j < length(pairwiseid); j++)
 		{
-			cout << array[i][j] << " ";
+			outfile << array[i][j] << " ";
 		}
-		cout << endl;
+		outfile << endl;
 	}
 
 	return 0;
