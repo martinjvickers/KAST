@@ -190,6 +190,10 @@ int pairwise(ModifyStringOptions options)
 //this is where we do stuff
 int mainloop(ModifyStringOptions options)
 {
+
+        ofstream outfile;
+        outfile.open(toCString(options.outputFileName), std::ios_base::app);
+
 	while(1)
 	{
 		//get the next query record
@@ -271,11 +275,12 @@ int mainloop(ModifyStringOptions options)
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 		n.lock();
-		cout << "############################ " << queryid << " took " << elapsed_secs << endl;
+		outfile << "############################ " << queryid << " took " << elapsed_secs << endl;
 		int c = 0;
+
 		for(auto const& p: results2)
 		{
-			cout << p.first << " " << p.second << endl;
+			outfile << p.first << " " << p.second << endl;
 			c++;
 			if(c > options.nohits)
 				break;
