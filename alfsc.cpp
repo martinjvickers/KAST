@@ -34,9 +34,12 @@ SOFTWARE.
 #include <ctime>
 mutex m; //read query mutex
 mutex n; //write to console mutex
+mutex o; //count the number of running threads
 SeqFileIn queryFileIn;
 map<string,bool> kmermap;
 vector<Seq> v;
+
+queue< pair<CharString,map<string,double>> > printbuffer;
 
 /*
 Parse our commandline options
@@ -190,10 +193,6 @@ int pairwise(ModifyStringOptions options)
 //this is where we do stuff
 int mainloop(ModifyStringOptions options)
 {
-
-        ofstream outfile;
-        outfile.open(toCString(options.outputFileName), std::ios_base::app);
-
 	while(1)
 	{
 		//get the next query record
@@ -236,7 +235,6 @@ int mainloop(ModifyStringOptions options)
 				//record
 				results[dist] = toCString(v[i].getID());
 				results2[toCString(v[i].getID())] = dist;
-				//cout << toCString(v[i].getID()) << endl;
 			}
 		} else {
 			//now go through each reference seq
@@ -272,19 +270,12 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
+		n.lock();
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-		n.lock();
-		outfile << "############################ " << queryid << " took " << elapsed_secs << endl;
-		int c = 0;
-
-		for(auto const& p: results2)
-		{
-			outfile << p.first << " " << p.second << endl;
-			c++;
-			if(c > options.nohits)
-				break;
-		}
+		printbuffer.push(make_pair(queryid,results2));
+		if(options.debug == true)
+			cout << "Pushed " << queryid << " in " << elapsed_secs << " seconds " << endl; 
 		n.unlock();
 	}
 
@@ -297,6 +288,10 @@ int main(int argc, char const ** argv)
 	ModifyStringOptions options;
 	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 	
+	//useful to check how many threads the machine has.
+	//unsigned int n = std::thread::hardware_concurrency();
+
+
 	// If parsing was not successful then exit with code 1 if there were errors.
 	// Otherwise, exit with code 0 (e.g. help was printed).
 	if (res != seqan::ArgumentParser::PARSE_OK)
@@ -332,7 +327,7 @@ int main(int argc, char const ** argv)
 				refseqobj.getCounts(options.klen);
 				refseqobj.getTotalMarkov(options.klen, options.markovOrder);
 				v.push_back(refseqobj);
-				cout << sizeof(refseqobj) << endl;
+				//cout << sizeof(refseqobj) << endl;
 			}
 			cout << v.size() << endl;
 		}
@@ -362,6 +357,30 @@ int main(int argc, char const ** argv)
 		{
 			workers[w].join();
 		}
+
+
+		//I would prefer to have this elsewhere as this is going to write data out at the very end, e.g. putting all of this into ram.
+		ofstream outfile;
+                outfile.open(toCString(options.outputFileName), std::ios_base::app);
+
+                while(!printbuffer.empty())
+                {
+                        int c = 0;
+                        pair<CharString,map<string,double>> val = printbuffer.front();
+                        printbuffer.pop();
+
+                        outfile << "############################ " << val.first << endl;
+
+                        for(auto const& p: val.second)
+                        {
+                                outfile << p.first << " " << p.second << endl;
+                                c++;
+                                if(c > options.nohits)
+                                        break;
+                        }
+
+                }
+
 	}
 
 	return 0;
