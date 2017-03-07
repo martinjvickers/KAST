@@ -163,7 +163,6 @@ unordered_map<string, markov_dat> Seq::getMarkov(int klen, int markov)
 	if(markovmap.empty())
 	{
 		count_obj r_obj = Seq::count(markov);
-		//count_obj r_obj = count(markov, orig_sequence);
 		r_count = r_obj.kmer_counts;
 		r_total  = r_obj.total;
 		count_obj r1_obj = Seq::count(markov+1);
@@ -199,7 +198,6 @@ void Seq::printMarkov(int klen, int markov)
         //if not already calculated
         if(kmer_count_map.empty())
         {
-	//	cout << "kmer_count_map.empty()" << endl;
                 count_obj obj = Seq::count(klen);
                 tot = obj.total;
                 kmer_count_map = obj.kmer_counts;
@@ -207,7 +205,6 @@ void Seq::printMarkov(int klen, int markov)
 
 	if(markovmap.empty())
         {
-	//	cout << "markovmap.empty()" << endl;
                 count_obj r_obj = Seq::count(markov);
                 r_count = r_obj.kmer_counts;
 		r_total  = r_obj.total;
