@@ -41,6 +41,9 @@ vector<Seq> v;
 
 queue< pair<CharString,map<string,double>> > printbuffer;
 
+ofstream outfile;
+
+
 /*
 Parse our commandline options
 */
@@ -211,12 +214,11 @@ int mainloop(ModifyStringOptions options)
 		}
 		m.unlock();
 
-		Seq qryseqobj(queryseq, queryid, options.noreverse, options.klen, options.markovOrder);
-
 		clock_t begin = clock();
 
-		map<double,string> results;
-		map<string,double> results2;
+		//this is where we store it
+		std::multimap<double, Seq> results;
+		Seq qryseqobj(queryseq, queryid, options.noreverse, options.klen, options.markovOrder);
 
 		if(options.useram == true)
 		{
@@ -224,23 +226,30 @@ int mainloop(ModifyStringOptions options)
 			{
 				double dist;
 				if(options.type == "kmer")
-                                        dist = euler(v[i], qryseqobj, options);
-                                else if(options.type == "d2")
-                                        dist = d2(v[i], qryseqobj, options);
-                                else if(options.type == "d2s")
-                                        dist = d2sopt(v[i], qryseqobj, options, kmermap);
-                                else if(options.type == "d2s-opt")
-                                        dist = d2sopt(v[i], qryseqobj, options, kmermap);
+	                                dist = euler(v[i], qryseqobj, options);
+	                        else if(options.type == "d2")
+	                                dist = d2(v[i], qryseqobj, options);
+	                        else if(options.type == "d2s")
+	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
+	                        else if(options.type == "d2s-opt")
+	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
 
 				//record
-				results[dist] = toCString(v[i].getID());
-				results2[toCString(v[i].getID())] = dist;
+				results.insert(std::pair<double,Seq>(dist, v[i]));
+
+				//this is a sorted list by double, where the smallest is at the top and largest at the end. 
+				//So, if  is larger than the number of hits we wish to keep, remove the last one.
+				if(results.size() > options.nohits)
+				{
+					std::multimap<double,Seq>::iterator it = results.end();
+					results.erase(--it);
+				}
 			}
 		} else {
 			//now go through each reference seq
-        	        CharString refid;
-                	IupacString refseq;
-	                SeqFileIn refFileIn;
+		        CharString refid;
+	        	IupacString refseq;
+		        SeqFileIn refFileIn;
 			if(!open(refFileIn, (toCString(options.referenceFileName))))
 			{
 				cerr << "Error: could not open file " << toCString(options.referenceFileName) << endl;
@@ -264,16 +273,23 @@ int mainloop(ModifyStringOptions options)
 					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 		
 				//record
-				results[dist] = toCString(refseqobj.getID());
-				results2[toCString(refseqobj.getID())] = dist;
-				
+				results.insert(std::pair<double,Seq>(dist, refseqobj));
+				if(results.size() > options.nohits)
+				{
+					std::multimap<double,Seq>::iterator it=results.end();
+					results.erase(--it); //get rid of the last one, which is the largest
+					
+				}
 			}
 		}
 
 		n.lock();
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-		printbuffer.push(make_pair(queryid,results2));
+		outfile << "############################ " << queryid << endl;
+		for(auto i : results)
+			outfile << i.second.getID() << " " << i.first << endl;
+
 		if(options.debug == true)
 			cout << "Pushed " << queryid << " in " << elapsed_secs << " seconds " << endl; 
 		n.unlock();
@@ -309,8 +325,6 @@ int main(int argc, char const ** argv)
 		//only do this if we want to do it
 		if(options.useram == true)
 		{
-			cout << " reading in reference objects " << endl;
-
         	        //now go through each reference seq
         	        CharString refid;
         	        IupacString refseq;
@@ -328,7 +342,6 @@ int main(int argc, char const ** argv)
 				refseqobj.getTotalMarkov(options.klen, options.markovOrder);
 				v.push_back(refseqobj);
 			}
-			cout << v.size() << endl;
 		}
 
 		if(options.type == "d2s-opt")
@@ -345,6 +358,8 @@ int main(int argc, char const ** argv)
 			return 1;
 		}
 
+		outfile.open(toCString(options.outputFileName), std::ios_base::app);//open output file
+
 		thread workers[options.num_threads];
 		for(int w = 0; w < options.num_threads; w++)
 		{
@@ -357,28 +372,7 @@ int main(int argc, char const ** argv)
 			workers[w].join();
 		}
 
-
-		//I would prefer to have this elsewhere as this is going to write data out at the very end, e.g. putting all of this into ram.
-		ofstream outfile;
-                outfile.open(toCString(options.outputFileName), std::ios_base::app);
-
-                while(!printbuffer.empty())
-                {
-                        int c = 0;
-                        pair<CharString,map<string,double>> val = printbuffer.front();
-                        printbuffer.pop();
-
-                        outfile << "############################ " << val.first << endl;
-
-                        for(auto const& p: val.second)
-                        {
-                                outfile << p.first << " " << p.second << endl;
-                                c++;
-                                if(c > options.nohits)
-                                        break;
-                        }
-
-                }
+		outfile.close();
 
 	}
 
