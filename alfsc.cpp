@@ -33,16 +33,12 @@ SOFTWARE.
 #include <limits>
 #include <ctime>
 mutex m; //read query mutex
-mutex n; //write to console mutex
+mutex n; //write to file mutex
 mutex o; //count the number of running threads
-SeqFileIn queryFileIn;
-map<string,bool> kmermap;
-vector<Seq> v;
-
-queue< pair<CharString,map<string,double>> > printbuffer;
-
-ofstream outfile;
-
+SeqFileIn queryFileIn; // query file
+map<string,bool> kmermap; //kmer map if we're doing d2s
+vector<Seq> v; //stores all of our reference
+ofstream outfile; //output file
 
 /*
 Parse our commandline options
@@ -142,7 +138,7 @@ int pairwise(ModifyStringOptions options)
 	SeqFileIn pairwiseFileIn;
 	StringSet<IupacString> pairwiseseq;
         StringSet<CharString> pairwiseid;
-	
+
 	if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
 	{
 		cerr << "Error: could not open file " << toCString(options.pairwiseFileName) << endl;
@@ -152,8 +148,11 @@ int pairwise(ModifyStringOptions options)
 	readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);	
 
 	const int size = length(pairwiseid);
-	double array[size][size];
 	int last = 1;
+	vector< vector<double> > array;
+	array.resize(size);
+	for(int i = 0; i < size; i++)
+		array[i].resize(size);
 
 	for(int i = 0; i < length(pairwiseid); i++)
 	{
@@ -189,6 +188,8 @@ int pairwise(ModifyStringOptions options)
 		}
 		outfile << endl;
 	}
+
+	outfile.close();
 
 	return 0;
 }
@@ -283,6 +284,11 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
+		/*
+		Print to file. 
+		At this point, you are able to quickly access both the reference and query sequence, 
+		counts and distance.
+		*/
 		n.lock();
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -344,10 +350,11 @@ int main(int argc, char const ** argv)
 			}
 		}
 
+		//this is where we make our kmer map. If you do makeall we are using mts11's idea
 		if(options.type == "d2s-opt")
 		{
 			kmermap = makeall(options);
-		} else if(options.type == "d2s")
+		} else if(options.type == "d2s") //else here we just go ahead and make all of the kmers available.
 		{
 			kmermap = makecomplete(options);
 		}
@@ -360,6 +367,7 @@ int main(int argc, char const ** argv)
 
 		outfile.open(toCString(options.outputFileName), std::ios_base::app);//open output file
 
+		//run our threads, this is where we do the work
 		thread workers[options.num_threads];
 		for(int w = 0; w < options.num_threads; w++)
 		{
