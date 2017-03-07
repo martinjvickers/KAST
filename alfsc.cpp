@@ -74,7 +74,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.0.5");
-	setDate(parser, "January 2017");
+	setDate(parser, "March 2017");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
@@ -327,7 +327,6 @@ int main(int argc, char const ** argv)
 				refseqobj.getCounts(options.klen);
 				refseqobj.getTotalMarkov(options.klen, options.markovOrder);
 				v.push_back(refseqobj);
-				//cout << sizeof(refseqobj) << endl;
 			}
 			cout << v.size() << endl;
 		}
