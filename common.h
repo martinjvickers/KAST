@@ -84,7 +84,7 @@ struct ModifyStringOptions
 	CharString pairwiseFileName = NULL;
         int num_threads;
         bool debug;
-        bool useram;
+        bool lowram;
 	CharString outputFileName = NULL;
 };
 

@@ -95,7 +95,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.type, parser, "distance-type");
         options.noreverse = isSet(parser, "no-reverse");
 	options.debug = isSet(parser, "debug");
-	options.useram = isSet(parser, "use-ram");
+	options.lowram = isSet(parser, "low-ram");
 	getOptionValue(options.queryFileName, parser, "query-file");
 	getOptionValue(options.referenceFileName, parser, "reference-file");
 	getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
@@ -316,7 +316,7 @@ int mainloop(ModifyStringOptions options)
 		std::multimap<double, Seq> results;
 		Seq qryseqobj(queryseq, queryid, options.noreverse, options.klen, options.markovOrder);
 
-		if(options.useram == true)
+		if(options.lowram != true)
 		{
 			for(int i = 0; i < v.size(); i++)
 			{
@@ -424,7 +424,7 @@ int main(int argc, char const ** argv)
 	{
 
 		//only do this if we want to do it
-		if(options.useram == true)
+		if(options.lowram != true)
 		{
         	        //now go through each reference seq
         	        CharString refid;
