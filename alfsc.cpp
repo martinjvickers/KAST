@@ -40,6 +40,10 @@ map<string,bool> kmermap; //kmer map if we're doing d2s
 vector<Seq> v; //stores all of our reference
 ofstream outfile; //output file
 
+vector< vector<double> > array_threaded; //testing threaded pw
+int current_row = 0;
+mutex r;
+
 /*
 Parse our commandline options
 */
@@ -131,6 +135,99 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
                 return seqan::ArgumentParser::PARSE_ERROR;
 	}
 	return seqan::ArgumentParser::PARSE_OK;
+}
+
+int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, StringSet<IupacString> pairwiseseq)
+{
+
+	//not sure about this loop condition
+	while(current_row < length(pairwiseid))
+	{
+
+		//get row locally and increment it
+		int i;
+		r.lock();
+		i = current_row;
+		if(i >= length(pairwiseid))
+			return 0;
+		current_row++;
+		r.unlock();
+
+		//create that object	
+		Seq refseqobj(pairwiseseq[i], pairwiseid[i], options.noreverse, options.klen, options.markovOrder);
+
+		for(int j = 0; j < i; j++)
+		{
+			Seq qryseqobj(pairwiseseq[j], pairwiseid[j], options.noreverse, options.klen, options.markovOrder);
+
+			double dist;
+			if(options.type == "kmer")
+				dist = euler(refseqobj, qryseqobj, options);
+			else if(options.type == "d2")
+				dist = d2(refseqobj, qryseqobj, options);
+			else if(options.type == "d2s")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "d2s-opt")
+				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			array_threaded[i][j] = dist;
+			array_threaded[j][i] = dist;
+		}
+	}
+
+	return 0;
+}
+
+int threaded_pw(ModifyStringOptions options)
+{
+	//so I'd need a pairwise set of records
+	SeqFileIn pairwiseFileIn;
+        StringSet<IupacString> pairwiseseq;
+        StringSet<CharString> pairwiseid;
+	
+	if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
+        {
+                cerr << "Error: could not open file " << toCString(options.pairwiseFileName) << endl;
+                return 1;
+        }
+
+        readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);
+
+	//sort out our global matrix
+	const int size = length(pairwiseid);
+        int last = 1;
+        array_threaded.resize(size);
+        for(int i = 0; i < size; i++)
+                array_threaded[i].resize(size);
+
+	//run our threads, this is where we do the work
+	thread workers[options.num_threads];
+	for(int w = 0; w < options.num_threads; w++)
+	{
+		workers[w] = thread(pwthread, options, pairwiseid, pairwiseseq);
+	}
+
+	//do not exit until all the threads have finished
+	for(int w = 0; w < options.num_threads; w++)
+	{
+		workers[w].join();
+	}
+
+	//write out pairwise information to file
+        ofstream outfile;
+        outfile.open(toCString(options.outputFileName), std::ios_base::out);
+
+        for(int i = 0; i < length(pairwiseid); i++)
+        {
+                for(int j = 0; j < length(pairwiseid); j++)
+                {
+                        outfile << array_threaded[i][j] << " ";
+                }
+                outfile << endl;
+        }
+
+        outfile.close();
+
+	return 0;
 }
 
 int pairwise(ModifyStringOptions options)
@@ -322,8 +419,8 @@ int main(int argc, char const ** argv)
 	//if we are doing a pairwise comparison
 	if(options.pairwiseFileName != NULL)
 	{
-		//can't really multithread pairwise at this point (maybe we can do this in the future)
-		pairwise(options);
+		//pairwise(options);
+		threaded_pw(options); // pairwised version
 	}
 	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
 	{
@@ -365,7 +462,7 @@ int main(int argc, char const ** argv)
 			return 1;
 		}
 
-		outfile.open(toCString(options.outputFileName), std::ios_base::app);//open output file
+		outfile.open(toCString(options.outputFileName), std::ios_base::out);//open output file
 
 		//run our threads, this is where we do the work
 		thread workers[options.num_threads];
