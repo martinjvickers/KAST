@@ -1,3 +1,119 @@
+###Try some profiling
+
+###Pairwise timings 1 to 4 cores;
+
+```
+mvickers@n108379:~/development/alfsc_rewrite$ /usr/bin/time -v ./alfsc -p example_data/yeast.fasta -c 1 -o meh.txt
+	Command being timed: "./alfsc -p example_data/yeast.fasta -c 1 -o meh.txt"
+	User time (seconds): 34.68
+	System time (seconds): 0.27
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 64884
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 271930
+	Voluntary context switches: 11
+	Involuntary context switches: 5063
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+mvickers@n108379:~/development/alfsc_rewrite$ /usr/bin/time -v ./alfsc -p example_data/yeast.fasta -c 2 -o meh.txt
+	Command being timed: "./alfsc -p example_data/yeast.fasta -c 2 -o meh.txt"
+	User time (seconds): 35.10
+	System time (seconds): 0.26
+	Percent of CPU this job got: 189%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:18.62
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 106412
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 280301
+	Voluntary context switches: 48
+	Involuntary context switches: 4641
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+mvickers@n108379:~/development/alfsc_rewrite$ /usr/bin/time -v ./alfsc -p example_data/yeast.fasta -c 3 -o meh.txt
+	Command being timed: "./alfsc -p example_data/yeast.fasta -c 3 -o meh.txt"
+	User time (seconds): 35.34
+	System time (seconds): 0.30
+	Percent of CPU this job got: 266%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:13.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 144292
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 284841
+	Voluntary context switches: 98
+	Involuntary context switches: 4793
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+mvickers@n108379:~/development/alfsc_rewrite$ /usr/bin/time -v ./alfsc -p example_data/yeast.fasta -c 4 -o meh.txt
+	Command being timed: "./alfsc -p example_data/yeast.fasta -c 4 -o meh.txt"
+	User time (seconds): 35.43
+	System time (seconds): 0.35
+	Percent of CPU this job got: 316%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:11.29
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 180260
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 284682
+	Voluntary context switches: 161
+	Involuntary context switches: 16974
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+```
+
+
+
+#after recompiling with the Debug cmake flag
+
+```
+operf ./alfsc -r example_data/yeast.fasta -q example_data/SRR042642_10k.fastq.gz -o meh.txt -u -c 4
+opannotate --source --output-dir=annotated
+```
+
+
 ###AWS instance CPU
 ```
 processor       : 15
