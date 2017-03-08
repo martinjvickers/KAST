@@ -2,7 +2,7 @@
 This is a rewrite
 
 ### Version ###
-Early Early Beta! 0.0.4 :-)
+Not far from a complete release but still a bit to go. This is version 0.0.5.
 
 ### How do I get set up on Ubuntu 16.04? ###
 
@@ -11,7 +11,7 @@ sudo apt-get install git g++ build-essential cmake zlib1g-dev libbz2-dev libboos
 git clone https://github.com/seqan/seqan.git seqan
 git clone https://github.com/martinjvickers/alfsc.git
 cd alfsc
-cmake ../alfsc -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+cmake ../alfsc_rewrite -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
