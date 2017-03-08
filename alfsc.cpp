@@ -73,7 +73,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "output-format", "tabular");
 	addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
-	addOption(parser, seqan::ArgParseOption("u", "use-ram", "Use RAM to store reference counts once computed. Very fast but will use a lot of RAM if you have a large reference and/or large kmer size."));
+	addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run alfsc with a large reference, however it will take much longer."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
 	setVersion(parser, "0.0.5");
@@ -139,11 +139,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 
 int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, StringSet<IupacString> pairwiseseq)
 {
-
 	//not sure about this loop condition
 	while(current_row < length(pairwiseid))
 	{
-
 		//get row locally and increment it
 		int i;
 		r.lock();
@@ -384,7 +382,7 @@ int mainloop(ModifyStringOptions options)
 		/*
 		Print to file. 
 		At this point, you are able to quickly access both the reference and query sequence, 
-		counts and distance.
+		counts and distance. Nothing is implemented for that yet but the option is there.
 		*/
 		n.lock();
 		clock_t end = clock();
