@@ -167,6 +167,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2s-opt")
 				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "d2star")
+                                dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 			array_threaded[i][j] = dist;
 			array_threaded[j][i] = dist;
 		}
@@ -266,6 +268,8 @@ int pairwise(ModifyStringOptions options)
 				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2s-opt")
 				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "d2star")
+                                dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 			array[i][j] = dist;
 			array[j][i] = dist;
 		}
@@ -329,6 +333,8 @@ int mainloop(ModifyStringOptions options)
 	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
 	                        else if(options.type == "d2s-opt")
 	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
+				else if(options.type == "d2star")
+                                        dist = d2sopt(v[i], qryseqobj, options, kmermap);
 
 				//record
 				results.insert(std::pair<double,Seq>(dist, v[i]));
@@ -367,6 +373,8 @@ int mainloop(ModifyStringOptions options)
 					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 				else if(options.type == "d2s-opt")
 					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				else if(options.type == "d2star")
+                                        dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
 		
 				//record
 				results.insert(std::pair<double,Seq>(dist, refseqobj));
