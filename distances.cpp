@@ -157,3 +157,61 @@ double d2star(Seq ref, Seq query, ModifyStringOptions options, map<string, bool>
 	return 0.5 * (1 - temp);
 }
 
+double hao(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ourkmers)
+{
+	double nX = query.getTotalCounts(options.klen);
+	double nY = ref.getTotalCounts(options.klen);
+
+        unordered_map<string, long long int> querykmers = query.getCounts(options.klen);
+        unordered_map<string, long long int> refkmers = ref.getCounts(options.klen);
+        unordered_map<string,markov_dat> qrymarkov = query.getMarkov(options.klen, options.markovOrder);
+        unordered_map<string,markov_dat> refmarkov = ref.getMarkov(options.klen, options.markovOrder);
+
+	double tempX = 0.0;
+	double tempY = 0.0;
+	double tempXY = 0.0;
+
+	for(pair<string, bool> p: ourkmers) //for each kmer
+        {
+
+		double cXi = querykmers[p.first]; //get the counts
+		double pXi;
+                if(cXi == 0.0)
+                {
+                        pXi = query.missing(p.first, options.markovOrder);
+                } else {
+                        pXi = qrymarkov[p.first].prob;
+                }
+
+                double cYi = refkmers[p.first];
+                double pYi;
+                if(refkmers.find(p.first) != refkmers.end())
+                {
+                        pYi = ref.missing(p.first, options.markovOrder);
+                } else {
+                        pYi = refmarkov[p.first].prob;
+                }
+	
+		double fXi = cXi / nX;
+		double fYi = cYi / nY;
+		double temp1, temp2;
+
+		if(pXi == 0)
+			temp1 = -1;
+		else
+			temp1 = (fXi / pXi) - 1.0;
+
+		if(pYi == 0)
+			temp2 = -1;
+		else
+			temp2 = (fYi / pYi) - 1.0;
+
+		tempXY += temp1 * temp2;
+		tempX += temp1 * temp1;
+		tempY += temp2 * temp2;
+	}
+
+	double temp = tempXY / (sqrt(tempX) * sqrt(tempY));
+	return (1 - temp) / 2;
+
+}
