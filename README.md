@@ -1,5 +1,5 @@
 ### Quick summary ###
-This is a rewrite
+Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.
 
 ### Version ###
 Not far from a complete release but still a bit to go. This is version 0.0.6.
