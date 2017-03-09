@@ -1,6 +1,6 @@
 /*
 ALFSC - Alignment-free Sequence Comparison
-Version 0.0.5
+Version 0.0.6
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
@@ -76,7 +76,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 	addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run alfsc with a large reference, however it will take much longer."));
 	setDefaultValue(parser, "num-cores", "1");
 	setShortDescription(parser, "Alignment-free sequence comparison.");
-	setVersion(parser, "0.0.5");
+	setVersion(parser, "0.0.6");
 	setDate(parser, "March 2017");
 	addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
 	addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
