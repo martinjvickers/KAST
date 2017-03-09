@@ -169,6 +169,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 				dist = d2s(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2star")
                                 dist = d2star(refseqobj, qryseqobj, options, kmermap);
+			else if(options.type == "hao")
+                                dist = hao(refseqobj, qryseqobj, options, kmermap);
 			array_threaded[i][j] = dist;
 			array_threaded[j][i] = dist;
 		}
@@ -337,6 +339,8 @@ int mainloop(ModifyStringOptions options)
 	                                dist = d2s(v[i], qryseqobj, options, kmermap);
 				else if(options.type == "d2star")
                                         dist = d2star(v[i], qryseqobj, options, kmermap);
+				else if(options.type == "hao")
+                                	dist = hao(v[i], qryseqobj, options, kmermap);
 
 				//record
 				results.insert(std::pair<double,Seq>(dist, v[i]));
@@ -377,6 +381,8 @@ int mainloop(ModifyStringOptions options)
 					dist = d2s(refseqobj, qryseqobj, options, kmermap);
 				else if(options.type == "d2star")
                                         dist = d2star(refseqobj, qryseqobj, options, kmermap);
+				else if(options.type == "hao")
+					dist = hao(refseqobj, qryseqobj, options, kmermap);
 		
 				//record
 				results.insert(std::pair<double,Seq>(dist, refseqobj));
