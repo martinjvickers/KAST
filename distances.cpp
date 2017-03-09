@@ -269,5 +269,4 @@ double hao(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ou
 
 	double temp = tempXY / (sqrt(tempX) * sqrt(tempY));
 	return (1 - temp) / 2;
-
 }

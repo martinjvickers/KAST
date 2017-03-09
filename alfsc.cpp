@@ -116,18 +116,21 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 			return seqan::ArgumentParser::PARSE_ERROR;
 		}
 	}
+
 	if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
 	{
 		cerr << "You have specified a reference (-r) file but not a query (-q) file. See alfsc -h for details." << endl;
 		printHelp(parser);
 		return seqan::ArgumentParser::PARSE_ERROR;
 	}
+
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
         {
                 cerr << "You have specified a query (-q) file but not a reference (-r) file. See alfsc -h for details." << endl;
 		printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
+
 	if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
 	{
 		cerr << "You have not specifed any input file. See alfsc -h for details." << endl;
@@ -429,6 +432,7 @@ int main(int argc, char const ** argv)
 		for(int w = 0; w < options.num_threads; w++)
 		{
 			workers[w] = thread(mainloop, options);
+
 		}
 
 		//do not exit until all the threads have finished
@@ -439,5 +443,6 @@ int main(int argc, char const ** argv)
 	}
 
 	outfile.close();
+
 	return 0;
 }
