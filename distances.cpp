@@ -77,6 +77,34 @@ double manhattan(Seq ref, Seq query, ModifyStringOptions options)
 
 }
 
+double chebyshev(Seq ref, Seq query, ModifyStringOptions options)
+{
+	double score = 0.0;
+
+	//extract our maps
+        unordered_map<string, long long int> querykmers = query.getCounts(options.klen);
+        unordered_map<string, long long int> refkmers = ref.getCounts(options.klen);
+
+	//total number of counts for query and ref
+        int rN = ref.getTotalCounts(options.klen);
+        int qN = query.getTotalCounts(options.klen);
+
+	//create a unified map
+        unordered_map<string, long long int> ourkmers;
+        ourkmers = refkmers;
+        ourkmers.insert(querykmers.begin(), querykmers.end());
+
+	for(pair<string, long long int> p: ourkmers)
+        {
+		double rF = refkmers[p.first] / rN;
+                double qF = querykmers[p.first] / qN;
+		double temp = abs(rF - qF);
+		if(temp > score)
+			score = temp;
+	}
+	return score;
+}
+
 double d2s(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ourkmers)
 {
         int rN = ref.getTotalCounts(options.klen);
