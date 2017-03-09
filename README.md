@@ -2,7 +2,7 @@
 This is a rewrite
 
 ### Version ###
-Not far from a complete release but still a bit to go. This is version 0.0.5.
+Not far from a complete release but still a bit to go. This is version 0.0.6.
 
 ### How do I get set up on Ubuntu 16.04? ###
 
