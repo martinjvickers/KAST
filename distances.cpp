@@ -49,6 +49,7 @@ double d2(Seq ref, Seq query, ModifyStringOptions options)
         return 0.5*(1-score);
 }
 
+/*
 double d2s(Seq ref, Seq query, ModifyStringOptions options)
 {
         int rN = ref.getTotalCounts(options.klen);
@@ -101,8 +102,9 @@ double d2s(Seq ref, Seq query, ModifyStringOptions options)
         score = 0.5 * (1 - D2S/( sqrt(sum1)*sqrt(sum2) ));
         return score;
 }
+*/
 
-double d2sopt(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ourkmers)
+double d2s(Seq ref, Seq query, ModifyStringOptions options, map<string, bool> ourkmers)
 {
         int rN = ref.getTotalCounts(options.klen);
         int qN = query.getTotalCounts(options.klen);
