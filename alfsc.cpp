@@ -230,6 +230,7 @@ int threaded_pw(ModifyStringOptions options)
 	return 0;
 }
 
+/*
 int pairwise(ModifyStringOptions options)
 {
 	SeqFileIn pairwiseFileIn;
@@ -292,6 +293,7 @@ int pairwise(ModifyStringOptions options)
 
 	return 0;
 }
+*/
 
 //this is where we do stuff
 int mainloop(ModifyStringOptions options)
