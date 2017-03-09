@@ -457,7 +457,7 @@ int main(int argc, char const ** argv)
 		if(options.type == "d2s-opt")
 		{
 			kmermap = makeall(options);
-		} else if(options.type == "d2s") //else here we just go ahead and make all of the kmers available.
+		} else if(options.type == "d2s" || options.type == "d2star") //else here we just go ahead and make all of the kmers available.
 		{
 			kmermap = makecomplete(options);
 		}
