@@ -164,9 +164,9 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 			else if(options.type == "d2")
 				dist = d2(refseqobj, qryseqobj, options);
 			else if(options.type == "d2s")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				dist = d2s(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2s-opt")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				dist = d2s(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2star")
                                 dist = d2star(refseqobj, qryseqobj, options, kmermap);
 			array_threaded[i][j] = dist;
@@ -265,9 +265,9 @@ int pairwise(ModifyStringOptions options)
 			else if(options.type == "d2")
 				dist = d2(refseqobj, qryseqobj, options);
 			else if(options.type == "d2s")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				dist = d2s(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2s-opt")
-				dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+				dist = d2s(refseqobj, qryseqobj, options, kmermap);
 			else if(options.type == "d2star")
                                 dist = d2star(refseqobj, qryseqobj, options, kmermap);
 			array[i][j] = dist;
@@ -330,9 +330,9 @@ int mainloop(ModifyStringOptions options)
 	                        else if(options.type == "d2")
 	                                dist = d2(v[i], qryseqobj, options);
 	                        else if(options.type == "d2s")
-	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
+	                                dist = d2s(v[i], qryseqobj, options, kmermap);
 	                        else if(options.type == "d2s-opt")
-	                                dist = d2sopt(v[i], qryseqobj, options, kmermap);
+	                                dist = d2s(v[i], qryseqobj, options, kmermap);
 				else if(options.type == "d2star")
                                         dist = d2star(v[i], qryseqobj, options, kmermap);
 
@@ -370,9 +370,9 @@ int mainloop(ModifyStringOptions options)
 				else if(options.type == "d2")
 					dist = d2(refseqobj, qryseqobj, options);
 				else if(options.type == "d2s")
-					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+					dist = d2s(refseqobj, qryseqobj, options, kmermap);
 				else if(options.type == "d2s-opt")
-					dist = d2sopt(refseqobj, qryseqobj, options, kmermap);
+					dist = d2s(refseqobj, qryseqobj, options, kmermap);
 				else if(options.type == "d2star")
                                         dist = d2star(refseqobj, qryseqobj, options, kmermap);
 		
