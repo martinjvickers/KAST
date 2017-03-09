@@ -189,7 +189,7 @@ int threaded_pw(ModifyStringOptions options)
 	SeqFileIn pairwiseFileIn;
         StringSet<IupacString> pairwiseseq;
         StringSet<CharString> pairwiseid;
-	
+
 	if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
         {
                 cerr << "Error: could not open file " << toCString(options.pairwiseFileName) << endl;
@@ -219,9 +219,6 @@ int threaded_pw(ModifyStringOptions options)
 	}
 
 	//write out pairwise information to file
-        ofstream outfile;
-        outfile.open(toCString(options.outputFileName), std::ios_base::out);
-
         for(int i = 0; i < length(pairwiseid); i++)
         {
                 for(int j = 0; j < length(pairwiseid); j++)
@@ -230,8 +227,6 @@ int threaded_pw(ModifyStringOptions options)
                 }
                 outfile << endl;
         }
-
-        outfile.close();
 
 	return 0;
 }
@@ -371,6 +366,13 @@ int main(int argc, char const ** argv)
 	//useful to check how many threads the machine has.
 	//unsigned int n = std::thread::hardware_concurrency();
 
+        //try to open the write out file
+        try {
+                outfile.open(toCString(options.outputFileName), std::ios_base::out);
+        } catch (const ifstream::failure& e) {
+                cout << "Error: could not open output file " << toCString(options.outputFileName) << endl;
+                return 1; //if you can't open the output file then why bother trying to run the rest
+        }
 
 	// If parsing was not successful then exit with code 1 if there were errors.
 	// Otherwise, exit with code 0 (e.g. help was printed).
@@ -380,7 +382,6 @@ int main(int argc, char const ** argv)
 	//if we are doing a pairwise comparison
 	if(options.pairwiseFileName != NULL)
 	{
-		//pairwise(options);
 		threaded_pw(options); // pairwised version
 	}
 	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
@@ -423,8 +424,6 @@ int main(int argc, char const ** argv)
 			return 1;
 		}
 
-		outfile.open(toCString(options.outputFileName), std::ios_base::out);//open output file
-
 		//run our threads, this is where we do the work
 		thread workers[options.num_threads];
 		for(int w = 0; w < options.num_threads; w++)
@@ -437,10 +436,8 @@ int main(int argc, char const ** argv)
 		{
 			workers[w].join();
 		}
-
-		outfile.close();
-
 	}
 
+	outfile.close();
 	return 0;
 }
