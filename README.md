@@ -4,6 +4,10 @@ Perform Alignment-free k-tuple frequency comparisons from sequences. This can be
 ### Version ###
 Not far from a complete release but still a bit to go. This is version 0.0.6.
 
+### Manual and Usage ###
+
+https://github.com/martinjvickers/alfsc/wiki
+
 ### How do I get set up on Ubuntu 16.04? ###
 
 ```
