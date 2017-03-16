@@ -209,7 +209,9 @@ int threaded_pw(ModifyStringOptions options)
                 array_threaded[i].resize(size);
 
 	//run our threads, this is where we do the work
-	thread workers[options.num_threads];
+	//thread workers[options.num_threads];
+	int arraySize = options.num_threads;
+	thread * workers = new thread[arraySize];
 	for(int w = 0; w < options.num_threads; w++)
 	{
 		workers[w] = thread(pwthread, options, pairwiseid, pairwiseseq);
