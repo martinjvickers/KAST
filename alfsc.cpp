@@ -428,7 +428,9 @@ int main(int argc, char const ** argv)
 		}
 
 		//run our threads, this is where we do the work
-		thread workers[options.num_threads];
+		const int numthreads = options.num_threads;
+	//	thread workers[options.num_threads];
+		thread workers[numthreads];
 		for(int w = 0; w < options.num_threads; w++)
 		{
 			workers[w] = thread(mainloop, options);
