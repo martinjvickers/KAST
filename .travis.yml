@@ -25,7 +25,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test', 'george-edison55-precise-backports']
-         packages: ['g++-4.9', 'cmake', 'cmake-data', 'zlib1g-dev', 'libbz2-dev', 'libboost-dev']
+          packages: ['g++-4.9', 'cmake', 'cmake-data', 'zlib1g-dev', 'libbz2-dev', 'libboost-dev']
       install: export CXX="g++-6" CC="gcc-6"
 
 #packages: ['g++-4.9', 'cmake', 'cmake-data', 'zlib1g-dev', 'libbz2-dev', 'libboost-dev', 'python', 'python-nose', 'python-jinja2', 'python-pip']
