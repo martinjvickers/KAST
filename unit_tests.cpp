@@ -27,10 +27,11 @@ SOFTWARE.
  */
 
 #include "common.h"
+#include "seq.cpp"
 #include "distances.cpp"
 #include "utils.cpp"
-#include "seq.cpp"
 
+/*
 void testd2starN()
 {
         cout << "d2star test"<<endl;
@@ -125,11 +126,12 @@ void testd2s(){
 	cout << result << endl;
 
 }
+*/
 
 /*
 Same as testCount_1() but with an addition of an N at the beginning and end of the sequence. The results should be identical as N's are dropped automagically
 */
-void testCount_2()
+/*void testCount_2()
 {
         Dna5String seq = "NTGACTGACTGACTGACTGACTGACTGACTGACN";
         int klen = 3;
@@ -149,11 +151,13 @@ void testCount_2()
                         cout << "We have an unknown 3mer in this test: " << p.first << endl;
         }
 }
+*/
+
 
 /*
 Very simple test of counting to ensure that the correct results are being returned for a known result
 */
-void testCount_1()
+/*void testCount_1()
 {
 	Dna5String seq = "TGACTGACTGACTGACTGACTGACTGACTGACKJ";
 	int klen = 3;
@@ -172,10 +176,10 @@ void testCount_1()
 		else if(p.first != "GAC" && p.first != "TGA" && p.first != "ACT" && p.first != "CTG")
 			cout << "We have an unknown 3mer in this test: " << p.first << endl;
 	}
-}
+}*/
 
 /*Simple test of reverse compliment*/
-void testRevCompl_1()
+int testRevCompl_1()
 {
         Dna5String input_dnaSeq = "TGAC";
 	Dna5String expected_output_dnaSeq = "TGACNNNGTCA";
@@ -183,62 +187,78 @@ void testRevCompl_1()
 	if(expected_output_dnaSeq == recieved_output_dnaSeq)
 	{
 		cout << "Test reverse compliment PASSED" << endl;
+		return 0;
 	} else {
 		cout << "Test reverse compliment FAILED: Sent " << input_dnaSeq << " expected " << expected_output_dnaSeq << " recieved " << recieved_output_dnaSeq << endl;
+		return 1;
 	}
 }
 
 //check that when you give it something, it returns what you want
-void testRevCompl_2()
+int testRevCompl_2()
 {
 	if(getRevCompl('A') != 'T')
 	{
 		cout << "ERROR submitted A but got " << getRevCompl('A') << endl;
+		return 1;
 	}
 
 	if(getRevCompl('T') != 'A')
         {
                 cout << "ERROR submitted T but got " << getRevCompl('T') << endl;
+		return 1;
         }
 
 	if(getRevCompl('C') != 'G')
         {
                 cout << "ERROR submitted C but got " << getRevCompl('C') << endl;
+		return 1;
         }
 
 	if(getRevCompl('G') != 'C')
         {
                 cout << "ERROR submitted G but got " << getRevCompl('G') << endl;
+		return 1;
         }
 
 	if(getRevCompl('N') != 'N')
         {
                 cout << "ERROR submitted N but got " << getRevCompl('N') << endl;
+		return 1;
         }
 	if(getRevCompl('M') != 'N')
 	{
 		cout << "ERROR submitted M but got " << getRevCompl('M') << endl;
+		return 1;
 	}
 	if(getRevCompl('X') != 'N')
         {
                 cout << "ERROR submitted X but got " << getRevCompl('X') << endl;
+		return 1;
         }
+
+	cout << "Test Single Base getRevCompl PASSED" << endl;
+	return 0 ;
 
 }
 
 int main(int argc, char const ** argv)
 {
-	//tests of the reverse compliment function
-	testRevCompl_1();
-	testRevCompl_2();
+	int returncode = 0;
+
+	if(!testRevCompl_1())
+		returncode = 1;
+
+	if(!testRevCompl_2())
+		returncode = 1;
 
 	//tests of the counting function
-	testCount_1();
-	testCount_2();
+//	testCount_1();
+//	testCount_2();
 
-	testd2s();
-	testd2star();
+//	testd2s();
+//	testd2star();
 
-	testd2starN();
-	return 0;
+//	testd2starN();
+	return returncode;
 }
