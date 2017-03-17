@@ -29,6 +29,7 @@ SOFTWARE.
 #include "common.h"
 #include "distances.cpp"
 #include "utils.cpp"
+#include "seq.cpp"
 
 void testd2starN()
 {
