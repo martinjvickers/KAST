@@ -36,4 +36,5 @@ before_script:
 script:
  - cd alfsc
  - cmake ../alfsc -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
- - make
+ - make -j2
+ - ./unit_tests
