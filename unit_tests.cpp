@@ -246,10 +246,10 @@ int main(int argc, char const ** argv)
 {
 	int returncode = 0;
 
-	if(!testRevCompl_1())
+	if(testRevCompl_1() != 0)
 		returncode = 1;
 
-	if(!testRevCompl_2())
+	if(testRevCompl_2() != 0)
 		returncode = 1;
 
 	//tests of the counting function
