@@ -1,6 +1,99 @@
-#include <unordered_map>
+#include "utils.h"
 
-/**/
+// Parse our commandline options
+seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
+{
+        seqan::ArgumentParser parser("alfsc");
+        addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
+        setDefaultValue(parser, "klen", "3");
+        addOption(parser, seqan::ArgParseOption("d", "debug", "Debug Messages."));
+        addOption(parser, seqan::ArgParseOption("q", "query-file", "Path to the file containing your query sequence data.\n", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+        setValidValues(parser, "query-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
+        addOption(parser, seqan::ArgParseOption("r", "reference-file", "Path to the file containing your reference sequence data.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+        setValidValues(parser, "reference-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
+        addOption(parser, seqan::ArgParseOption("p", "pairwise-file", "Path to the file containing your sequence data which you will perform pairwise comparison on.", seqan::ArgParseArgument::INPUT_FILE, "IN"));
+        setValidValues(parser, "pairwise-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
+        addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
+        addOption(parser, seqan::ArgParseOption("o", "output-file", "Output file.", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
+        setRequired(parser, "output-file");
+        setDefaultValue(parser, "markov-order", "1");
+        addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
+        setDefaultValue(parser, "num-hits", "10");
+        addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
+        setValidValues(parser, "distance-type", "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai");
+        setDefaultValue(parser, "distance-type", "d2");
+        addOption(parser, seqan::ArgParseOption("f", "output-format", ".", seqan::ArgParseArgument::STRING, "STR"));
+        setValidValues(parser, "output-format", "tabular");
+        setDefaultValue(parser, "output-format", "tabular");
+        addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
+        addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
+        addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run alfsc with a large reference, however it will take much longer."));
+        setDefaultValue(parser, "num-cores", "1");
+        setShortDescription(parser, "Alignment-free sequence comparison.");
+        setVersion(parser, "0.0.6");
+        setDate(parser, "March 2017");
+        addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
+        addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
+        addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
+
+	seqan::ArgumentParser::ParseResult res = seqan::parse(parser, argc, argv);
+
+        // Only extract options if the program will continue after parseCommandLine()
+        if (res != seqan::ArgumentParser::PARSE_OK)
+                return res;
+
+        //begin extracting options
+        getOptionValue(options.klen, parser, "klen");
+        getOptionValue(options.nohits, parser, "num-hits");
+        getOptionValue(options.markovOrder, parser, "markov-order");
+        getOptionValue(options.type, parser, "distance-type");
+        options.noreverse = isSet(parser, "no-reverse");
+        options.debug = isSet(parser, "debug");
+        options.lowram = isSet(parser, "low-ram");
+        getOptionValue(options.queryFileName, parser, "query-file");
+        getOptionValue(options.referenceFileName, parser, "reference-file");
+        getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
+        getOptionValue(options.outputFileName, parser, "output-file");
+        getOptionValue(options.num_threads, parser, "num-cores");
+        getOptionValue(options.output_format, parser, "output-format");
+
+	if((options.markovOrder < 1) || (options.markovOrder > 3))
+        {
+                cerr << "Markov Order --markov-order should be an integer 1, 2 or 3." << endl;
+                return seqan::ArgumentParser::PARSE_ERROR;
+        }
+
+        if(isSet(parser, "pairwise-file")){
+                if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
+                {
+                        cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p). See alfsc -h for details." << endl;
+                        return seqan::ArgumentParser::PARSE_ERROR;
+                }
+        }
+
+        if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
+        {
+                cerr << "You have specified a reference (-r) file but not a query (-q) file. See alfsc -h for details." << endl;
+                printHelp(parser);
+                return seqan::ArgumentParser::PARSE_ERROR;
+        }
+
+        if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
+        {
+                cerr << "You have specified a query (-q) file but not a reference (-r) file. See alfsc -h for details." << endl;
+                printHelp(parser);
+                return seqan::ArgumentParser::PARSE_ERROR;
+        }
+
+        if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
+        {
+                cerr << "You have not specifed any input file. See alfsc -h for details." << endl;
+                printHelp(parser);
+                return seqan::ArgumentParser::PARSE_ERROR;
+        }
+        return seqan::ArgumentParser::PARSE_OK;
+}
+
 Iupac getRevCompl(Iupac const & nucleotide)
 {
         if (nucleotide == 'A')
@@ -14,7 +107,6 @@ Iupac getRevCompl(Iupac const & nucleotide)
         return 'N';
 }
 
-/**/
 Dna5String doRevCompl(Dna5String seq)
 {
         Dna5String allSeq;
@@ -30,21 +122,14 @@ Dna5String doRevCompl(Dna5String seq)
         return allSeq;
 }
 
-//calculate the counts
-//BUG!!! I need a check that if the klen is longer than the sequence, it should fall out gracefully
-count_obj count(int klen, IupacString sequence)
+map<string, unsigned int> count(IupacString sequence, int klen)
 {
         int total = 0;
-        unordered_map<string, long long int> map;
-
-        //iterate over the sequence
+        map<string, unsigned int> map;
         for(int i = 0; i <= length(sequence)-klen; i++)
         {
-                //get our kmer
                 string kmer;
                 assign(kmer,infix(sequence, i, i+klen));
-
-                //need to drop if there is an N in it
                 size_t found = kmer.find("N");
 
                 if(found > kmer.size()){
@@ -53,103 +138,43 @@ count_obj count(int klen, IupacString sequence)
                         total++;
                 }
         }
-        count_obj obj;
-        obj.kmer_counts = map;
-        obj.total = total;
-        return obj;
+        return map;
 }
 
-/*Will need to look at good ways of speeding this up*/
-map<string,bool> makeall(ModifyStringOptions options)
+map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map)
 {
-        SeqFileIn refFileIn;
-        CharString refid;
-        IupacString refseq;
-        open(refFileIn, (toCString(options.referenceFileName)));
+        map<string, double> markovmap;
+        double sum_prob = 0.0;
 
-        map<string,bool> kmermap;
+        map<string, unsigned int> markovcounts = count(sequence, markovOrder);
+        double tot = 0;
 
-        while(!atEnd(refFileIn))
+        for(pair<string, unsigned int> p: markovcounts)
         {
-                if(kmermap.size() != pow(4,options.klen))
-                {
-                        readRecord(refid, refseq, refFileIn);
-
-			Dna5String sequence;
-			if(options.noreverse==1)
-			{
-				sequence = refseq;
-			} else
-			{
-				sequence = doRevCompl(refseq);
-			}
-
-                        //iterate over the sequence
-                        for(int i = 0; i <= length(sequence)-options.klen; i++)
-                        {
-                                string kmer;
-                                assign(kmer,infix(sequence, i, i+options.klen));
-
-                                //need to drop if there is an N in it
-                                size_t found = kmer.find("N");
-
-                                if(found > kmer.size())
-                                {
-                                        kmermap[kmer] = true;
-                                }
-                        }
-                } else {
-			cout << "There should be no more kmers to find." << endl;
-			break;
-		}
+                tot = tot + p.second;
         }
 
-        SeqFileIn qryFileIn;
-        CharString qryid;
-        IupacString qryseq;
-        open(qryFileIn, (toCString(options.queryFileName)));
-
-        while(!atEnd(qryFileIn))
+        for(pair<string, bool> p: kmer_count_map)
         {
-                if(kmermap.size() != pow(4,options.klen))
+                double prob = 1.0;
+                Dna5String kmer = p.first;
+
+                for(int l = 0; l < (length(kmer)); l++)
                 {
-                        readRecord(qryid, qryseq, qryFileIn);
-
-                        Dna5String sequence;
-                        if(options.noreverse==1)
-                        {
-                                sequence = qryseq;
-                        } else
-                        {
-                                sequence = doRevCompl(qryseq);
-                        }
-
-
-                        //iterate over the sequence
-                        for(int i = 0; i <= length(sequence)-options.klen; i++)
-                        {
-                                string kmer;
-                                assign(kmer,infix(sequence, i, i+options.klen));
-
-                                //need to drop if there is an N in it
-                                size_t found = kmer.find("N");
-
-                                if(found > kmer.size())
-                                {
-                                        kmermap[kmer] = true;
-                                }
-                        }
-                } else {
-			cout << "There should be no more kmers to find " << endl;
-			break;
-		}
+                        int j = l + markovOrder;
+                        string inf;
+                        assign(inf,infix(kmer, l, j));
+                        prob = prob * (markovcounts[inf] / tot);
+                }
+                markovmap[p.first] = prob;
         }
-        return kmermap;
+
+        return markovmap;
 }
 
-map<string,bool> makecomplete(ModifyStringOptions options)
+map<string, bool> makecomplete(ModifyStringOptions options)
 {
-	map<string,bool> finkmers;
+        map<string, bool> finkmers;
 
         String<Dna5String> bases;
         appendValue(bases, "A");
@@ -177,51 +202,13 @@ map<string,bool> makecomplete(ModifyStringOptions options)
                 clear(temp);
         }
 
-	for(int i = 0; i < length(kmers); i++)
-	{
-		string kmer2;
-		assign(kmer2,infix(kmers[i], 0, length(kmers[i])));
-		finkmers[kmer2] = true;
-	}
-	cout << "All kmers created " << finkmers.size() << " kmers." << endl;
-	return finkmers;
-}
-
-
-
-//I want it to return an array with element 0 is the smallest
-void recordall(int nohits, double hits[], double value, int seqcurrpos, int hitpos[])
-{
-	cout << nohits << " " << value << " " << seqcurrpos << endl;
-
-        //if value is smaller than the current largest, lets knock it off
-        if(value < hits[nohits-1]){
-
-		cout << value << " is lower than " << hits[nohits-1] << endl;
-
-                hits[nohits-1] = value;
-                hitpos[nohits-1] = seqcurrpos; //copy position move
-                int j;
-                double temp;
-                int temppos;
-
-		cout << "here" << endl;
-
-                //now, lets see if our new value is smaller than any of the others
-                //iterate through the rest of the elements
-                int i = nohits-1;
-                while(i >= 0 && hits[i] < hits[i-1])
-                {
-                        temp = hits[i-1];
-                        temppos = hitpos[i-1];
-
-                        hits[i-1] = hits[i];
-                        hitpos[i-1] = hitpos[i];
-
-                        hits[i] = temp;
-                        hitpos[i] = temppos;
-
-                        i--;
-                }
+        for(int i = 0; i < length(kmers); i++)
+        {
+                string kmer2;
+                assign(kmer2,infix(kmers[i], 0, length(kmers[i])));
+                finkmers[kmer2] = true;
         }
+        return finkmers;
 }
+
+

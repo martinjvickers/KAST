@@ -23,14 +23,15 @@ SOFTWARE.
 
 */
 
+/*
 #include <iostream>
 #include <seqan/sequence.h>  // CharString, ...
 #include <seqan/stream.h>    // to stream a CharString into cout
 #include <seqan/file.h>
 #include <seqan/arg_parse.h>
 #include <seqan/seq_io.h>
-#include <math.h>       /* sqrt */
-#include <seqan/store.h> /* FragmentStore */
+#include <math.h>       
+#include <seqan/store.h> 
 #include <queue>
 #include <vector>
 #include <ctime>
@@ -43,12 +44,14 @@ SOFTWARE.
 #include <unordered_map>
 using namespace seqan;
 using namespace std;
+*/
 
 /*
 For a given kmer when calculating d2s and d2star you'll store 
 the counts of that kmer in the sequence as well as the markov
 probability. markov_dat is this data structure.
 */
+/*
 struct markov_dat
 {
         long long int count;
@@ -67,13 +70,22 @@ struct markov_obj
         int total_count;
 	double sum_prob;
 };
+*/
+
+#ifndef COMMON_H
+#define COMMON_H
+
+#include <seqan/sequence.h>
+
+using namespace seqan;
+using namespace std;
 
 /*
 User defined options struct
 */
 struct ModifyStringOptions
 {
-        unsigned klen;
+        int klen;
         int nohits;
         int markovOrder;
         CharString type;
@@ -88,3 +100,4 @@ struct ModifyStringOptions
 	CharString outputFileName = NULL;
 };
 
+#endif

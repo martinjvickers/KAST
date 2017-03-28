@@ -27,9 +27,8 @@ SOFTWARE.
  */
 
 #include "common.h"
-#include "seq.cpp"
-#include "distances.cpp"
-#include "utils.cpp"
+#include "distance.h"
+#include "utils.h"
 
 /*
 void testd2starN()
