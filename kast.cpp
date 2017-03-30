@@ -1,5 +1,5 @@
 /*
-ALFSC - Alignment-free Sequence Comparison
+KAST - Kmer Alignment-free Search Tool
 Version 0.0.7
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
