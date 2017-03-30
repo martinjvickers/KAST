@@ -3,7 +3,7 @@
 // Parse our commandline options
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv)
 {
-        seqan::ArgumentParser parser("alfsc");
+        seqan::ArgumentParser parser("kast");
         addOption(parser, seqan::ArgParseOption("k", "klen", "Kmer Length.", seqan::ArgParseArgument::INTEGER, "INT"));
         setDefaultValue(parser, "klen", "3");
         addOption(parser, seqan::ArgParseOption("d", "debug", "Debug Messages."));
@@ -27,9 +27,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "output-format", "tabular");
         addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
         addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
-        addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run alfsc with a large reference, however it will take much longer."));
+        addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run kast with a large reference, however it will take much longer."));
         setDefaultValue(parser, "num-cores", "1");
-        setShortDescription(parser, "Alignment-free sequence comparison.");
+        setShortDescription(parser, "Kmer Alignment-free Search Tool.");
         setVersion(parser, "0.0.7");
         setDate(parser, "March 2017");
         addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -66,28 +66,28 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         if(isSet(parser, "pairwise-file")){
                 if(isSet(parser, "reference-file") == true || isSet(parser, "query-file") == true)
                 {
-                        cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p). See alfsc -h for details." << endl;
+                        cerr << "If you are performing a pairwise comparison, you do not need to specify a query (-q) and a reference (-r) file. If you are performing a reference/query based search you do not need to specify a pairwise-file (-p). See kast -h for details." << endl;
                         return seqan::ArgumentParser::PARSE_ERROR;
                 }
         }
 
         if(isSet(parser, "reference-file") == true && isSet(parser, "query-file") == false)
         {
-                cerr << "You have specified a reference (-r) file but not a query (-q) file. See alfsc -h for details." << endl;
+                cerr << "You have specified a reference (-r) file but not a query (-q) file. See kast -h for details." << endl;
                 printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
 
         if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == true)
         {
-                cerr << "You have specified a query (-q) file but not a reference (-r) file. See alfsc -h for details." << endl;
+                cerr << "You have specified a query (-q) file but not a reference (-r) file. See kast -h for details." << endl;
                 printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
 
         if(isSet(parser, "reference-file") == false && isSet(parser, "query-file") == false && isSet(parser, "pairwise-file") == false)
         {
-                cerr << "You have not specifed any input file. See alfsc -h for details." << endl;
+                cerr << "You have not specifed any input file. See kast -h for details." << endl;
                 printHelp(parser);
                 return seqan::ArgumentParser::PARSE_ERROR;
         }
