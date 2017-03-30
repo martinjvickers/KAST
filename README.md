@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/martinjvickers/KAST.svg?branch=master)](https://travis-ci.org/martinjvickers/KAST)
+
 ### Quick summary ###
 Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.
 
