@@ -31,10 +31,10 @@ matrix:
 
 before_script:
  - git clone https://github.com/seqan/seqan.git seqan
- - git clone https://github.com/martinjvickers/alfsc.git
+ - git clone https://github.com/martinjvickers/KAST.git
 
 script:
- - cd alfsc
- - cmake ../alfsc -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+ - cd KAST
+ - cmake ../kast -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  - ./unit_tests
