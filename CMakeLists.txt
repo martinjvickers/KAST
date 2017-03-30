@@ -2,7 +2,7 @@
 cmake_minimum_required (VERSION 3.0.0)
 
 # Name of project and that it is C++ only.
-project (alfsc CXX)
+project (kast CXX)
 
 # ----------------------------------------------------------------------------
 # Dependencies
@@ -28,7 +28,7 @@ add_definitions (${SEQAN_DEFINITIONS})
 set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
 
 # Add executable and link against SeqAn dependencies.
-add_executable (alfsc distance.cpp utils.cpp alfsc.cpp)
+add_executable (kast distance.cpp utils.cpp kast.cpp)
 target_link_libraries (alfsc ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 add_executable (unit_tests distance.cpp utils.cpp unit_tests.cpp)
 target_link_libraries (unit_tests ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
