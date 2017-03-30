@@ -29,6 +29,6 @@ set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole
 
 # Add executable and link against SeqAn dependencies.
 add_executable (kast distance.cpp utils.cpp kast.cpp)
-target_link_libraries (alfsc ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (kast ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 add_executable (unit_tests distance.cpp utils.cpp unit_tests.cpp)
 target_link_libraries (unit_tests ${SEQAN_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
