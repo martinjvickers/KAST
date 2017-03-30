@@ -6,29 +6,29 @@ Not far from a complete release but still a bit to go. This is version 0.0.6.
 
 ### Manual and Usage ###
 
-https://github.com/martinjvickers/alfsc/wiki
+https://github.com/martinjvickers/KAST/wiki
 
 ### How do I get set up on Ubuntu 16.04? ###
 
 ```
 sudo apt-get install git g++ build-essential cmake zlib1g-dev libbz2-dev libboost-all-dev
 git clone https://github.com/seqan/seqan.git seqan
-git clone https://github.com/martinjvickers/alfsc.git
+git clone https://github.com/martinjvickers/KAST.git
 cd alfsc
-cmake ../alfsc -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
+cmake ../KAST -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
 make
 ```
 
 ### Quick run test ###
 
 ```
-/usr/bin/time -v ./alfsc -q example_data/SRR042642_1.fastq.gz -r example_data/yeast.fasta -k 3 -c 4 -o output.txt
+/usr/bin/time -v ./kast -q example_data/SRR042642_1.fastq.gz -r example_data/yeast.fasta -k 3 -c 4 -o output.txt
 ```
 
 If you wish to do pairwise comparison the following command;
 
 ```
-./alfsc -r example_data/yeast.fasta -o test.txt
+./kast -r example_data/yeast.fasta -o test.txt
 ```
 
 ### Binary Release ###
