@@ -1,0 +1,95 @@
+<tool id="kast" name="KAST: Kmer Alignment-free Search Tool" version="0.0.7">
+    <requirements>
+    </requirements>
+    <stdio>
+        <exit_code range="1:" />
+    </stdio>
+    <command><![CDATA[
+        ln -s "$input1" "$input1".fa &&
+        ln -s "$input2" "$input2".fa &&
+        kast -q "$input1".fa -r "$input2".fa -o "$output1" -k $kmer_length -m $markov_order -t $distance_type -n $num_hits $low_ram $no_reverse &&
+        rm "$input1".fa &&
+        rm "$input2".fa
+    ]]></command>
+    <inputs>
+        <param type="data" name="input1" format="fasta" />
+        <param type="data" name="input2" format="fasta" />
+        <param type="integer" name="kmer_length" value="3" min="1" max="31" label="Kmer Length"/>
+        <param type="integer" name="markov_order" value="1" min="1" max="3" label="Markov Order"/>
+        <param type="integer" name="num_hits" value="10" min="1" label="Number of Hits"/>
+        <param type="boolean" name="no_reverse" truevalue="--no-reverse" falsevalue="" label="Do not perform reverse compliment" />
+        <param type="select" name="distance_type" label="The method in which the distance between two sequences is calculated" >
+            <option value="d2">d2</option>
+            <option value="d2s">d2s</option>
+            <option value="kmer">kmer</option>
+            <option value="d2star">d2star</option>
+            <option value="hao">hao</option>
+            <option value="manhattan">manhattan</option>
+            <option value="chebyshev">chebyshev</option>
+        </param>
+        <param type="boolean" name="low_ram" truevalue="--low-ram" falsevalue="" label="Use Low Ram Mode - this will be much slower" />
+    </inputs>
+    <outputs>
+        <data name="output1" format="txt" />
+    </outputs>
+    <tests>
+        <test>
+            <param name="input1" value="1.fa"/>
+            <param name="input2" value="2.fa"/>
+            <output name="output1" file="output.txt"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+
+DESCRIPTION
+    Perform Alignment-free k-tuple frequency comparisons from sequences. This
+    can be in the form of two input files (e.g. a reference and a query) or a
+    single file for pairwise comparisons to be made.
+
+OPTIONS
+    -h, --help
+          Display the help message.
+    -k, --klen INT
+          Kmer Length. Default: 3.
+    -d, --debug
+          Debug Messages.
+    -q, --query-file IN
+          Path to the file containing your query sequence data.
+    -r, --reference-file IN
+          Path to the file containing your reference sequence data.
+    -p, --pairwise-file IN
+          Path to the file containing your sequence data which you will
+          perform pairwise comparison on.
+    -m, --markov-order INT
+          Markov Order Default: 1.
+    -o, --output-file OUT
+          Output file.
+    -n, --num-hits INT
+          Number of top hits to return Default: 10.
+    -t, --distance-type STR
+          The method of calculating the distance between two sequences. One of
+          d2, kmer, d2s, d2s-opt, d2star, manhattan, chebyshev, hao, and dai.
+          Default: d2.
+    -f, --output-format STR
+          . One of tabular. Default: tabular.
+    -nr, --no-reverse
+          Do not use reverse compliment.
+    -c, --num-cores INT
+          Number of Cores. Default: 1.
+    -l, --low-ram
+          Does not store the reference in RAM. As long as you're not using a
+          very large kmer size, this option will allow you to run kast with a
+          large reference, however it will take much longer.
+    --version
+          Display version information.
+
+VERSION
+    Last update: March 2017
+    kast version: 0.0.7
+    SeqAn version: 2.2.1
+
+
+    ]]></help>
+    <citations>
+    </citations>
+</tool>
