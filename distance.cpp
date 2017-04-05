@@ -95,6 +95,7 @@ double hao(ModifyStringOptions options, map<string, bool> ourkmers, map<string, 
         double tempX = 0.0;
         double tempY = 0.0;
         double tempXY = 0.0;
+	double d_Hao = 0.0;
 
         for(pair<string, bool> p: ourkmers)
         {
@@ -103,10 +104,9 @@ double hao(ModifyStringOptions options, map<string, bool> ourkmers, map<string, 
                 double rC = refcounts[p.first];
                 double rP = refmarkov[p.first];
 
-                double fQi = qC / qN;
-                double fRi = rC / rN;
+                double fQi = qC / (double)qN;
+                double fRi = rC / (double)rN;
                 double temp1, temp2;
-                
                 if(qP == 0)
                         temp1 = -1;
                 else
