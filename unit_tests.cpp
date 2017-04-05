@@ -1,7 +1,7 @@
 /*
-ALFSC - Alignment-free Sequence Comparison
-Version 0.0.1
-Written by Dr. Martin Vickers (mjv08@aber.ac.uk)
+KAST - 
+Version 0.0.7
+Written by Dr. Martin Vickers
 
 MIT License
 
@@ -26,156 +26,99 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-#include "common.h"
 #include "distance.h"
 #include "utils.h"
 
-/*
-void testd2starN()
-{
-        cout << "d2star test"<<endl;
-        int klen = 3;
-        int markovorder = 1;
-        Dna5String qryseq = doRevCompl("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        Dna5String refseq = doRevCompl("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-
-        unordered_map<string, markov_dat> refmap;
-        markov(refseq, klen, markovorder, refmap);
-
-        cout << "Comparing seq : " << refseq << endl;
-        for(pair<string, markov_dat> p: refmap)
-        {
-                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
-        }
-
-        unordered_map<string, markov_dat> querymap;
-        markov(qryseq, klen, markovorder, querymap);
-
-        cout << "Comparing seq : " << qryseq << endl;
-        for(pair<string, markov_dat> p: querymap)
-        {
-                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
-        }
-
-        double result = d2star(refmap, querymap);
-
-        cout << result << endl;
-
-}
-
-
-void testd2star()
-{
-	cout << "d2star test"<<endl;
-        int klen = 3;
-	int markovorder = 1;
-        Dna5String qryseq = doRevCompl("gattGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
-        Dna5String refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
-
-        unordered_map<string, markov_dat> refmap;
-        markov(refseq, klen, markovorder, refmap);
-
-        cout << "Comparing seq : " << refseq << endl;
-        for(pair<string, markov_dat> p: refmap)
-        {
-                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
-        }
-
-        unordered_map<string, markov_dat> querymap;
-        markov(qryseq, klen, markovorder, querymap);
-
-        cout << "Comparing seq : " << qryseq << endl;
-        for(pair<string, markov_dat> p: querymap)
-        {
-                cout << p.first << " " << p.second.count << " " << p.second.prob << endl;
-        }
-
-        double result = d2star(refmap, querymap);
-
-        cout << result << endl;
-
-}
-
-void testd2s(){
+int testeuler(){
 
 	int klen = 3;
-	Dna5String qryseq = doRevCompl("GATTGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
-	Dna5String refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
+	IupacString qryseq = doRevCompl("GATTGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
+	IupacString refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
 	
-	unordered_map<string, long long int> refmap;
-	count(refseq, klen, refmap);
+	ModifyStringOptions options;
+	map<string, unsigned int> refcounts = count(refseq, klen);
+	map<string, unsigned int> querycounts = count(qryseq, klen);
+	
+	double dist = euler(options, refcounts, querycounts);
 
-	cout << "Comparing seq : " << refseq << endl;
-	for(pair<string, long long int> p: refmap)
-	{
-		cout << p.first << " " << p.second << endl;
-	}
+	cout << "Euler " << dist << endl;
 
-	unordered_map<string, long long int> querymap;
-	count(qryseq, klen, querymap);	
-
-	cout << "Comparing seq : " << qryseq << endl;
-	for(pair<string, long long int> p: querymap)
-        {
-		cout << p.first << " " << p.second << endl;
-        }
-
-	double result = d2(refmap, querymap);
-
-	cout << result << endl;
-
+	return 0;
 }
-*/
 
-/*
-Same as testCount_1() but with an addition of an N at the beginning and end of the sequence. The results should be identical as N's are dropped automagically
-*/
-/*void testCount_2()
-{
-        Dna5String seq = "NTGACTGACTGACTGACTGACTGACTGACTGACN";
+int testd2(){
+
         int klen = 3;
-        unordered_map<string, long long int> map;
-        count(seq, klen, map);
-        for(pair<string, long long int> p: map)
+        IupacString qryseq = doRevCompl("GATTGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
+        IupacString refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
+
+        ModifyStringOptions options;
+        map<string, unsigned int> refcounts = count(refseq, klen);
+        map<string, unsigned int> querycounts = count(qryseq, klen);
+
+        double dist = d2(options, refcounts, querycounts);
+
+        cout << "d2 " << dist << endl;
+
+        return 0;
+}
+
+int testmanhattan(){
+
+        int klen = 3;
+        IupacString qryseq = doRevCompl("GATTGCCTCTCATTTTCTCTCCCATATTATAGGGTGAAATATGATCGCGTATGCGAGAGTAGTGCCAACATATTGTGATCTTCGATTTTTTGGCAACCCAAAATGGAGGCGGACGAACGAGATGATAATGATAAGATGATTCAAAAAGACAATGCACGACAGAGAGAGCAGAAAAGATAA");
+        IupacString refseq = doRevCompl("CCACACCACACCCACACACCCACACACCACACCACACACCACACCACACCCACACACACACATCCTAACACTACCCTAACACAGCCCTAATCTAACCCTGGCCAACCTGTCTCTCAACTTACCCTCCATTACCCTGCCTCCACTCGTTACCCTGTCCCATTCAACCATACCACTCCGAAC");
+
+        ModifyStringOptions options;
+        map<string, unsigned int> refcounts = count(refseq, klen);
+        map<string, unsigned int> querycounts = count(qryseq, klen);
+
+        double dist = manhattan(options, refcounts, querycounts);
+
+        cout << "Manhattan " << dist << endl;
+
+        return 0;
+}
+
+
+int testCount_1()
+{
+        IupacString seq = "NTGACTGACTGACTGACTGACTGACTGACTGACN";
+        int klen = 3;
+        map<string, unsigned int> counts = count(seq, klen);
+
+        for(pair<string, unsigned int> p: counts)
         {
                 if(p.first == "TGA" && p.second != 8)
+                {
                         cout << "TGA should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
                 else if(p.first == "GAC" && p.second != 8)
+                {
                         cout << "GAC should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
                 else if(p.first == "ACT" && p.second != 7)
+                {
                         cout << "ACT should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
                 else if(p.first == "CTG" && p.second != 7)
+                {
                         cout << "CTG should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
                 else if(p.first != "GAC" && p.first != "TGA" && p.first != "ACT" && p.first != "CTG")
+                {
                         cout << "We have an unknown 3mer in this test: " << p.first << endl;
+			return 1;
+                }
         }
+
+        return 0;
 }
-*/
 
-
-/*
-Very simple test of counting to ensure that the correct results are being returned for a known result
-*/
-/*void testCount_1()
-{
-	Dna5String seq = "TGACTGACTGACTGACTGACTGACTGACTGACKJ";
-	int klen = 3;
-	unordered_map<string, long long int> map;
-	count(seq, klen, map);
-	for(pair<string, long long int> p: map)
-	{
-		if(p.first == "TGA" && p.second != 8)
-			cout << "TGA should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
-		else if(p.first == "GAC" && p.second != 8)
-			cout << "GAC should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
-		else if(p.first == "ACT" && p.second != 7)
-			cout << "ACT should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
-		else if(p.first == "CTG" && p.second != 7)
-			cout << "CTG should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
-		else if(p.first != "GAC" && p.first != "TGA" && p.first != "ACT" && p.first != "CTG")
-			cout << "We have an unknown 3mer in this test: " << p.first << endl;
-	}
-}*/
 
 /*Simple test of reverse compliment*/
 int testRevCompl_1()
@@ -185,7 +128,6 @@ int testRevCompl_1()
         Dna5String recieved_output_dnaSeq = doRevCompl(input_dnaSeq);
 	if(expected_output_dnaSeq == recieved_output_dnaSeq)
 	{
-		cout << "Test reverse compliment PASSED" << endl;
 		return 0;
 	} else {
 		cout << "Test reverse compliment FAILED: Sent " << input_dnaSeq << " expected " << expected_output_dnaSeq << " recieved " << recieved_output_dnaSeq << endl;
@@ -236,7 +178,6 @@ int testRevCompl_2()
 		return 1;
         }
 
-	cout << "Test Single Base getRevCompl PASSED" << endl;
 	return 0 ;
 
 }
@@ -245,19 +186,62 @@ int main(int argc, char const ** argv)
 {
 	int returncode = 0;
 
+	//testing reverse compliments
 	if(testRevCompl_1() != 0)
+	{
 		returncode = 1;
+	} 
+	else 
+	{
+		cout << "Test reverse compliment PASSED" << endl;
+	}
 
 	if(testRevCompl_2() != 0)
-		returncode = 1;
+	{
+                returncode = 1;
+        }
+        else
+        {
+		cout << "Test Single Base getRevCompl PASSED" << endl;
+        }
 
-	//tests of the counting function
-//	testCount_1();
-//	testCount_2();
+	//test counting
+	if(testCount_1() != 0)
+	{
+                returncode = 1;
+        }
+        else
+        {
+		cout << "Test Count PASSED" << endl;
+        }
 
-//	testd2s();
-//	testd2star();
+	//test distances
+	if(testeuler() != 0)
+        {
+                returncode = 1;
+        }
+        else
+        {
+                cout << "Test Euler PASSED" << endl;
+        }
 
-//	testd2starN();
+        if(testd2() != 0)
+        {
+                returncode = 1;
+        }
+        else
+        {
+                cout << "Test Euler PASSED" << endl;
+        }
+
+        if(testmanhattan() != 0)
+        {
+                returncode = 1;
+        }
+        else
+        {
+                cout << "Test Euler PASSED" << endl;
+        }
+
 	return returncode;
 }
