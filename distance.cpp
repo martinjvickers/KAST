@@ -193,8 +193,8 @@ double manhattan(ModifyStringOptions options, map<string, unsigned int> refcount
 
         for(pair<string, unsigned int> p: ourkmers)
         {
-                double rF = refcounts[p.first] / rN;
-                double qF = querycounts[p.first] / qN;
+                double rF = refcounts[p.first] / (double)rN;
+                double qF = querycounts[p.first] / (double)qN;
                 score = score + (abs(rF - qF));
         }
 
@@ -206,6 +206,7 @@ double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcount
         double score = 0.0;
         int rN = 0;
         int qN = 0;
+	double temp = 0.0;
 
         for(pair<string, unsigned int> p: refcounts)
                 rN = rN + refcounts[p.first];
@@ -220,9 +221,9 @@ double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcount
 
         for(pair<string, unsigned int> p: ourkmers)
         {
-                double rF = refcounts[p.first] / rN;
-                double qF = querycounts[p.first] / qN;
-                double temp = abs(rF - qF);
+                double rF = refcounts[p.first] / (double)rN;
+                double qF = querycounts[p.first] / (double)qN;
+                temp = abs(rF - qF);
                 if(temp > score)
                         score = temp;
         }
