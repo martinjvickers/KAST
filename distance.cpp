@@ -189,7 +189,7 @@ double manhattan(ModifyStringOptions options, map<string, unsigned int> refcount
         //create a unified map
         map<string, unsigned int> ourkmers;
         ourkmers = refcounts;
-        ourkmers.insert(querycounts.begin(),querycounts.end());
+        ourkmers.insert(querycounts.begin(), querycounts.end());
 
         for(pair<string, unsigned int> p: ourkmers)
         {
@@ -198,7 +198,7 @@ double manhattan(ModifyStringOptions options, map<string, unsigned int> refcount
                 score = score + (abs(rF - qF));
         }
 
-        return pow(score, 0.5);
+	return score;
 }
 
 double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
