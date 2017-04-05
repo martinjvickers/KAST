@@ -29,13 +29,6 @@ SOFTWARE.
 #include "distance.h"
 #include "utils.h"
 
-/*
-Manhattan 0.63265
-Ch 0.03061
-*/
-
-
-
 int testd2star(){
 
         int klen = 3;
@@ -67,6 +60,48 @@ int testd2star(){
         return 0;
 }
 
+int testhao(){
+
+        int klen = 3;
+        int markovOrder = 1;
+        IupacString qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
+	IupacString refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
+	//IupacString qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+	//IupacString refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+        IupacString revq = doRevCompl(qryseq);
+        IupacString revr = doRevCompl(refseq);
+
+
+        ModifyStringOptions options;
+        options.klen = klen;
+        options.markovOrder = markovOrder;
+
+	map<string, unsigned int> refcounts = count(refseq, klen);
+	map<string, unsigned int> querycounts = count(qryseq, klen);
+	//map<string, unsigned int> refcounts = count(revr, klen);
+	//map<string, unsigned int> querycounts = count(revq, klen);
+        map<string, bool> ourkmers = makecomplete(options);
+
+        map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
+	map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
+	
+
+        double dist = hao(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
+        double expected = 0.37094;
+        double epsilon = 0.00001;
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("[FAILED] - Test Hao - Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+
+        return 0;
+}
+
+
 int testd2s(){
 
         int klen = 3;
@@ -85,7 +120,7 @@ int testd2s(){
 
 	double dist = d2s(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
         double expected = 0.432463894423;
-	
+
         double epsilon = 0.000001;
         if(abs(dist - expected) < epsilon)
         {
@@ -97,6 +132,48 @@ int testd2s(){
 
         return 0;
 }
+
+int testd2s_d2tools(){
+
+        int klen = 3;
+        int markovOrder = 1;
+        IupacString qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
+        IupacString refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
+        //IupacString qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+        //IupacString refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+        IupacString revq = doRevCompl(qryseq);
+        IupacString revr = doRevCompl(refseq);
+
+
+        ModifyStringOptions options;
+        options.klen = klen;
+        options.markovOrder = markovOrder;
+
+        map<string, unsigned int> refcounts = count(refseq, klen);
+        map<string, unsigned int> querycounts = count(qryseq, klen);
+        //map<string, unsigned int> refcounts = count(revr, klen);
+        //map<string, unsigned int> querycounts = count(revq, klen);
+        map<string, bool> ourkmers = makecomplete(options);
+
+        map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
+        map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
+
+        double dist = d2s(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
+        double expected = 0.42284;
+        double epsilon = 0.000001;
+
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("Test d2s d2tools FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+
+        return 0;
+}
+
 
 int testchebyshev(){
 
@@ -183,11 +260,10 @@ int testmanhattan(){
 
         double dist = manhattan(options, refcounts, querycounts);
 	double expected = 0.63265;
-	double epsilon = 0.000001;
+	double epsilon = 0.00001;
 
 	if(abs(dist - expected) < epsilon)
         {
-		printf("Test Manhattan PASSED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
                 return 0;
         } else {
 		printf("Test Manhattan FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
@@ -310,7 +386,7 @@ int main(int argc, char const ** argv)
 	} 
 	else 
 	{
-		cout << "Test reverse compliment PASSED" << endl;
+		cout << "[PASSED] - Test reverse compliment" << endl;
 	}
 
 	if(testRevCompl_2() != 0)
@@ -319,7 +395,7 @@ int main(int argc, char const ** argv)
         }
         else
         {
-		cout << "Test Single Base getRevCompl PASSED" << endl;
+		cout << "[PASSED] - Test Single Base getRevCompl" << endl;
         }
 
 	//test counting
@@ -329,7 +405,7 @@ int main(int argc, char const ** argv)
         }
         else
         {
-		cout << "Test Count PASSED" << endl;
+		cout << "[PASSED] - Test Count" << endl;
         }
 
 	//test distances
@@ -339,7 +415,7 @@ int main(int argc, char const ** argv)
         }
         else
         {
-                cout << "Test Euler PASSED" << endl;
+                cout << "[PASSED] - Test Euler" << endl;
         }
 
         if(testd2() != 0)
@@ -348,7 +424,7 @@ int main(int argc, char const ** argv)
         }
         else
         {
-                cout << "Test d2 PASSED" << endl;
+                cout << "[PASSED] - Test d2" << endl;
         }
 
         if(testmanhattan() != 0)
@@ -357,7 +433,7 @@ int main(int argc, char const ** argv)
         }
         else
         {
-                cout << "Test Manhattan PASSED" << endl;
+                cout << "[PASSED] - Test Manhattan" << endl;
         }
 
 	if(testd2s() != 0)
@@ -366,16 +442,25 @@ int main(int argc, char const ** argv)
         }
         else
         {
-                cout << "Test d2s PASSED" << endl;
+                cout << "[PASSED] - Test d2s" << endl;
         }
-
+/*
+	if(testd2s_d2tools() != 0)
+        {
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Test d2s tools" << endl;
+        }
+*/
 	if(testd2star() != 0)
         {
                 returncode = 1;
         }
         else
         {
-                cout << "Test d2star PASSED" << endl;
+                cout << "[PASSED] - Test d2star" << endl;
         }
 
 	if(testchebyshev() != 0)
@@ -384,8 +469,17 @@ int main(int argc, char const ** argv)
         }
         else
         {
-                cout << "Test Chebyshev PASSED" << endl;
+                cout << "[PASSED] - Test Chebyshev" << endl;
         }
-
+/*
+        if(testhao() != 0)
+        {
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Test Hao" << endl;
+        }
+*/
 	return returncode;
 }
