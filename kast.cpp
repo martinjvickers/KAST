@@ -291,6 +291,7 @@ int threaded_pw(ModifyStringOptions options)
         //write out pairwise information to file
         for(int i = 0; i < length(pairwiseid); i++)
         {
+		outfile << pairwiseid[i] << " ";
                 for(int j = 0; j < length(pairwiseid); j++)
                 {
                         outfile << array_threaded[i][j] << " ";
