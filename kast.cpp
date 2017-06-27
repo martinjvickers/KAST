@@ -181,6 +181,11 @@ int mainloop(ModifyStringOptions options)
 		{
 			n.lock();
 			outfile << "############################ " << queryid << endl;
+
+			StringSet<CharString> split;
+			strSplit(split, queryid);
+			CharString qName = split[0];
+
 			for(pair<double, int> p: results)
 			{
 				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
@@ -299,16 +304,34 @@ int threaded_pw(ModifyStringOptions options)
                 workers[w].join();
         }
 
-        //write out pairwise information to file
-        for(int i = 0; i < length(pairwiseid); i++)
-        {
-		outfile << pairwiseid[i] << " ";
-                for(int j = 0; j < length(pairwiseid); j++)
+	if(options.phylyp = true)
+	{
+		outfile << length(pairwiseid) << endl;
+		for(int i = 0; i < length(pairwiseid); i++)
                 {
-                        outfile << array_threaded[i][j] << " ";
-                }
-                outfile << endl;
-        }
+                        StringSet<CharString> split;
+                        strSplit(split, pairwiseid[i]);
+                        CharString qName = split[0];
+
+			outfile << qName << "\t";
+			for(int j = 0; j < length(pairwiseid); j++)
+			{
+				outfile << array_threaded[i][j] << "\t";
+			}
+			outfile << endl;
+		}
+	} else {
+	        //write out pairwise information to file
+	        for(int i = 0; i < length(pairwiseid); i++)
+	        {
+			outfile << pairwiseid[i] << " ";
+	                for(int j = 0; j < length(pairwiseid); j++)
+	                {
+	                        outfile << array_threaded[i][j] << " ";
+	                }
+	                outfile << endl;
+	        }
+	}
 
         return 0;
 }
