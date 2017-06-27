@@ -1,6 +1,6 @@
 /*
 KAST - Kmer Alignment-free Search Tool
-Version 0.0.7
+Version 0.0.8
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
