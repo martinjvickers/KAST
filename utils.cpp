@@ -26,6 +26,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setValidValues(parser, "output-format", "tabular");
         setDefaultValue(parser, "output-format", "tabular");
         addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
+	addOption(parser, seqan::ArgParseOption("tab", "tab-delimited-out", "For reference/query based usage, output tab delimited output. <dist-score>	<contig-length>	<fasta-header>"));
+	addOption(parser, seqan::ArgParseOption("phylyp", "phylyp-out", "For pairwise based usage, output in PHYLYP format. For details see http://evolution.genetics.washington.edu/phylip/doc/distance.html"));
         addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
         addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run kast with a large reference, however it will take much longer."));
         setDefaultValue(parser, "num-cores", "1");
@@ -50,6 +52,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         options.noreverse = isSet(parser, "no-reverse");
         options.debug = isSet(parser, "debug");
         options.lowram = isSet(parser, "low-ram");
+	options.phylyp = isSet(parser, "phylyp");
+	options.tabout = isSet(parser, "tab");
         getOptionValue(options.queryFileName, parser, "query-file");
         getOptionValue(options.referenceFileName, parser, "reference-file");
         getOptionValue(options.pairwiseFileName, parser, "pairwise-file");

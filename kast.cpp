@@ -177,13 +177,24 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
-		n.lock();
-                outfile << "############################ " << queryid << endl;
-                for(pair<double, int> p: results)
-                {
-                	outfile << referenceids[p.second] << " " << p.first << endl;
-                }
-		n.unlock();
+		if(options.tabout == true)
+		{
+			n.lock();
+			outfile << "############################ " << queryid << endl;
+			for(pair<double, int> p: results)
+			{
+				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
+			}
+			n.unlock();
+		} else {
+			n.lock();
+                	outfile << "############################ " << queryid << endl;
+                	for(pair<double, int> p: results)
+                	{
+                		outfile << referenceids[p.second] << " " << p.first << endl;
+                	}
+			n.unlock();
+		}
 	}
 
 	return 0;

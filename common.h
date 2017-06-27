@@ -97,6 +97,8 @@ struct ModifyStringOptions
         int num_threads;
         bool debug;
         bool lowram;
+	bool phylyp;
+	bool tabout;
 	CharString outputFileName = NULL;
 };
 
