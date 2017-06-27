@@ -26,6 +26,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
 Iupac getRevCompl(Iupac const & nucleotide);
 Dna5String doRevCompl(Dna5String seq);
 map<string, unsigned int> count(IupacString sequence, int klen);
+double gc_ratio(IupacString sequence);
 map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map);
 map<string, bool> makecomplete(ModifyStringOptions options);
 

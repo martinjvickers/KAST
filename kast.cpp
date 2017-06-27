@@ -180,15 +180,18 @@ int mainloop(ModifyStringOptions options)
 		if(options.tabout == true)
 		{
 			n.lock();
-			outfile << "############################ " << queryid << endl;
 
 			StringSet<CharString> split;
 			strSplit(split, queryid);
 			CharString qName = split[0];
+			outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
 
 			for(pair<double, int> p: results)
 			{
-				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
+				StringSet<CharString> split2;
+				strSplit(split2, referenceids[p.second]);
+				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+//				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
 			}
 			n.unlock();
 		} else {

@@ -145,6 +145,23 @@ map<string, unsigned int> count(IupacString sequence, int klen)
         return map;
 }
 
+double gc_ratio(IupacString sequence)
+{
+	int gc = 0;
+	int agct = 0;
+
+	for(int i = 0; i < length(sequence); i++)
+	{
+		if (sequence[i] == 'G' || sequence[i] == 'C')
+			gc++;
+		if (sequence[i] != 'N')
+			agct++;
+	}
+
+        return (double)gc/(double)agct;
+}
+
+
 map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map)
 {
         map<string, double> markovmap;
