@@ -1,6 +1,6 @@
 /*
 KAST - Kmer Alignment-free Search Tool
-Version 0.0.8
+Version 0.0.9
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
@@ -192,8 +192,23 @@ int mainloop(ModifyStringOptions options)
 				strSplit(split2, referenceids[p.second]);
 				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
 //				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
+				
 			}
 			n.unlock();
+		} else if(options.blastlike == true) {
+
+			n.lock();
+			outfile << ">" << queryid << endl;
+			outfile << "Length=" << length(queryseq) << endl;
+			outfile << endl;
+
+			for(pair<double, int> p: results)
+			{
+				outfile << "Query\tLength=" << length(queryseq) << "\tGC-Ratio=" << gc_ratio(queryseq) << endl;
+				outfile << "Ref\tLength=" << length(referenceseqs[p.second]) << "\tGC-Ratio=" << gc_ratio(referenceseqs[p.second]) << endl;
+			}
+			n.unlock();
+
 		} else {
 			n.lock();
                 	outfile << "############################ " << queryid << endl;

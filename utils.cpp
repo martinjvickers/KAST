@@ -27,13 +27,14 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "output-format", "tabular");
         addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("tab", "tab-delimited-out", "For reference/query based usage, output tab delimited output. <dist-score>	<contig-length>	<fasta-header>"));
+	addOption(parser, seqan::ArgParseOption("blast", "blast-like", "Blast-like fully detailed report"));
 	addOption(parser, seqan::ArgParseOption("phylyp", "phylyp-out", "For pairwise based usage, output in PHYLYP format. For details see http://evolution.genetics.washington.edu/phylip/doc/distance.html"));
         addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
         addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run kast with a large reference, however it will take much longer."));
         setDefaultValue(parser, "num-cores", "1");
         setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-        setVersion(parser, "0.0.8");
-        setDate(parser, "June 2017");
+        setVersion(parser, "0.0.9");
+        setDate(parser, "July 2017");
         addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
@@ -54,6 +55,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         options.lowram = isSet(parser, "low-ram");
 	options.phylyp = isSet(parser, "phylyp");
 	options.tabout = isSet(parser, "tab");
+	options.blastlike = isSet(parser, "blast-like");
         getOptionValue(options.queryFileName, parser, "query-file");
         getOptionValue(options.referenceFileName, parser, "reference-file");
         getOptionValue(options.pairwiseFileName, parser, "pairwise-file");

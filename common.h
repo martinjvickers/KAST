@@ -99,6 +99,7 @@ struct ModifyStringOptions
         bool lowram;
 	bool phylyp;
 	bool tabout;
+	bool blastlike;
 	CharString outputFileName = NULL;
 };
 
