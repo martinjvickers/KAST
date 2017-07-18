@@ -30,7 +30,7 @@ make
 If you wish to do pairwise comparison the following command;
 
 ```
-./kast -r example_data/yeast.fasta -o test.txt
+./kast -p example_data/yeast.fasta -o test.txt
 ```
 
 ### Binary Release ###
