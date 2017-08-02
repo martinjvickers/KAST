@@ -103,7 +103,7 @@ int mainloop(ModifyStringOptions options)
 					dist = euler(options, ref_counts_vec[j], querycounts);
 				else if(options.type == "d2")
 					dist = d2(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "d2s")
+				else if(options.type == "d2s" || options.type == "d2s-opt")
 					dist = d2s(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
 				else if(options.type == "d2star")
 					dist = d2star(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
@@ -379,7 +379,15 @@ int main(int argc, char const ** argv)
 		readRecords(referenceids, referenceseqs, seqRefFileIn);
 
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+		{
 			kmer_count_map = makecomplete(options);
+			cout << "d2s kmers" << length(kmer_count_map) << endl;
+		}
+		else if(options.type == "d2s-opt")
+		{
+			kmer_count_map = makequick(options, referenceseqs);
+			cout << "d2s-opt kmers" << length(kmer_count_map) << endl;
+		}
 
 		//read reference and counts into memory
 		for(int i = 0; i < length(referenceids); i++)
@@ -391,7 +399,7 @@ int main(int argc, char const ** argv)
 				seq = referenceseqs[i];
 
 			ref_counts_vec.push_back(count(seq, options.klen));
-			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt")
 				ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
 		}
 

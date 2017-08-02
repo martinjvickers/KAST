@@ -29,5 +29,7 @@ map<string, unsigned int> count(IupacString sequence, int klen);
 double gc_ratio(IupacString sequence);
 map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map);
 map<string, bool> makecomplete(ModifyStringOptions options);
-
+map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs);
+//int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> quickkmers);
+int ipow(int base, int exp);
 #endif

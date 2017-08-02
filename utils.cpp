@@ -195,6 +195,33 @@ map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<
         return markovmap;
 }
 
+map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs)
+//int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> &quickmers)
+{
+	map<string, bool> quickmers;
+
+	for(int i = 0; i < length(referenceseqs); i++)
+	{
+		for(int j = 0; j <= length(referenceseqs[i]) - options.klen; j++)
+		{
+			// end quickly if done	
+			int max = ipow(4, options.klen);
+			if( quickmers.size() == max )
+				return quickmers;
+
+                	string kmer;
+                	assign(kmer, infix(referenceseqs[i], j, j + options.klen));
+                	size_t found = kmer.find("N");
+
+                	if(found > kmer.size())
+                	        quickmers[kmer] = true;
+		}
+	}
+
+//	return 0;
+	return quickmers;
+}
+
 map<string, bool> makecomplete(ModifyStringOptions options)
 {
         map<string, bool> finkmers;
@@ -234,4 +261,15 @@ map<string, bool> makecomplete(ModifyStringOptions options)
         return finkmers;
 }
 
-
+int ipow(int base, int exp)
+{
+	int result = 1;
+	while (exp)
+	{
+		if (exp & 1)
+			result *= base;
+		exp >>= 1;
+		base *= base;
+	}
+	return result;
+}
