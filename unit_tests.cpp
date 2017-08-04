@@ -514,5 +514,17 @@ int main(int argc, char const ** argv)
         }
 
 
+        if(length(namecut("HELLOWORLDWHAT IS HAPPENING", cutsize)) != cutsize)
+        {
+                cout << "[FAILED] - Text cutsize" << endl;
+                returncode = 1;
+        }
+        else
+        {
+		cout << namecut("HELLOWORLDWHAT IS HAPPENING", cutsize) << endl;
+                cout << "[PASSED] - Text cutsize" << endl;
+        }
+
+
 	return returncode;
 }

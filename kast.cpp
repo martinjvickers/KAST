@@ -329,7 +329,10 @@ int threaded_pw(ModifyStringOptions options)
                 {
                         StringSet<CharString> split;
                         strSplit(split, pairwiseid[i]);
-                        CharString qName = split[0];
+			int cutsize = 10;
+                        //CharString qName = namecut(split[0], cutsize);
+			CharString qName = split[0];
+			qName = namecut(qName, cutsize);
 
 			outfile << qName << "\t";
 			for(int j = 0; j < length(pairwiseid); j++)
