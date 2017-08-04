@@ -117,22 +117,6 @@ AminoAcid getRevCompl(AminoAcid const & nucleotide)
         return 'N';
 }
 
-/*
-Dna5String doRevCompl(Dna5String seq)
-{
-        Dna5String allSeq;
-        append(allSeq,seq);
-        allSeq += "NNN";
-        Dna5String revComplGenome;
-        resize(revComplGenome, length(seq));
-        for (unsigned i = 0; i < length(seq); ++i)
-        {
-                revComplGenome[length(seq) - 1 - i] = getRevCompl(seq[i]);
-        }
-        allSeq += revComplGenome;
-        return allSeq;
-}
-*/
 String<AminoAcid> doRevCompl(String<AminoAcid> seq)
 {
         String<AminoAcid> allSeq;
@@ -164,6 +148,35 @@ map<string, unsigned int> count(String<AminoAcid> sequence, int klen)
                         map[kmer] = count + 1;
                         total++;
                 }
+        }
+        return map;
+}
+
+map<string, unsigned int> count(String<AminoAcid> sequence, int klen, vector<CharString> mask)
+{
+        int total = 0;
+        map<string, unsigned int> map;
+        for(int i = 0; i <= length(sequence)-klen; i++)
+        {
+                string kmer;
+                assign(kmer,infix(sequence, i, i+klen));
+
+		//so kmer has the wider bit we care about
+		//now go through the mask and append kmers
+		for(auto m : mask)
+		{
+			CharString masked_kmer;
+			for(int loc = 0; loc < length(m); loc++)
+			{
+				if(m[loc] == '1')
+					append(masked_kmer,kmer[loc]);
+			}
+
+			
+			unsigned int count = map[toCString(masked_kmer)];
+			map[toCString(masked_kmer)] = count + 1;
+			//total++;
+		}
         }
         return map;
 }

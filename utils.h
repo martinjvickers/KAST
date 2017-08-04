@@ -27,6 +27,7 @@ AminoAcid getRevCompl(AminoAcid const & nucleotide);
 //Dna5String doRevCompl(Dna5String seq);
 String<AminoAcid> doRevCompl(String<AminoAcid> seq);
 map<string, unsigned int> count(String<AminoAcid> sequence, int klen);
+map<string, unsigned int> count(String<AminoAcid> sequence, int klen, vector<CharString> mask);
 double gc_ratio(String<AminoAcid> sequence);
 map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map);
 map<string, bool> makecomplete(ModifyStringOptions options);
