@@ -322,7 +322,7 @@ int threaded_pw(ModifyStringOptions options)
                 workers[w].join();
         }
 
-	if(options.phylyp = true)
+	if(options.phylyp == true)
 	{
 		outfile << length(pairwiseid) << endl;
 		for(int i = 0; i < length(pairwiseid); i++)
