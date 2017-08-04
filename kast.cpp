@@ -62,7 +62,7 @@ int mainloop(ModifyStringOptions options)
 {
 	while(1)
 	{
-		IupacString queryseq;
+		String<AminoAcid> queryseq;
 		CharString queryid;
 
 		m.lock();
@@ -79,7 +79,7 @@ int mainloop(ModifyStringOptions options)
 
 		map<double, int> results;
 
-		IupacString seq;
+		String<AminoAcid> seq;
 		if(options.noreverse == false)
 			seq = doRevCompl(queryseq);
 		else
@@ -124,7 +124,7 @@ int mainloop(ModifyStringOptions options)
 
 		} else {
 			CharString refid;
-			IupacString refseq;
+			String<AminoAcid> refseq;
 			SeqFileIn refFileIn;
 			int counter = 0;
 			if(!open(refFileIn, (toCString(options.referenceFileName))))
@@ -137,7 +137,7 @@ int mainloop(ModifyStringOptions options)
                         {
 				readRecord(refid, refseq, refFileIn);
 
-				IupacString rseq;
+				String<AminoAcid> rseq;
 	                        if(options.noreverse == false)
 					rseq = doRevCompl(refseq);
 				else
@@ -223,7 +223,7 @@ int mainloop(ModifyStringOptions options)
 	return 0;
 }
 
-int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, StringSet<IupacString> pairwiseseq)
+int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, StringSet<String<AminoAcid>> pairwiseseq)
 {
         //not sure about this loop condition
         while(current_row < length(pairwiseid))
@@ -237,7 +237,7 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
                 current_row++;
                 r.unlock();
 
-		IupacString seq;
+		String<AminoAcid> seq;
 		if(options.noreverse == false)
 			seq = doRevCompl(pairwiseseq[i]);
 
@@ -251,7 +251,7 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 		for(int j = 0; j < i; j++)
                 {
 			double dist;
-			IupacString refseq;
+			String<AminoAcid> refseq;
 			if(options.noreverse == false)
 				refseq = doRevCompl(pairwiseseq[j]);
 
@@ -289,7 +289,7 @@ int threaded_pw(ModifyStringOptions options)
 {
         //so I'd need a pairwise set of records
         SeqFileIn pairwiseFileIn;
-        StringSet<IupacString> pairwiseseq;
+        StringSet<String<AminoAcid>> pairwiseseq;
         StringSet<CharString> pairwiseid;
 
         if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
@@ -392,7 +392,7 @@ int main(int argc, char const ** argv)
 		//read reference and counts into memory
 		for(int i = 0; i < length(referenceids); i++)
 		{
-			IupacString seq;
+			String<AminoAcid> seq;
 			if(options.noreverse == false)
 				seq = doRevCompl(referenceseqs[i]);
 			else

@@ -22,6 +22,9 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
         setValidValues(parser, "distance-type", "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai");
         setDefaultValue(parser, "distance-type", "d2");
+	addOption(parser, seqan::ArgParseOption("s", "sequence-type", "Define the type of sequence data to work with.", seqan::ArgParseArgument::STRING, "STR"));
+	setValidValues(parser, "sequence-type", "nucl prot");
+	setDefaultValue(parser, "sequence-type", "nucl");
         addOption(parser, seqan::ArgParseOption("f", "output-format", ".", seqan::ArgParseArgument::STRING, "STR"));
         setValidValues(parser, "output-format", "tabular");
         setDefaultValue(parser, "output-format", "tabular");
@@ -33,8 +36,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run kast with a large reference, however it will take much longer."));
         setDefaultValue(parser, "num-cores", "1");
         setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-        setVersion(parser, "0.0.9");
-        setDate(parser, "July 2017");
+        setVersion(parser, "0.0.11");
+        setDate(parser, "August 2017");
         addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
@@ -50,6 +53,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.nohits, parser, "num-hits");
         getOptionValue(options.markovOrder, parser, "markov-order");
         getOptionValue(options.type, parser, "distance-type");
+	getOptionValue(options.sequenceType, parser, "sequence-type");
         options.noreverse = isSet(parser, "no-reverse");
         options.debug = isSet(parser, "debug");
         options.lowram = isSet(parser, "low-ram");
@@ -100,7 +104,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         return seqan::ArgumentParser::PARSE_OK;
 }
 
-Iupac getRevCompl(Iupac const & nucleotide)
+AminoAcid getRevCompl(AminoAcid const & nucleotide)
 {
         if (nucleotide == 'A')
                 return 'T';
@@ -128,7 +132,7 @@ Dna5String doRevCompl(Dna5String seq)
         return allSeq;
 }
 
-map<string, unsigned int> count(IupacString sequence, int klen)
+map<string, unsigned int> count(String<AminoAcid> sequence, int klen)
 {
         int total = 0;
         map<string, unsigned int> map;
@@ -147,7 +151,7 @@ map<string, unsigned int> count(IupacString sequence, int klen)
         return map;
 }
 
-double gc_ratio(IupacString sequence)
+double gc_ratio(String<AminoAcid> sequence)
 {
 	int gc = 0;
 	int agct = 0;
@@ -163,8 +167,7 @@ double gc_ratio(IupacString sequence)
         return (double)gc/(double)agct;
 }
 
-
-map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map)
+map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map)
 {
         map<string, double> markovmap;
         double sum_prob = 0.0;

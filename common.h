@@ -89,6 +89,7 @@ struct ModifyStringOptions
         int nohits;
         int markovOrder;
         CharString type;
+	CharString sequenceType;
 	CharString output_format;
         bool noreverse;
         CharString queryFileName = NULL;

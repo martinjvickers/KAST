@@ -23,6 +23,7 @@ include_directories (${SEQAN_INCLUDE_DIRS})
 
 # Add definitions set by find_package (SeqAn).
 add_definitions (${SEQAN_DEFINITIONS})
+add_definitions ( -DSEQAN_DISABLE_VERSION_CHECK )
 
 # Add CXX flags found by find_package (SeqAn).
 set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
