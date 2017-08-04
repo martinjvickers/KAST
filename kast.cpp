@@ -384,12 +384,12 @@ int main(int argc, char const ** argv)
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
 			kmer_count_map = makecomplete(options);
-			cout << "d2s kmers" << length(kmer_count_map) << endl;
+			cout << "d2s kmers " << length(kmer_count_map) << endl;
 		}
 		else if(options.type == "d2s-opt")
 		{
 			kmer_count_map = makequick(options, referenceseqs);
-			cout << "d2s-opt kmers" << length(kmer_count_map) << endl;
+			cout << "d2s-opt kmers " << length(kmer_count_map) << endl;
 		}
 
 		//read reference and counts into memory
