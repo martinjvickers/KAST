@@ -276,3 +276,29 @@ int ipow(int base, int exp)
 	}
 	return result;
 }
+
+CharString namecut(CharString seq, int val)
+{
+        if(length(seq) == val)
+                return seq;
+
+        if(length(seq) < val)
+        {
+                CharString charSeq;
+                resize(charSeq, val, Exact());
+                assign(charSeq, seq);
+                for(int i = 0; i < val-length(seq); i++)
+                        insert(charSeq,length(seq)+i," ");
+                return charSeq;
+        }
+
+        if(length(seq) > val)
+        {
+                CharString charSeq;
+                resize(charSeq, val, Exact());
+                assign(charSeq, seq, Limit());
+                return charSeq;
+        }
+
+}
+

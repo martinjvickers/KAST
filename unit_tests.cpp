@@ -481,5 +481,38 @@ int main(int argc, char const ** argv)
                 cout << "[PASSED] - Test Hao" << endl;
         }
 */
+
+        int cutsize = 10;
+        if(length(namecut("TGAC", cutsize)) != cutsize)
+        {
+                cout << "[FAILED] - Smaller cutsize" << endl;
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Smaller cutsize" << endl;
+        }
+
+        if(length(namecut("TGACTGACTGAC", cutsize)) != cutsize)
+        {
+                cout << "[FAILED] - Larger cutsize" << endl;
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Larger cutsize" << endl;
+        }
+
+        if(length(namecut("TGACTGACTG", cutsize)) != cutsize)
+        {
+                cout << "[FAILED] - Idendical cutsize" << endl;
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Idendical cutsize" << endl;
+        }
+
+
 	return returncode;
 }
