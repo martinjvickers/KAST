@@ -23,11 +23,11 @@
 #include <seqan/arg_parse.h>
 
 seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, int argc, char const ** argv);
-Iupac getRevCompl(Iupac const & nucleotide);
+AminoAcid getRevCompl(AminoAcid const & nucleotide);
 Dna5String doRevCompl(Dna5String seq);
-map<string, unsigned int> count(IupacString sequence, int klen);
-double gc_ratio(IupacString sequence);
-map<string, double> markov(int klen, IupacString sequence, int markovOrder, map<string, bool> kmer_count_map);
+map<string, unsigned int> count(String<AminoAcid> sequence, int klen);
+double gc_ratio(String<AminoAcid> sequence);
+map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map);
 map<string, bool> makecomplete(ModifyStringOptions options);
 map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs);
 //int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> quickkmers);
