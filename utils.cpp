@@ -117,6 +117,7 @@ AminoAcid getRevCompl(AminoAcid const & nucleotide)
         return 'N';
 }
 
+/*
 Dna5String doRevCompl(Dna5String seq)
 {
         Dna5String allSeq;
@@ -131,6 +132,22 @@ Dna5String doRevCompl(Dna5String seq)
         allSeq += revComplGenome;
         return allSeq;
 }
+*/
+String<AminoAcid> doRevCompl(String<AminoAcid> seq)
+{
+        String<AminoAcid> allSeq;
+        append(allSeq,seq);
+        allSeq += "NNN";
+        String<AminoAcid> revComplGenome;
+        resize(revComplGenome, length(seq));
+        for (unsigned i = 0; i < length(seq); ++i)
+        {
+                revComplGenome[length(seq) - 1 - i] = getRevCompl(seq[i]);
+        }
+        allSeq += revComplGenome;
+        return allSeq;
+}
+
 
 map<string, unsigned int> count(String<AminoAcid> sequence, int klen)
 {

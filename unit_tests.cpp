@@ -316,9 +316,9 @@ int testCount_1()
 /*Simple test of reverse compliment*/
 int testRevCompl_1()
 {
-        Dna5String input_dnaSeq = "TGAC";
-	Dna5String expected_output_dnaSeq = "TGACNNNGTCA";
-        Dna5String recieved_output_dnaSeq = doRevCompl(input_dnaSeq);
+        String<AminoAcid> input_dnaSeq = "TGAC";
+	String<AminoAcid> expected_output_dnaSeq = "TGACNNNGTCA";
+        String<AminoAcid> recieved_output_dnaSeq = doRevCompl(input_dnaSeq);
 	if(expected_output_dnaSeq == recieved_output_dnaSeq)
 	{
 		return 0;

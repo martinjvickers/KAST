@@ -52,7 +52,7 @@ mutex m, n, r;
 vector<map<string, unsigned int>> ref_counts_vec;
 vector<map<string, double>> ref_markov_vec;
 StringSet<CharString> referenceids;
-StringSet<Dna5String> referenceseqs;
+StringSet<String<AminoAcid>> referenceseqs;
 ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
