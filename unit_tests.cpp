@@ -523,12 +523,12 @@ int main(int argc, char const ** argv)
 
         if(length(namecut("TGACTGACTG", cutsize)) != cutsize)
         {
-                cout << "[FAILED] - Idendical cutsize" << endl;
+                cout << "[FAILED] - Identical cutsize" << endl;
                 returncode = 1;
         }
         else
         {
-                cout << "[PASSED] - Idendical cutsize" << endl;
+                cout << "[PASSED] - Identical cutsize" << endl;
         }
 
 
