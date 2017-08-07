@@ -539,7 +539,6 @@ int main(int argc, char const ** argv)
         }
         else
         {
-		cout << namecut("HELLOWORLDWHAT IS HAPPENING", cutsize) << endl;
                 cout << "[PASSED] - Text cutsize" << endl;
         }
 
