@@ -42,8 +42,8 @@ int count_mask_test()
 	cout << "Kmer Size\t" << klen << "\tMask\t00111" << endl;
 	cout << "Seq\t" << qryseq << endl;
 	map<string, unsigned int> querycounts = count(qryseq, klen, vec);
-	for(auto i : querycounts)
-		cout << i.first << "\t" << i.second << endl;
+	//for(auto i : querycounts)
+	//	cout << i.first << "\t" << i.second << endl;
 	return 0;
 }
 
