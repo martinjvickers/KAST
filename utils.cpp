@@ -30,6 +30,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "output-format", "tabular");
         addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("tab", "tab-delimited-out", "For reference/query based usage, output tab delimited output. <dist-score>	<contig-length>	<fasta-header>"));
+	addOption(parser, seqan::ArgParseOption("mask", "skip-mer", "", seqan::ArgParseArgument::STRING, "TEXT", true));
 	addOption(parser, seqan::ArgParseOption("blast", "blast-like", "Blast-like fully detailed report"));
 	addOption(parser, seqan::ArgParseOption("phylyp", "phylyp-out", "For pairwise based usage, output in PHYLYP format. For details see http://evolution.genetics.washington.edu/phylip/doc/distance.html"));
         addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
@@ -66,6 +67,13 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.outputFileName, parser, "output-file");
         getOptionValue(options.num_threads, parser, "num-cores");
         getOptionValue(options.output_format, parser, "output-format");
+
+	for(int i = 0; i < getOptionValueCount(parser, "skip-mers"); i++)
+	{
+		CharString tmpVal;
+		getOptionValue(tmpVal, parser, "skip-mers", i);
+		options.mask.push_back(tmpVal);
+	}
 
 	if((options.markovOrder < 1) || (options.markovOrder > 3))
         {
@@ -171,7 +179,6 @@ map<string, unsigned int> count(String<AminoAcid> sequence, int klen, vector<Cha
 				if(m[loc] == '1')
 					append(masked_kmer,kmer[loc]);
 			}
-
 			
 			unsigned int count = map[toCString(masked_kmer)];
 			map[toCString(masked_kmer)] = count + 1;
@@ -229,7 +236,6 @@ map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder
 }
 
 map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs)
-//int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> &quickmers)
 {
 	map<string, bool> quickmers;
 
@@ -251,7 +257,6 @@ map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> r
 		}
 	}
 
-//	return 0;
 	return quickmers;
 }
 

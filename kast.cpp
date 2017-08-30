@@ -370,6 +370,11 @@ int main(int argc, char const ** argv)
 		return 1; //if you can't open the output file then why bother trying to run the rest
 	}
 
+	//I need to check that if we are using skip-mers, then we need to check that these are sensible
+		//skip-mer mask must all be 0/1's
+		//skip-mer mask should be the same number of characters as the kmer size
+	
+
 	if(options.pairwiseFileName != NULL)
         {
 		//do pairwise

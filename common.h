@@ -102,6 +102,7 @@ struct ModifyStringOptions
 	bool tabout;
 	bool blastlike;
 	CharString outputFileName = NULL;
+	vector<CharString> mask;
 };
 
 #endif
