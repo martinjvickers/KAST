@@ -68,10 +68,10 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         getOptionValue(options.num_threads, parser, "num-cores");
         getOptionValue(options.output_format, parser, "output-format");
 
-	for(int i = 0; i < getOptionValueCount(parser, "skip-mers"); i++)
+	for(int i = 0; i < getOptionValueCount(parser, "skip-mer"); i++)
 	{
 		CharString tmpVal;
-		getOptionValue(tmpVal, parser, "skip-mers", i);
+		getOptionValue(tmpVal, parser, "skip-mer", i);
 		options.mask.push_back(tmpVal);
 	}
 
