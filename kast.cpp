@@ -85,7 +85,12 @@ int mainloop(ModifyStringOptions options)
 		else
 			seq = queryseq;
 
-		map<string, unsigned int> querycounts = count(seq, options.klen);
+		map<string, unsigned int> querycounts;
+		if(options.mask.size() > 0)
+			querycounts = count(seq, options.klen, options.mask);
+		else
+			querycounts = count(seq, options.klen);
+
 		map<string, double> querymarkov;
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
@@ -143,7 +148,13 @@ int mainloop(ModifyStringOptions options)
 				else
 					rseq = refseq;
 
-				map<string, unsigned int> refcounts = count(rseq, options.klen);
+				map<string, unsigned int> refcounts;
+
+				if(options.mask.size() > 0)
+					count(rseq, options.klen, options.mask);
+				else
+					count(rseq, options.klen);
+
 				map<string, double> refmarkov;
 				if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 				{
@@ -241,7 +252,13 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 		if(options.noreverse == false)
 			seq = doRevCompl(pairwiseseq[i]);
 
-		map<string, unsigned int> querycounts = count(seq, options.klen);
+		//map<string, unsigned int> querycounts = count(seq, options.klen);
+		map<string, unsigned int> querycounts;
+		if(options.mask.size() > 0)
+			querycounts = count(seq, options.klen, options.mask);
+		else
+			querycounts = count(seq, options.klen);
+
 		map<string, double> querymarkov;
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
@@ -255,7 +272,12 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 			if(options.noreverse == false)
 				refseq = doRevCompl(pairwiseseq[j]);
 
-			map<string, unsigned int> refcounts = count(refseq, options.klen);
+			map<string, unsigned int> refcounts;
+			if(options.mask.size() > 0)
+				refcounts = count(refseq, options.klen, options.mask);
+			else
+				refcounts = count(refseq, options.klen);
+
 			map<string, double> refmarkov;
 			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 			{
@@ -406,7 +428,12 @@ int main(int argc, char const ** argv)
 			else
 				seq = referenceseqs[i];
 
-			ref_counts_vec.push_back(count(seq, options.klen));
+			// ensure counts are done if mask is done
+			if(options.mask.size() > 0)
+				ref_counts_vec.push_back(count(seq, options.klen, options.mask));
+			else
+				ref_counts_vec.push_back(count(seq, options.klen));
+
 			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt")
 				ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
 		}
