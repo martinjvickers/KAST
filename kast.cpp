@@ -395,7 +395,22 @@ int main(int argc, char const ** argv)
 	//I need to check that if we are using skip-mers, then we need to check that these are sensible
 		//skip-mer mask must all be 0/1's
 		//skip-mer mask should be the same number of characters as the kmer size
-	
+	for(auto m : options.mask)
+	{
+		if(length(m) != options.klen)
+		{
+			cerr << "ERROR: Mask sizes should be the same size as the K-Mer length."<< endl;
+			return 1;
+		}
+		for(int i = 0; i < length(m); i++)
+		{
+			if(m[i] != '0' && m[i] != '1')
+			{
+				cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
+				return 1;
+			}
+		}
+	}
 
 	if(options.pairwiseFileName != NULL)
         {
