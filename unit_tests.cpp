@@ -1,11 +1,11 @@
 /*
 KAST - 
-Version 0.0.11
+Version 0.0.12
 Written by Dr. Martin Vickers
 
 MIT License
 
-Copyright (c) 2016 Martin James Vickers
+Copyright (c) 2017 Martin James Vickers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
