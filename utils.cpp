@@ -112,6 +112,56 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         return seqan::ArgumentParser::PARSE_OK;
 }
 
+        //I need to check that if we are using skip-mers, then we need to check that these are sensible
+                //skip-mer mask must all be 0/1's
+                //skip-mer mask should be the same number of characters as the kmer size
+                //all skipmers shoud have the same number of 1's across masks
+int parseMask(ModifyStringOptions options, int &effectiveKlen)
+{
+	bool first = true;
+
+        for(auto m : options.mask)
+        {
+		// all should be the same number of characters as the klen
+                if(length(m) != options.klen)
+                {
+                        cerr << "ERROR: Mask sizes should be the same size as the K-Mer length."<< endl;
+                        return 1;
+                }
+
+                int counter = 0;
+
+		// checks to see that the mask is only made of 0/1's
+                for(int i = 0; i < length(m); i++)
+                {
+                        if(m[i] != '0' && m[i] != '1')
+                        {
+                                cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
+                                return 1;
+                        }
+
+                        if(m[i] == '1')
+                                counter++;
+                }
+
+		if(first == true)
+		{
+			effectiveKlen = counter;
+			first = false;
+		}	
+		else 
+		{
+			if(counter != effectiveKlen)
+			{
+				cerr << "ERROR: The number of 0's and 1's in each mask should be the same e.g. 10001, 11000, 00011" << endl;
+				return 1;
+			}
+		}
+        }
+
+	return 0;
+}
+
 AminoAcid getRevCompl(AminoAcid const & nucleotide)
 {
         if (nucleotide == 'A')
@@ -241,15 +291,18 @@ map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> r
 
 	for(int i = 0; i < length(referenceseqs); i++)
 	{
-		for(int j = 0; j <= length(referenceseqs[i]) - options.klen; j++)
+//		for(int j = 0; j <= length(referenceseqs[i]) - options.klen; j++)
+		for(int j = 0; j <= length(referenceseqs[i]) - options.effectiveLength; j++)
 		{
 			// end quickly if done	
-			int max = ipow(4, options.klen);
+			//int max = ipow(4, options.klen);
+			int max = ipow(4, options.effectiveLength);
 			if( quickmers.size() == max )
 				return quickmers;
 
                 	string kmer;
-                	assign(kmer, infix(referenceseqs[i], j, j + options.klen));
+                	//assign(kmer, infix(referenceseqs[i], j, j + options.klen));
+			assign(kmer, infix(referenceseqs[i], j, j + options.effectiveLength));
                 	size_t found = kmer.find("N");
 
                 	if(found > kmer.size())
@@ -273,7 +326,8 @@ map<string, bool> makecomplete(ModifyStringOptions options)
         String<Dna5String> kmers;
         kmers = bases;
 
-        for(int j = 0; j < options.klen-1; j++)
+        //for(int j = 0; j < options.klen-1; j++)
+	for(int j = 0; j < options.effectiveLength-1; j++)
         {
                 String<Dna5String> temp;
 

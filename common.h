@@ -103,6 +103,7 @@ struct ModifyStringOptions
 	bool blastlike;
 	CharString outputFileName = NULL;
 	vector<CharString> mask;
+	int effectiveLength;
 };
 
 #endif

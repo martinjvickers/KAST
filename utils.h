@@ -35,4 +35,5 @@ map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> r
 //int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> quickkmers);
 int ipow(int base, int exp);
 CharString namecut(CharString seq, int val);
+int parseMask(ModifyStringOptions options, int &effectiveKlen);
 #endif

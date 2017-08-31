@@ -57,6 +57,7 @@ int testd2star(){
         ModifyStringOptions options;
         options.klen = klen;
         options.markovOrder = markovOrder;
+	options.effectiveLength = options.klen;
         map<string, unsigned int> refcounts = count(refseq, klen);
         map<string, unsigned int> querycounts = count(qryseq, klen);
         map<string, bool> ourkmers = makecomplete(options);
@@ -94,7 +95,7 @@ int testhao(){
         ModifyStringOptions options;
         options.klen = klen;
         options.markovOrder = markovOrder;
-
+	options.effectiveLength = options.klen;
 	map<string, unsigned int> refcounts = count(refseq, klen);
 	map<string, unsigned int> querycounts = count(qryseq, klen);
 	//map<string, unsigned int> refcounts = count(revr, klen);
@@ -130,6 +131,7 @@ int testd2s(){
         ModifyStringOptions options;
 	options.klen = klen;
 	options.markovOrder = markovOrder;
+	options.effectiveLength = options.klen;
         map<string, unsigned int> refcounts = count(refseq, klen);
         map<string, unsigned int> querycounts = count(qryseq, klen);
 	map<string, bool> ourkmers = makecomplete(options);
@@ -167,7 +169,7 @@ int testd2s_d2tools(){
         ModifyStringOptions options;
         options.klen = klen;
         options.markovOrder = markovOrder;
-
+	options.effectiveLength = options.klen;
         map<string, unsigned int> refcounts = count(refseq, klen);
         map<string, unsigned int> querycounts = count(qryseq, klen);
         //map<string, unsigned int> refcounts = count(revr, klen);

@@ -94,7 +94,8 @@ int mainloop(ModifyStringOptions options)
 		map<string, double> querymarkov;
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
-			querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map); // only do this if one of the markov distance methods
+//			querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map); // only do this if oe of the markov distance methods
+			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
 		}
 
 		if(options.lowram != true)
@@ -158,7 +159,8 @@ int mainloop(ModifyStringOptions options)
 				map<string, double> refmarkov;
 				if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 				{
-					refmarkov = markov(options.klen, rseq, options.markovOrder, kmer_count_map); // only do this if one of the markov distance methods
+//					refmarkov = markov(options.klen, rseq, options.markovOrder, kmer_count_map); // only do this if one of the markov distance methods
+					refmarkov = markov(options.effectiveLength, rseq, options.markovOrder, kmer_count_map);
 				}
 
 				double dist;
@@ -262,7 +264,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 		map<string, double> querymarkov;
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
-			querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map);
+			//querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map);
+			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
 		}
 
 		for(int j = 0; j < i; j++)
@@ -281,7 +284,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 			map<string, double> refmarkov;
 			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 			{
-				refmarkov = markov(options.klen, refseq, options.markovOrder, kmer_count_map);
+				//refmarkov = markov(options.klen, refseq, options.markovOrder, kmer_count_map);
+				refmarkov = markov(options.effectiveLength, refseq, options.markovOrder, kmer_count_map);
 			}
 			
 			if(options.type == "kmer")
@@ -392,25 +396,10 @@ int main(int argc, char const ** argv)
 		return 1; //if you can't open the output file then why bother trying to run the rest
 	}
 
-	//I need to check that if we are using skip-mers, then we need to check that these are sensible
-		//skip-mer mask must all be 0/1's
-		//skip-mer mask should be the same number of characters as the kmer size
-	for(auto m : options.mask)
-	{
-		if(length(m) != options.klen)
-		{
-			cerr << "ERROR: Mask sizes should be the same size as the K-Mer length."<< endl;
-			return 1;
-		}
-		for(int i = 0; i < length(m); i++)
-		{
-			if(m[i] != '0' && m[i] != '1')
-			{
-				cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
-				return 1;
-			}
-		}
-	}
+	options.effectiveLength = options.klen;
+	if(parseMask(options, options.effectiveLength) == 1)
+		return 1;
+	cout << "Using a mask. Effective kmer size " << options.effectiveLength << endl;
 
 	if(options.pairwiseFileName != NULL)
         {
@@ -426,12 +415,10 @@ int main(int argc, char const ** argv)
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
 			kmer_count_map = makecomplete(options);
-			cout << "d2s kmers " << length(kmer_count_map) << endl;
 		}
 		else if(options.type == "d2s-opt")
 		{
 			kmer_count_map = makequick(options, referenceseqs);
-			cout << "d2s-opt kmers " << length(kmer_count_map) << endl;
 		}
 
 		//read reference and counts into memory
@@ -450,7 +437,10 @@ int main(int argc, char const ** argv)
 				ref_counts_vec.push_back(count(seq, options.klen));
 
 			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt")
-				ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
+			{
+				//ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
+				ref_markov_vec.push_back(markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map));
+			}
 		}
 
 		if(!open(queryFileIn, (toCString(options.queryFileName))))
