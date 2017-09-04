@@ -215,14 +215,13 @@ int mainloop(ModifyStringOptions options)
 		else if(options.output_format == "blastlike")
 		{
 			n.lock();
-			outfile << ">" << queryid << endl;
-			outfile << "Length=" << length(queryseq) << endl;
-			outfile << endl;
-
+			outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+			
+			int count = 1;
 			for(pair<double, int> p: results)
 			{
-				outfile << "Query\tLength=" << length(queryseq) << "\tGC-Ratio=" << gc_ratio(queryseq) << endl;
-				outfile << "Ref\tLength=" << length(referenceseqs[p.second]) << "\tGC-Ratio=" << gc_ratio(referenceseqs[p.second]) << endl;
+				outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+				count++;
 			}
 			n.unlock();
 
