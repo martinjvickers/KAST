@@ -30,7 +30,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "output-format", "tabular");
         addOption(parser, seqan::ArgParseOption("nr", "no-reverse", "Do not use reverse compliment."));
 	addOption(parser, seqan::ArgParseOption("tab", "tab-delimited-out", "For reference/query based usage, output tab delimited output. <dist-score>	<contig-length>	<fasta-header>"));
-	addOption(parser, seqan::ArgParseOption("mask", "skip-mer", "", seqan::ArgParseArgument::STRING, "TEXT", true));
+	addOption(parser, seqan::ArgParseOption("mask", "skip-mer", "Specify binary masks where a zero indicates skipping that base and one keeps it. e.g. 01110.", seqan::ArgParseArgument::STRING, "TEXT", true));
 	addOption(parser, seqan::ArgParseOption("blast", "blast-like", "Blast-like fully detailed report"));
 	addOption(parser, seqan::ArgParseOption("phylyp", "phylyp-out", "For pairwise based usage, output in PHYLYP format. For details see http://evolution.genetics.washington.edu/phylip/doc/distance.html"));
         addOption(parser, seqan::ArgParseOption("c", "num-cores", "Number of Cores.", seqan::ArgParseArgument::INTEGER, "INT"));
