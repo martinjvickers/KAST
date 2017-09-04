@@ -399,7 +399,6 @@ int main(int argc, char const ** argv)
 	options.effectiveLength = options.klen;
 	if(parseMask(options, options.effectiveLength) == 1)
 		return 1;
-	cout << "Using a mask. Effective kmer size " << options.effectiveLength << endl;
 
 	if(options.pairwiseFileName != NULL)
         {
