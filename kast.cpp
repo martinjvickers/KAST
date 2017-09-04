@@ -190,7 +190,9 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
-		if(options.tabout == true)
+//		if(options.tabout == true)
+//default tabular blastlike
+		if(options.output_format == "tabular")
 		{
 			n.lock();
 
@@ -208,8 +210,10 @@ int mainloop(ModifyStringOptions options)
 				
 			}
 			n.unlock();
-		} else if(options.blastlike == true) {
-
+		} 
+		//else if(options.blastlike == true)
+		else if(options.output_format == "blastlike")
+		{
 			n.lock();
 			outfile << ">" << queryid << endl;
 			outfile << "Length=" << length(queryseq) << endl;
@@ -222,7 +226,9 @@ int mainloop(ModifyStringOptions options)
 			}
 			n.unlock();
 
-		} else {
+		} 
+		else
+		{
 			n.lock();
                 	outfile << "############################ " << queryid << endl;
                 	for(pair<double, int> p: results)
