@@ -37,8 +37,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         addOption(parser, seqan::ArgParseOption("l", "low-ram", "Does not store the reference in RAM. As long as you're not using a very large kmer size, this option will allow you to run kast with a large reference, however it will take much longer."));
         setDefaultValue(parser, "num-cores", "1");
         setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-        setVersion(parser, "0.0.12");
-        setDate(parser, "August 2017");
+        setVersion(parser, "0.0.13");
+        setDate(parser, "September 2017");
         addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
         addDescription(parser, "Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.");
