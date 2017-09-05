@@ -15,7 +15,7 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setValidValues(parser, "pairwise-file", toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
         addOption(parser, seqan::ArgParseOption("m", "markov-order", "Markov Order", seqan::ArgParseArgument::INTEGER, "INT"));
         addOption(parser, seqan::ArgParseOption("o", "output-file", "Output file.", seqan::ArgParseArgument::OUTPUT_FILE, "OUT"));
-        setRequired(parser, "output-file");
+        //setRequired(parser, "output-file");
         setDefaultValue(parser, "markov-order", "1");
         addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
         setDefaultValue(parser, "num-hits", "10");

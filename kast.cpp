@@ -190,8 +190,6 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
-//		if(options.tabout == true)
-//default tabular blastlike
 		if(options.output_format == "tabular")
 		{
 			n.lock();
@@ -199,28 +197,49 @@ int mainloop(ModifyStringOptions options)
 			StringSet<CharString> split;
 			strSplit(split, queryid);
 			CharString qName = split[0];
-			outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			if(options.outputFileName == NULL)
+			{
+				cout << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			} else {
+				outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			}
 
 			for(pair<double, int> p: results)
 			{
 				StringSet<CharString> split2;
 				strSplit(split2, referenceids[p.second]);
-				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
-//				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
+
+				if(options.outputFileName == NULL)
+				{
+					cout << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+				} else {
+					outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+				}
 				
 			}
 			n.unlock();
 		} 
-		//else if(options.blastlike == true)
 		else if(options.output_format == "blastlike")
 		{
 			n.lock();
-			outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+
+			if(options.outputFileName == NULL)
+			{
+				cout << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+			} else {
+				outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+			}
 			
 			int count = 1;
 			for(pair<double, int> p: results)
 			{
-				outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+
+				if(options.outputFileName == NULL)
+				{
+					cout << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+				} else {
+					outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+				}
 				count++;
 			}
 			n.unlock();
@@ -229,10 +248,22 @@ int mainloop(ModifyStringOptions options)
 		else
 		{
 			n.lock();
-                	outfile << "############################ " << queryid << endl;
+
+			if(options.outputFileName == NULL)
+			{
+				cout << "############################ " << queryid << endl;
+			} else {
+	                	outfile << "############################ " << queryid << endl;
+			}
+
                 	for(pair<double, int> p: results)
                 	{
-                		outfile << referenceids[p.second] << " " << p.first << endl;
+				if(options.outputFileName == NULL)
+				{
+					cout << referenceids[p.second] << " " << p.first << endl;
+				} else {
+                			outfile << referenceids[p.second] << " " << p.first << endl;
+				}
                 	}
 			n.unlock();
 		}
