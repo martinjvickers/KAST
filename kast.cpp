@@ -384,9 +384,16 @@ int threaded_pw(ModifyStringOptions options)
                 workers[w].join();
         }
 
+	//print out in phylyp mode
 	if(options.phylyp == true)
 	{
-		outfile << length(pairwiseid) << endl;
+		if(options.outputFileName == NULL)
+                {
+			cout << length(pairwiseid) << endl;
+		} else {
+			outfile << length(pairwiseid) << endl;
+		}
+
 		for(int i = 0; i < length(pairwiseid); i++)
                 {
                         StringSet<CharString> split;
@@ -396,24 +403,19 @@ int threaded_pw(ModifyStringOptions options)
 			CharString qName = split[0];
 			qName = namecut(qName, cutsize);
 
-			outfile << qName << "\t";
-			for(int j = 0; j < length(pairwiseid); j++)
+			if(options.outputFileName == NULL)
 			{
-				outfile << array_threaded[i][j] << "\t";
+				cout << qName << "\t";
+				for(int j = 0; j < length(pairwiseid); j++)
+					cout << array_threaded[i][j] << "\t";
+				cout << endl;
+			} else {
+				outfile << qName << "\t";
+                                for(int j = 0; j < length(pairwiseid); j++)
+                                        outfile << array_threaded[i][j] << "\t";
+                                outfile << endl;
 			}
-			outfile << endl;
 		}
-	} else {
-	        //write out pairwise information to file
-	        for(int i = 0; i < length(pairwiseid); i++)
-	        {
-			outfile << pairwiseid[i] << " ";
-	                for(int j = 0; j < length(pairwiseid); j++)
-	                {
-	                        outfile << array_threaded[i][j] << " ";
-	                }
-	                outfile << endl;
-	        }
 	}
 
         return 0;
