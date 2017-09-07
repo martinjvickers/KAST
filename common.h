@@ -98,7 +98,8 @@ struct ModifyStringOptions
         int num_threads;
         bool debug;
         bool lowram;
-	bool phylyp;
+	//bool phylyp;
+	bool phylyp = true;
 	bool tabout;
 	bool blastlike;
 	CharString outputFileName = NULL;

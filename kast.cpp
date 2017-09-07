@@ -190,44 +190,80 @@ int mainloop(ModifyStringOptions options)
 			}
 		}
 
-		if(options.tabout == true)
+		if(options.output_format == "tabular")
 		{
 			n.lock();
 
 			StringSet<CharString> split;
 			strSplit(split, queryid);
 			CharString qName = split[0];
-			outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			if(options.outputFileName == NULL)
+			{
+				cout << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			} else {
+				outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+			}
 
 			for(pair<double, int> p: results)
 			{
 				StringSet<CharString> split2;
 				strSplit(split2, referenceids[p.second]);
-				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
-//				outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << referenceids[p.second] << endl;
+
+				if(options.outputFileName == NULL)
+				{
+					cout << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+				} else {
+					outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+				}
 				
 			}
 			n.unlock();
-		} else if(options.blastlike == true) {
-
+		} 
+		else if(options.output_format == "blastlike")
+		{
 			n.lock();
-			outfile << ">" << queryid << endl;
-			outfile << "Length=" << length(queryseq) << endl;
-			outfile << endl;
 
+			if(options.outputFileName == NULL)
+			{
+				cout << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+			} else {
+				outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+			}
+			
+			int count = 1;
 			for(pair<double, int> p: results)
 			{
-				outfile << "Query\tLength=" << length(queryseq) << "\tGC-Ratio=" << gc_ratio(queryseq) << endl;
-				outfile << "Ref\tLength=" << length(referenceseqs[p.second]) << "\tGC-Ratio=" << gc_ratio(referenceseqs[p.second]) << endl;
+
+				if(options.outputFileName == NULL)
+				{
+					cout << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+				} else {
+					outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+				}
+				count++;
 			}
 			n.unlock();
 
-		} else {
+		} 
+		else
+		{
 			n.lock();
-                	outfile << "############################ " << queryid << endl;
+
+			if(options.outputFileName == NULL)
+			{
+				cout << "############################ " << queryid << endl;
+			} else {
+	                	outfile << "############################ " << queryid << endl;
+			}
+
                 	for(pair<double, int> p: results)
                 	{
-                		outfile << referenceids[p.second] << " " << p.first << endl;
+				if(options.outputFileName == NULL)
+				{
+					cout << referenceids[p.second] << " " << p.first << endl;
+				} else {
+                			outfile << referenceids[p.second] << " " << p.first << endl;
+				}
                 	}
 			n.unlock();
 		}
@@ -348,9 +384,16 @@ int threaded_pw(ModifyStringOptions options)
                 workers[w].join();
         }
 
+	//print out in phylyp mode
 	if(options.phylyp == true)
 	{
-		outfile << length(pairwiseid) << endl;
+		if(options.outputFileName == NULL)
+                {
+			cout << length(pairwiseid) << endl;
+		} else {
+			outfile << length(pairwiseid) << endl;
+		}
+
 		for(int i = 0; i < length(pairwiseid); i++)
                 {
                         StringSet<CharString> split;
@@ -360,24 +403,19 @@ int threaded_pw(ModifyStringOptions options)
 			CharString qName = split[0];
 			qName = namecut(qName, cutsize);
 
-			outfile << qName << "\t";
-			for(int j = 0; j < length(pairwiseid); j++)
+			if(options.outputFileName == NULL)
 			{
-				outfile << array_threaded[i][j] << "\t";
+				cout << qName << "\t";
+				for(int j = 0; j < length(pairwiseid); j++)
+					cout << array_threaded[i][j] << "\t";
+				cout << endl;
+			} else {
+				outfile << qName << "\t";
+                                for(int j = 0; j < length(pairwiseid); j++)
+                                        outfile << array_threaded[i][j] << "\t";
+                                outfile << endl;
 			}
-			outfile << endl;
 		}
-	} else {
-	        //write out pairwise information to file
-	        for(int i = 0; i < length(pairwiseid); i++)
-	        {
-			outfile << pairwiseid[i] << " ";
-	                for(int j = 0; j < length(pairwiseid); j++)
-	                {
-	                        outfile << array_threaded[i][j] << " ";
-	                }
-	                outfile << endl;
-	        }
 	}
 
         return 0;
@@ -399,7 +437,6 @@ int main(int argc, char const ** argv)
 	options.effectiveLength = options.klen;
 	if(parseMask(options, options.effectiveLength) == 1)
 		return 1;
-	cout << "Using a mask. Effective kmer size " << options.effectiveLength << endl;
 
 	if(options.pairwiseFileName != NULL)
         {
