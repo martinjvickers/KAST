@@ -47,6 +47,19 @@ int count_mask_test()
 	return 0;
 }
 
+int zero_sized_seq_count()
+{
+        int klen = 3;
+        String<AminoAcid> qryseq = doRevCompl("");
+        ModifyStringOptions options;
+        options.klen = klen;
+        map<string, unsigned int> querycounts = count(qryseq, klen);
+	if(querycounts.size() == 0)
+	        return 0;
+	else
+		return 1;
+}
+
 int testd2star(){
 
         int klen = 3;
@@ -553,7 +566,15 @@ int main(int argc, char const ** argv)
 	{
 		cout << "[PASSED] - Masked Count test" << endl;
 	}
-
+	if(zero_sized_seq_count() != 0)
+	{
+		cout << "[FAILED] - Zero Sized Seq Count Test" << endl;
+		returncode = 1;
+	}
+	else
+	{
+		cout << "[PASSED] - Zero Sized Seq Count Test" << endl;
+	}
 
 	return returncode;
 }
