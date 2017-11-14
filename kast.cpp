@@ -446,22 +446,27 @@ int main(int argc, char const ** argv)
 	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
         {
 		//read in reference
-		SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
+//		SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
 		try 
 		{
-			cout << "Attempting to read the records " << endl;
+			SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
+			//cout << "Attempting to read the records " << endl;
 			readRecords(referenceids, referenceseqs, seqRefFileIn);
+			//cout << "There are " << length(referenceids) << " " << length(referenceseqs) << " in the reference" << endl;
 		} 
-		catch (ParseError const & e) 
-		{
-			cout << "Could not read in records " << options.referenceFileName << endl;
+		catch (IOError const & e)
+        	{
+			cout << "Could not read in records " << endl;
 			cout << e.what() << endl;
 			return 1;
 		}
-		catch (IOError const & e)
-        	{
-			cout << "Could not read in records " << options.referenceFileName << endl;
-			cout << e.what() << endl;
+		catch (ParseError const & e)
+                {
+			cout << "There is a formating error in " << options.referenceFileName << endl << e.what() << endl;
+                        return 1;
+                }
+		catch (...)
+		{
 			return 1;
 		}
 
