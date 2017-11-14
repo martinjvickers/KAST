@@ -166,6 +166,39 @@ int testd2s(){
         return 0;
 }
 
+int testd2s_m2(){
+
+        int klen = 3;
+        int markovOrder = 2;
+        String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
+        String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
+
+        ModifyStringOptions options;
+        options.klen = klen;
+        options.markovOrder = markovOrder;
+        options.effectiveLength = options.klen;
+        map<string, unsigned int> refcounts = count(refseq, klen);
+        map<string, unsigned int> querycounts = count(qryseq, klen);
+        map<string, bool> ourkmers = makecomplete(options);
+        map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
+        map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
+
+        double dist = d2s(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
+        double expected = 0.171434105;
+
+        double epsilon = 0.000001;
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+
+        return 0;
+}
+
+
 int testd2s_d2tools(){
 
         int klen = 3;
@@ -477,6 +510,16 @@ int main(int argc, char const ** argv)
         {
                 cout << "[PASSED] - Test d2s" << endl;
         }
+
+	if(testd2s_m2() != 0)
+	{
+                returncode = 1;
+        }
+        else
+        {
+                cout << "[PASSED] - Test d2s m 2" << endl;
+        }
+
 /*
 	if(testd2s_d2tools() != 0)
         {

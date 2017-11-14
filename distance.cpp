@@ -16,6 +16,16 @@ double d2s(ModifyStringOptions options, map<string, bool> ourkmers, map<string, 
                 rN = rN + refcounts[p.first];
         }
 
+/*
+	cout << qN << " " << rN << endl;
+
+	for(auto q : querymarkov)
+		cout << q.first << "\t" << q.second << endl;
+
+	for(auto r : refmarkov)
+		cout << r.first << "\t" << r.second << endl;
+*/
+
         for(pair<string, bool> p: ourkmers)
         {
                 double qC = querycounts[p.first];
@@ -25,6 +35,10 @@ double d2s(ModifyStringOptions options, map<string, bool> ourkmers, map<string, 
 
                 double qCt = qC - (qN*qP);
                 double rCt = rC - (rN*rP);
+
+//		cout << p.first << " Q " << qCt << " from " << qC << " : " << qN << " " << qP << " " << (qN*qP) << endl;
+//		cout << p.first << " R " << rCt << " from " << rC << " : " << rN << " " << rP << " " << (rN*rP) << endl;
+
                 double dist = sqrt(qCt*qCt + rCt*rCt);
                 D2S = D2S + (qCt*rCt / dist);
                 sum1 = sum1 + (qCt*qCt / dist);

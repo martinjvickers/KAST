@@ -447,7 +447,23 @@ int main(int argc, char const ** argv)
         {
 		//read in reference
 		SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
-		readRecords(referenceids, referenceseqs, seqRefFileIn);
+		try 
+		{
+			cout << "Attempting to read the records " << endl;
+			readRecords(referenceids, referenceseqs, seqRefFileIn);
+		} 
+		catch (ParseError const & e) 
+		{
+			cout << "Could not read in records " << options.referenceFileName << endl;
+			cout << e.what() << endl;
+			return 1;
+		}
+		catch (IOError const & e)
+        	{
+			cout << "Could not read in records " << options.referenceFileName << endl;
+			cout << e.what() << endl;
+			return 1;
+		}
 
 		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
 		{
@@ -457,6 +473,9 @@ int main(int argc, char const ** argv)
 		{
 			kmer_count_map = makequick(options, referenceseqs);
 		}
+
+		if(options.debug == true)
+                        cout << " Getting ready to read reference" << endl;
 
 		//read reference and counts into memory
 		for(int i = 0; i < length(referenceids); i++)

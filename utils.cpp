@@ -256,11 +256,17 @@ double gc_ratio(String<AminoAcid> sequence)
 
 map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map)
 {
+	//cout << "Calculating markov for " << endl;
+	//cout << sequence << endl;
+
         map<string, double> markovmap;
         double sum_prob = 0.0;
 
         map<string, unsigned int> markovcounts = count(sequence, markovOrder);
         double tot = 0;
+
+	//for(auto m : markovcounts)
+	//	cout << m.first << " " << m.second << endl;
 
         for(pair<string, unsigned int> p: markovcounts)
         {
@@ -272,14 +278,16 @@ map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder
                 double prob = 1.0;
                 Dna5String kmer = p.first;
 
-                for(int l = 0; l < (length(kmer)); l++)
+                for(int l = 0; l <= (length(kmer))-markovOrder; l++)
                 {
                         int j = l + markovOrder;
                         string inf;
                         assign(inf,infix(kmer, l, j));
-                        prob = prob * (markovcounts[inf] / tot);
+                        prob = prob * ((double)markovcounts[inf] / (double)tot);
+			//cout << "mN " <<  inf << " " << p.first << " " << prob << " " << ((double)markovcounts[inf] / (double)tot) << " " << tot << endl;
                 }
                 markovmap[p.first] = prob;
+		//cout << p.first << " " << prob << endl;
         }
 
         return markovmap;
