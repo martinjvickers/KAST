@@ -93,6 +93,7 @@ double d2star(ModifyStringOptions options, map<string, bool> ourkmers, map<strin
         }
         double temp = D_2Star / (sqrt(tempQ) * sqrt(tempR));
         return 0.5 * (1 - temp);
+
 }
 
 double hao(ModifyStringOptions options, map<string, bool> ourkmers, map<string, unsigned int> refcounts, map<string, double> refmarkov, map<string, unsigned int> querycounts, map<string, double> querymarkov)
@@ -168,9 +169,9 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts, m
 
 double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
 {
-        double sumqCrC = 0.0;
-        double sumqC2 = 0.0;
-        double sumrC2 = 0.0;
+        long long unsigned int sumqCrC = 0;
+        long long unsigned int sumqC2 = 0;
+        long long unsigned int sumrC2 = 0;
 
         //create a unified map
         map<string, unsigned int> ourkmers;
@@ -179,12 +180,12 @@ double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, map<
 
         for(pair<string, unsigned int> p: ourkmers)
         {
-                sumqCrC = sumqCrC + (refcounts[p.first] * querycounts[p.first]);
-                sumqC2 = sumqC2 + (querycounts[p.first] * querycounts[p.first]);
-                sumrC2 = sumrC2 + (refcounts[p.first] * refcounts[p.first]);
+                sumqCrC = sumqCrC + ((long long unsigned int)refcounts[p.first] * (long long unsigned int)querycounts[p.first]);
+                sumqC2 = sumqC2 + ((long long unsigned int)querycounts[p.first] * (long long unsigned int)querycounts[p.first]);
+                sumrC2 = sumrC2 + ((long long unsigned int)refcounts[p.first] * (long long unsigned int)refcounts[p.first]);
         }
 
-        double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
+        long double score = sumqCrC / ((double)sqrt(sumqC2) * (double)sqrt(sumrC2));
         return 0.5*(1-score);
 }
 
