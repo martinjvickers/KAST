@@ -143,8 +143,8 @@ double hao(ModifyStringOptions options, map<string, bool> ourkmers, map<string, 
 double euler(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
 {
         double score = 0.0;
-        int rN = 0;
-        int qN = 0;
+        long long unsigned int rN = 0;
+        long long unsigned int qN = 0;
 
         for(pair<string, unsigned int> p: refcounts)
                 rN = rN + refcounts[p.first];
@@ -192,8 +192,8 @@ double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, map<
 double manhattan(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
 {
         double score = 0.0;
-        int rN = 0;
-        int qN = 0;
+        long long unsigned int rN = 0;
+        long long unsigned int qN = 0;
 
         for(pair<string, unsigned int> p: refcounts)
                 rN = rN + refcounts[p.first];
@@ -219,8 +219,8 @@ double manhattan(ModifyStringOptions options, map<string, unsigned int> refcount
 double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
 {
         double score = 0.0;
-        int rN = 0;
-        int qN = 0;
+        long long unsigned int rN = 0;
+        long long unsigned int qN = 0;
 	double temp = 0.0;
 
         for(pair<string, unsigned int> p: refcounts)
