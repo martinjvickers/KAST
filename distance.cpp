@@ -245,3 +245,33 @@ double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcount
 
         return score;
 }
+
+double normalised_google_distance(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
+{
+   double score = 0.0;
+
+   return score;
+}
+
+double bray_curtis_distance(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
+{
+   double sumMinus = 0.0;
+   double sumPlus = 0.0;
+
+   //create a unified map
+   map<string, unsigned int> ourkmers;
+   ourkmers = refcounts;
+   ourkmers.insert(querycounts.begin(), querycounts.end());
+   
+   for(pair<string, unsigned int> p: ourkmers)
+   {
+      int qC = querycounts[p.first];
+      int rC = refcounts[p.first];
+      sumMinus = sumMinus + abs(qC - rC);
+      sumPlus = sumPlus + abs(qC + rC);
+   }
+
+   return (double)sumMinus/(double)sumPlus;
+
+}
+

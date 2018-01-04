@@ -38,9 +38,8 @@ SOFTWARE.
 #include <thread>
 #include <map>
 #include <vector>
-
 #include "common.h"
-
+#include <gmp.h>
 #include "distance.h"
 #include "utils.h"
 using namespace seqan;
@@ -119,6 +118,10 @@ int mainloop(ModifyStringOptions options)
 					dist = manhattan(options, ref_counts_vec[j], querycounts);
 				else if(options.type == "chebyshev")
 					dist = chebyshev(options, ref_counts_vec[j], querycounts);
+				else if(options.type == "bc")
+					dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
+				else if(options.type == "ngd")
+					dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
 
 				results.insert(pair<double, int> (dist, j));
 				if(results.size() > options.nohits)
@@ -178,6 +181,10 @@ int mainloop(ModifyStringOptions options)
                                         dist = manhattan(options, refcounts, querycounts);
 				else if(options.type == "chebyshev")
                                         dist = chebyshev(options, refcounts, querycounts);
+                                else if(options.type == "bc")
+                                        dist = bray_curtis_distance(options, refcounts, querycounts);
+                                else if(options.type == "ngd")
+                                        dist = normalised_google_distance(options, refcounts, querycounts);
 
 				results.insert(pair<double, int> (dist, counter));
                                 if(results.size() > options.nohits)
@@ -338,6 +345,11 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
                         	dist = manhattan(options, refcounts, querycounts);
                         else if(options.type == "chebyshev")
                         	dist = chebyshev(options, refcounts, querycounts);
+                        else if(options.type == "bc")
+                                dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
+                        else if(options.type == "ngd")
+                                dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
+
 			
 			array_threaded[i][j] = dist;
 			array_threaded[j][i] = dist;

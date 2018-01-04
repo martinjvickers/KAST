@@ -19,8 +19,8 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         setDefaultValue(parser, "markov-order", "1");
         addOption(parser, seqan::ArgParseOption("n", "num-hits", "Number of top hits to return", seqan::ArgParseArgument::INTEGER, "INT"));
         setDefaultValue(parser, "num-hits", "10");
-        addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences.", seqan::ArgParseArgument::STRING, "STR"));
-        setValidValues(parser, "distance-type", "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai");
+        addOption(parser, seqan::ArgParseOption("t", "distance-type", "The method of calculating the distance between two sequences. For descriptions of distance please refer to https://github.com/martinjvickers/KAST/wiki/Distance-Types", seqan::ArgParseArgument::STRING, "STR"));
+        setValidValues(parser, "distance-type", "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai bc ngd");
         setDefaultValue(parser, "distance-type", "d2");
 	addOption(parser, seqan::ArgParseOption("s", "sequence-type", "Define the type of sequence data to work with.", seqan::ArgParseArgument::STRING, "STR"));
 	setValidValues(parser, "sequence-type", "nucl prot");
