@@ -249,8 +249,46 @@ double chebyshev(ModifyStringOptions options, map<string, unsigned int> refcount
 double normalised_google_distance(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
 {
    double score = 0.0;
+   double sumqC = 0.0;
+   double sumrC = 0.0;
 
-   return score;
+   map<string, unsigned int> min_qr;
+
+   for(pair<string, unsigned int> p: querycounts)
+      sumqC += querycounts[p.first];
+
+   for(pair<string, unsigned int> p: refcounts)
+   {
+      sumrC += refcounts[p.first];
+      if(querycounts.find(p.first) != querycounts.end())
+      {
+         if(querycounts[p.first] < refcounts[p.first])
+            min_qr[p.first] = querycounts[p.first];
+         else
+            min_qr[p.first] = refcounts[p.first];
+      }
+   }
+
+   double sum_min_qr = 0.0;
+   for(pair<string, unsigned int> p: min_qr)
+      sum_min_qr += min_qr[p.first];
+
+   double sum_max, sum_min;
+
+   if(sumqC > sumrC)
+   {
+      sum_max = sumqC;
+      sum_min = sumrC;
+   } 
+   else
+   {
+      sum_max = sumrC;
+      sum_min = sumqC;
+   }
+
+   double sum_all = sumqC + sumrC;
+
+   return (sum_max - sum_min_qr) / (sum_all - sum_min);
 }
 
 double bray_curtis_distance(ModifyStringOptions options, map<string, unsigned int> refcounts, map<string, unsigned int> querycounts)
