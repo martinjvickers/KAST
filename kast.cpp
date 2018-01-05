@@ -91,7 +91,7 @@ int mainloop(ModifyStringOptions options)
 			querycounts = count(seq, options.klen);
 
 		map<string, double> querymarkov;
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
 		{
 //			querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map); // only do this if oe of the markov distance methods
 			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
@@ -112,6 +112,8 @@ int mainloop(ModifyStringOptions options)
 					dist = d2s(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
 				else if(options.type == "d2star")
 					dist = d2star(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+                                else if(options.type == "dai")
+                                        dist = dai(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
 				else if(options.type == "hao")
 					dist = hao(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
 				else if(options.type == "manhattan")
@@ -160,7 +162,7 @@ int mainloop(ModifyStringOptions options)
 					count(rseq, options.klen);
 
 				map<string, double> refmarkov;
-				if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+				if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
 				{
 //					refmarkov = markov(options.klen, rseq, options.markovOrder, kmer_count_map); // only do this if one of the markov distance methods
 					refmarkov = markov(options.effectiveLength, rseq, options.markovOrder, kmer_count_map);
@@ -175,6 +177,8 @@ int mainloop(ModifyStringOptions options)
                                         dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
 				else if(options.type == "d2star")
                                         dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+                                else if(options.type == "dai")
+                                        dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
 				else if(options.type == "hao")
                                         dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
 				else if(options.type == "manhattan")
@@ -305,7 +309,7 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 			querycounts = count(seq, options.klen);
 
 		map<string, double> querymarkov;
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
 		{
 			//querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map);
 			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
@@ -325,7 +329,7 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 				refcounts = count(refseq, options.klen);
 
 			map<string, double> refmarkov;
-			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
 			{
 				//refmarkov = markov(options.klen, refseq, options.markovOrder, kmer_count_map);
 				refmarkov = markov(options.effectiveLength, refseq, options.markovOrder, kmer_count_map);
@@ -339,6 +343,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
                         	dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
                         else if(options.type == "d2star")
                         	dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+                        else if(options.type == "dai")
+                                dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
                         else if(options.type == "hao")
                         	dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
                         else if(options.type == "manhattan")
@@ -482,7 +488,7 @@ int main(int argc, char const ** argv)
 			return 1;
 		}
 
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star")
+		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
 		{
 			kmer_count_map = makecomplete(options);
 		}
@@ -509,7 +515,7 @@ int main(int argc, char const ** argv)
 			else
 				ref_counts_vec.push_back(count(seq, options.klen));
 
-			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt")
+			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt" || options.type == "dai")
 			{
 				//ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
 				ref_markov_vec.push_back(markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map));

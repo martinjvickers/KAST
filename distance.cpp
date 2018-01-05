@@ -313,3 +313,81 @@ double bray_curtis_distance(ModifyStringOptions options, map<string, unsigned in
 
 }
 
+double dai(ModifyStringOptions options, map<string, bool> ourkmers,     
+              map<string, unsigned int> refcounts,
+              map<string, double> refmarkov,
+              map<string, unsigned int> querycounts,
+              map<string, double> querymarkov)
+{
+   double score = 0.0;
+   double S2kr = 0.0;
+   int n = 0;
+   double tempX = 0.0;
+   double tempY = 0.0;
+
+   int qN = 0;
+   int rN = 0;
+
+   for(pair<string, bool> p: ourkmers)
+   {
+      qN = qN + querycounts[p.first];
+      rN = rN + refcounts[p.first];
+   }
+
+   for(pair<string, unsigned int> p: ourkmers)
+   {
+      n++;
+      double rC = refcounts[p.first];
+      double qC = querycounts[p.first];
+      double rP = refmarkov[p.first];
+      double qP = querymarkov[p.first];
+
+      double fRi = rC / (float)rN;
+      double fQi = qC / (float)qN;
+      double r_sigma = fRi * rP;
+      double q_sigma = fQi * qP;
+      cout << "r_sigma " << rC << " " << fRi << " " << rP << endl;
+      cout << "q_sigma " << qC << " " << fQi << " " << qP << endl;
+      double temp1 = 0.0;
+      double temp2 = 0.0;
+    
+      cout << p.first << "\t" << r_sigma << "\t" << q_sigma << endl;
+
+      if(rC != 0 && qC != 0)
+      {
+         if(r_sigma != q_sigma)
+         {
+            double temp = (float)(r_sigma+q_sigma);
+            double temp3 = (2 * r_sigma) / (float)temp;
+            double temp4 = (2 * q_sigma) / (float)temp;
+            cout << temp << "\t" << temp3 << "\t" << temp4 << endl;
+            temp1 = r_sigma*log(temp3);
+            temp2 = q_sigma*log(temp4);
+            cout << temp << "\t" << temp1 << "\t" << temp2 << endl;
+         }
+         tempX += temp1;
+         tempY += temp2;
+      }
+   }
+
+   cout << tempX << "\t" << tempY << "\t" << n<< endl;
+
+   if(tempX == 0.0 && tempY == 0.0)
+      return 0.0;
+   else
+      return (tempX+tempY)/(n+2*log(2.0));
+
+   return score;
+}
+
+
+
+
+
+
+
+
+
+
+
+
