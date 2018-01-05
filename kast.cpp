@@ -346,9 +346,9 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
                         else if(options.type == "chebyshev")
                         	dist = chebyshev(options, refcounts, querycounts);
                         else if(options.type == "bc")
-                                dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
+                                dist = bray_curtis_distance(options, refcounts, querycounts);
                         else if(options.type == "ngd")
-                                dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
+                                dist = normalised_google_distance(options, refcounts, querycounts);
 
 			
 			array_threaded[i][j] = dist;
