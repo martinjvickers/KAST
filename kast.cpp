@@ -91,9 +91,11 @@ int mainloop(ModifyStringOptions options)
          querycounts = count(seq, options.klen);
 
       map<string, double> querymarkov;
-      if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
+      if(options.type == "d2s" || options.type == "hao" || 
+         options.type == "d2star" || options.type == "dai")
       {
-         querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
+         querymarkov = markov(options.effectiveLength, seq, 
+                              options.markovOrder, kmer_count_map);
       }
 
       if(options.lowram != true)
@@ -107,21 +109,27 @@ int mainloop(ModifyStringOptions options)
             else if(options.type == "d2")
                dist = d2(options, ref_counts_vec[j], querycounts);
             else if(options.type == "d2s" || options.type == "d2s-opt")
-               dist = d2s(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+               dist = d2s(options, kmer_count_map, ref_counts_vec[j], 
+                          ref_markov_vec[j], querycounts, querymarkov);
             else if(options.type == "d2star")
-               dist = d2star(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+               dist = d2star(options, kmer_count_map, ref_counts_vec[j], 
+                             ref_markov_vec[j], querycounts, querymarkov);
             else if(options.type == "dai")
-               dist = dai(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+               dist = dai(options, kmer_count_map, ref_counts_vec[j], 
+                          ref_markov_vec[j], querycounts, querymarkov);
             else if(options.type == "hao")
-               dist = hao(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+               dist = hao(options, kmer_count_map, ref_counts_vec[j], 
+                          ref_markov_vec[j], querycounts, querymarkov);
             else if(options.type == "manhattan")
                dist = manhattan(options, ref_counts_vec[j], querycounts);
             else if(options.type == "chebyshev")
                dist = chebyshev(options, ref_counts_vec[j], querycounts);
             else if(options.type == "bc")
-               dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
+               dist = bray_curtis_distance(options, ref_counts_vec[j], 
+                                           querycounts);
             else if(options.type == "ngd")
-               dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
+               dist = normalised_google_distance(options, ref_counts_vec[j], 
+                                                 querycounts);
 
             results.insert(pair<double, int> (dist, j));
             if(results.size() > options.nohits)
@@ -139,7 +147,8 @@ int mainloop(ModifyStringOptions options)
          int counter = 0;
          if(!open(refFileIn, (toCString(options.referenceFileName))))
          {
-            cerr << "Error: could not open file " << toCString(options.referenceFileName) << endl;
+            cerr << "Error: could not open file ";
+            cerr << toCString(options.referenceFileName) << endl;
             return 1;
          }
 
@@ -161,9 +170,11 @@ int mainloop(ModifyStringOptions options)
                count(rseq, options.klen);
 
             map<string, double> refmarkov;
-            if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
+            if(options.type == "d2s" || options.type == "hao" || 
+               options.type == "d2star" || options.type == "dai")
             {
-               refmarkov = markov(options.effectiveLength, rseq, options.markovOrder, kmer_count_map);
+               refmarkov = markov(options.effectiveLength, rseq, 
+                                  options.markovOrder, kmer_count_map);
             }
 
             double dist;
@@ -172,13 +183,17 @@ int mainloop(ModifyStringOptions options)
             else if(options.type == "d2")
                dist = d2(options, refcounts, querycounts);
             else if(options.type == "d2s")
-               dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+               dist = d2s(options, kmer_count_map, refcounts, refmarkov, 
+                          querycounts, querymarkov);
             else if(options.type == "d2star")
-               dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+               dist = d2star(options, kmer_count_map, refcounts, refmarkov, 
+                             querycounts, querymarkov);
             else if(options.type == "dai")
-               dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+               dist = dai(options, kmer_count_map, refcounts, refmarkov, 
+                          querycounts, querymarkov);
             else if(options.type == "hao")
-               dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+               dist = hao(options, kmer_count_map, refcounts, refmarkov, 
+                          querycounts, querymarkov);
             else if(options.type == "manhattan")
                dist = manhattan(options, refcounts, querycounts);
             else if(options.type == "chebyshev")
@@ -186,7 +201,8 @@ int mainloop(ModifyStringOptions options)
             else if(options.type == "bc")
                dist = bray_curtis_distance(options, refcounts, querycounts);
             else if(options.type == "ngd")
-               dist = normalised_google_distance(options, refcounts, querycounts);
+               dist = normalised_google_distance(options, refcounts, 
+                                                 querycounts);
 
             results.insert(pair<double, int> (dist, counter));
             if(results.size() > options.nohits)
@@ -207,11 +223,15 @@ int mainloop(ModifyStringOptions options)
          CharString qName = split[0];
          if(options.outputFileName == NULL)
          {
-            cout << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+            cout << "############################ ";
+            cout << length(queryseq) << "\t" << gc_ratio(queryseq);
+            cout << "\t" << qName << endl;
          }
          else
          {
-            outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+            outfile << "############################ ";
+            outfile << length(queryseq) << "\t" << gc_ratio(queryseq);
+            outfile << "\t" << qName << endl;
          }
 
          for(pair<double, int> p: results)
@@ -221,11 +241,15 @@ int mainloop(ModifyStringOptions options)
 
             if(options.outputFileName == NULL)
             {
-               cout << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+               cout << p.first << "\t" << length(referenceseqs[p.second]);
+               cout << "\t" << gc_ratio(referenceseqs[p.second]);
+               cout << "\t" << split2[0] << endl;
             }
             else
             {
-               outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+               outfile << p.first << "\t" << length(referenceseqs[p.second]);
+               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
+               outfile << "\t" << split2[0] << endl;
             }			
          }
          n.unlock();
@@ -236,11 +260,13 @@ int mainloop(ModifyStringOptions options)
 
          if(options.outputFileName == NULL)
          {
-            cout << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+            cout << "RefID\tQryID\tRefLen\tQryLen\t";
+            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
          }
          else
          {
-            outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
+            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
          }
 
          int count = 1;
@@ -248,11 +274,21 @@ int mainloop(ModifyStringOptions options)
          {
             if(options.outputFileName == NULL)
             {
-               cout << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+               cout << referenceids[p.second] << "\t" << queryid << "\t";
+               cout << length(referenceseqs[p.second]) << "\t";
+               cout << length(queryseq) << "\t";
+               cout << gc_ratio(referenceseqs[p.second]) << "\t";
+               cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               cout << p.first << endl;
             }
             else
             {
-               outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+               outfile << referenceids[p.second] << "\t" << queryid << "\t";
+               outfile << length(referenceseqs[p.second]) << "\t";
+               outfile << length(queryseq) << "\t";
+               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
+               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               outfile << p.first << endl;
             }
             count++;
          }
