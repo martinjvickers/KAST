@@ -39,11 +39,7 @@ int count_mask_test()
         options.klen = klen;
 	vector<CharString> vec;
 	vec.push_back("00111");
-	//cout << "Kmer Size\t" << klen << "\tMask\t00111" << endl;
-	//cout << "Seq\t" << qryseq << endl;
 	map<string, unsigned int> querycounts = count(qryseq, klen, vec);
-	//for(auto i : querycounts)
-	//	cout << i.first << "\t" << i.second << endl;
 	return 0;
 }
 
@@ -443,82 +439,82 @@ int testRevCompl_2()
 
 int main(int argc, char const ** argv)
 {
-	int returncode = 0;
+   int returncode = 0;
 
-	//testing reverse compliments
-	if(testRevCompl_1() != 0)
-	{
-		returncode = 1;
-	} 
-	else 
-	{
-		cout << "[PASSED] - Test reverse compliment" << endl;
-	}
+   //testing reverse compliments
+   if(testRevCompl_1() != 0)
+   {
+      returncode = 1;
+   } 
+   else 
+   {
+      cout << "[PASSED] - Test reverse compliment" << endl;
+   }
 
-	if(testRevCompl_2() != 0)
-	{
-                returncode = 1;
-        }
-        else
-        {
-		cout << "[PASSED] - Test Single Base getRevCompl" << endl;
-        }
+   if(testRevCompl_2() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Single Base getRevCompl" << endl;
+   }
 
-	//test counting
-	if(testCount_1() != 0)
-	{
-                returncode = 1;
-        }
-        else
-        {
-		cout << "[PASSED] - Test Count" << endl;
-        }
+   //test counting
+   if(testCount_1() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Count" << endl;
+   }
 
-	//test distances
-	if(testeuler() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test Euler" << endl;
-        }
+   //test distances
+   if(testeuler() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Euler" << endl;
+   }
 
-        if(testd2() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test d2" << endl;
-        }
+   if(testd2() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2" << endl;
+   }
 
-        if(testmanhattan() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test Manhattan" << endl;
-        }
+   if(testmanhattan() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Manhattan" << endl;
+   }
 
-	if(testd2s() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test d2s" << endl;
-        }
+   if(testd2s() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2s" << endl;
+   }
 
-	if(testd2s_m2() != 0)
-	{
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test d2s m 2" << endl;
-        }
+   if(testd2s_m2() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2s m 2" << endl;
+   }
 
 /*
 	if(testd2s_d2tools() != 0)
@@ -530,23 +526,24 @@ int main(int argc, char const ** argv)
                 cout << "[PASSED] - Test d2s tools" << endl;
         }
 */
-	if(testd2star() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test d2star" << endl;
-        }
+   if(testd2star() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2star" << endl;
+   }
 
-	if(testchebyshev() != 0)
-        {
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Test Chebyshev" << endl;
-        }
+   if(testchebyshev() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+       cout << "[PASSED] - Test Chebyshev" << endl;
+   }
+
 /*
         if(testhao() != 0)
         {
@@ -558,66 +555,68 @@ int main(int argc, char const ** argv)
         }
 */
 
-        int cutsize = 10;
-        if(length(namecut("TGAC", cutsize)) != cutsize)
-        {
-                cout << "[FAILED] - Smaller cutsize" << endl;
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Smaller cutsize" << endl;
-        }
+   int cutsize = 10;
+   if(length(namecut("TGAC", cutsize)) != cutsize)
+   {
+      cout << "[FAILED] - Smaller cutsize" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Smaller cutsize" << endl;
+   }
 
-        if(length(namecut("TGACTGACTGAC", cutsize)) != cutsize)
-        {
-                cout << "[FAILED] - Larger cutsize" << endl;
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Larger cutsize" << endl;
-        }
+   if(length(namecut("TGACTGACTGAC", cutsize)) != cutsize)
+   {
+      cout << "[FAILED] - Larger cutsize" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Larger cutsize" << endl;
+   }
 
-        if(length(namecut("TGACTGACTG", cutsize)) != cutsize)
-        {
-                cout << "[FAILED] - Identical cutsize" << endl;
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Identical cutsize" << endl;
-        }
+   if(length(namecut("TGACTGACTG", cutsize)) != cutsize)
+   {
+      cout << "[FAILED] - Identical cutsize" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Identical cutsize" << endl;
+   }
 
 
-        if(length(namecut("HELLOWORLDWHAT IS HAPPENING", cutsize)) != cutsize)
-        {
-                cout << "[FAILED] - Text cutsize" << endl;
-                returncode = 1;
-        }
-        else
-        {
-                cout << "[PASSED] - Text cutsize" << endl;
-        }
+   if(length(namecut("HELLOWORLDWHAT IS HAPPENING", cutsize)) != cutsize)
+   {
+      cout << "[FAILED] - Text cutsize" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Text cutsize" << endl;
+   }
 
-	if(count_mask_test() != 0)
-	{
-		cout << "[FAILED] - Masked Count test" << endl;
-		returncode = 1;
-	} 
-	else 
-	{
-		cout << "[PASSED] - Masked Count test" << endl;
-	}
-	if(zero_sized_seq_count() != 0)
-	{
-		cout << "[FAILED] - Zero Sized Seq Count Test" << endl;
-		returncode = 1;
-	}
-	else
-	{
-		cout << "[PASSED] - Zero Sized Seq Count Test" << endl;
-	}
+   if(count_mask_test() != 0)
+   {
+      cout << "[FAILED] - Masked Count test" << endl;
+      returncode = 1;
+   } 
+   else 
+   {
+      cout << "[PASSED] - Masked Count test" << endl;
+   }
 
-	return returncode;
+   if(zero_sized_seq_count() != 0)
+   {
+      cout << "[FAILED] - Zero Sized Seq Count Test" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Zero Sized Seq Count Test" << endl;
+   }
+
+   return returncode;
+
 }
