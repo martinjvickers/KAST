@@ -1,11 +1,11 @@
 /*
 KAST - Kmer Alignment-free Search Tool
-Version 0.0.15
+Version 0.0.17
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 MIT License
 
-Copyright (c) 2017 Martin James Vickers
+Copyright (c) 2018 Martin James Vickers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -59,228 +59,233 @@ vector< vector<double> > array_threaded;
 //main threaded loop
 int mainloop(ModifyStringOptions options)
 {
-	while(1)
-	{
-		String<AminoAcid> queryseq;
-		CharString queryid;
+   while(1)
+   {
+      String<AminoAcid> queryseq;
+      CharString queryid;
 
-		m.lock();
-                if(!atEnd(queryFileIn))
-                {
-			readRecord(queryid, queryseq, queryFileIn);
-		}
-		else
-		{
-			m.unlock();
-                        return 0;
-		}
-		m.unlock();
+      m.lock();
+      if(!atEnd(queryFileIn))
+      {
+         readRecord(queryid, queryseq, queryFileIn);
+      }
+      else
+      {
+         m.unlock();
+         return 0;
+      }
+      m.unlock();
 
-		map<double, int> results;
+      map<double, int> results;
 
-		String<AminoAcid> seq;
-		if(options.noreverse == false)
-			seq = doRevCompl(queryseq);
-		else
-			seq = queryseq;
+      String<AminoAcid> seq;
+      if(options.noreverse == false)
+         seq = doRevCompl(queryseq);
+      else
+         seq = queryseq;
 
-		map<string, unsigned int> querycounts;
-		if(options.mask.size() > 0)
-			querycounts = count(seq, options.klen, options.mask);
-		else
-			querycounts = count(seq, options.klen);
+      map<string, unsigned int> querycounts;
+      if(options.mask.size() > 0)
+         querycounts = count(seq, options.klen, options.mask);
+      else
+         querycounts = count(seq, options.klen);
 
-		map<string, double> querymarkov;
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
-		{
-//			querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map); // only do this if oe of the markov distance methods
-			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
-		}
+      map<string, double> querymarkov;
+      if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
+      {
+         querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
+      }
 
-		if(options.lowram != true)
-                {
+      if(options.lowram != true)
+      {
+         for(int j = 0; j < length(referenceids); j++)
+         {
+            double dist;
 
-			for(int j = 0; j < length(referenceids); j++)
-                	{
-				double dist;
+            if(options.type == "kmer")
+               dist = euler(options, ref_counts_vec[j], querycounts);
+            else if(options.type == "d2")
+               dist = d2(options, ref_counts_vec[j], querycounts);
+            else if(options.type == "d2s" || options.type == "d2s-opt")
+               dist = d2s(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+            else if(options.type == "d2star")
+               dist = d2star(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+            else if(options.type == "dai")
+               dist = dai(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+            else if(options.type == "hao")
+               dist = hao(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
+            else if(options.type == "manhattan")
+               dist = manhattan(options, ref_counts_vec[j], querycounts);
+            else if(options.type == "chebyshev")
+               dist = chebyshev(options, ref_counts_vec[j], querycounts);
+            else if(options.type == "bc")
+               dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
+            else if(options.type == "ngd")
+               dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
 
-				if(options.type == "kmer")
-					dist = euler(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "d2")
-					dist = d2(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "d2s" || options.type == "d2s-opt")
-					dist = d2s(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
-				else if(options.type == "d2star")
-					dist = d2star(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
-                                else if(options.type == "dai")
-                                        dist = dai(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
-				else if(options.type == "hao")
-					dist = hao(options, kmer_count_map, ref_counts_vec[j], ref_markov_vec[j], querycounts, querymarkov);
-				else if(options.type == "manhattan")
-					dist = manhattan(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "chebyshev")
-					dist = chebyshev(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "bc")
-					dist = bray_curtis_distance(options, ref_counts_vec[j], querycounts);
-				else if(options.type == "ngd")
-					dist = normalised_google_distance(options, ref_counts_vec[j], querycounts);
+            results.insert(pair<double, int> (dist, j));
+            if(results.size() > options.nohits)
+            {
+               map<double, int>::iterator it = results.end();
+               results.erase(--it);
+            }
+         }
+      }
+      else
+      {
+         CharString refid;
+         String<AminoAcid> refseq;
+         SeqFileIn refFileIn;
+         int counter = 0;
+         if(!open(refFileIn, (toCString(options.referenceFileName))))
+         {
+            cerr << "Error: could not open file " << toCString(options.referenceFileName) << endl;
+            return 1;
+         }
 
-				results.insert(pair<double, int> (dist, j));
-				if(results.size() > options.nohits)
-				{
-					map<double, int>::iterator it = results.end();
-					results.erase(--it);
-				}
-			}
+         while(!atEnd(refFileIn))
+         {
+            readRecord(refid, refseq, refFileIn);
 
-		} else {
-			CharString refid;
-			String<AminoAcid> refseq;
-			SeqFileIn refFileIn;
-			int counter = 0;
-			if(!open(refFileIn, (toCString(options.referenceFileName))))
-                       	{
-				cerr << "Error: could not open file " << toCString(options.referenceFileName) << endl;
-				return 1;
-			}
+            String<AminoAcid> rseq;
+            if(options.noreverse == false)
+               rseq = doRevCompl(refseq);
+            else
+               rseq = refseq;
 
-			while(!atEnd(refFileIn))
-                        {
-				readRecord(refid, refseq, refFileIn);
+            map<string, unsigned int> refcounts;
 
-				String<AminoAcid> rseq;
-	                        if(options.noreverse == false)
-					rseq = doRevCompl(refseq);
-				else
-					rseq = refseq;
+            if(options.mask.size() > 0)
+               count(rseq, options.klen, options.mask);
+            else
+               count(rseq, options.klen);
 
-				map<string, unsigned int> refcounts;
+            map<string, double> refmarkov;
+            if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
+            {
+               refmarkov = markov(options.effectiveLength, rseq, options.markovOrder, kmer_count_map);
+            }
 
-				if(options.mask.size() > 0)
-					count(rseq, options.klen, options.mask);
-				else
-					count(rseq, options.klen);
+            double dist;
+            if(options.type == "kmer")
+               dist = euler(options, refcounts, querycounts);
+            else if(options.type == "d2")
+               dist = d2(options, refcounts, querycounts);
+            else if(options.type == "d2s")
+               dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+            else if(options.type == "d2star")
+               dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+            else if(options.type == "dai")
+               dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+            else if(options.type == "hao")
+               dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
+            else if(options.type == "manhattan")
+               dist = manhattan(options, refcounts, querycounts);
+            else if(options.type == "chebyshev")
+               dist = chebyshev(options, refcounts, querycounts);
+            else if(options.type == "bc")
+               dist = bray_curtis_distance(options, refcounts, querycounts);
+            else if(options.type == "ngd")
+               dist = normalised_google_distance(options, refcounts, querycounts);
 
-				map<string, double> refmarkov;
-				if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
-				{
-//					refmarkov = markov(options.klen, rseq, options.markovOrder, kmer_count_map); // only do this if one of the markov distance methods
-					refmarkov = markov(options.effectiveLength, rseq, options.markovOrder, kmer_count_map);
-				}
+            results.insert(pair<double, int> (dist, counter));
+            if(results.size() > options.nohits)
+            {
+               map<double, int>::iterator it = results.end();
+               results.erase(--it);
+            }
+            counter++;
+         }
+      }
 
-				double dist;
-				if(options.type == "kmer")
-					dist = euler(options, refcounts, querycounts);
-				else if(options.type == "d2")
-					dist = d2(options, refcounts, querycounts);
-				else if(options.type == "d2s")
-                                        dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-				else if(options.type == "d2star")
-                                        dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-                                else if(options.type == "dai")
-                                        dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-				else if(options.type == "hao")
-                                        dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-				else if(options.type == "manhattan")
-                                        dist = manhattan(options, refcounts, querycounts);
-				else if(options.type == "chebyshev")
-                                        dist = chebyshev(options, refcounts, querycounts);
-                                else if(options.type == "bc")
-                                        dist = bray_curtis_distance(options, refcounts, querycounts);
-                                else if(options.type == "ngd")
-                                        dist = normalised_google_distance(options, refcounts, querycounts);
+      if(options.output_format == "tabular")
+      {
+         n.lock();
 
-				results.insert(pair<double, int> (dist, counter));
-                                if(results.size() > options.nohits)
-                                {
-                                        map<double, int>::iterator it = results.end();
-                                        results.erase(--it);
-                                }
+         StringSet<CharString> split;
+         strSplit(split, queryid);
+         CharString qName = split[0];
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+         }
+         else
+         {
+            outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
+         }
 
-				counter++;
-			}
-		}
+         for(pair<double, int> p: results)
+         {
+            StringSet<CharString> split2;
+            strSplit(split2, referenceids[p.second]);
 
-		if(options.output_format == "tabular")
-		{
-			n.lock();
+            if(options.outputFileName == NULL)
+            {
+               cout << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+            }
+            else
+            {
+               outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
+            }			
+         }
+         n.unlock();
+      } 
+      else if(options.output_format == "blastlike")
+      {
+         n.lock();
 
-			StringSet<CharString> split;
-			strSplit(split, queryid);
-			CharString qName = split[0];
-			if(options.outputFileName == NULL)
-			{
-				cout << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
-			} else {
-				outfile << "############################ " << length(queryseq) << "\t" << gc_ratio(queryseq) << "\t" << qName << endl;
-			}
+         if(options.outputFileName == NULL)
+         {
+            cout << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+         else
+         {
+            outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
+         }
 
-			for(pair<double, int> p: results)
-			{
-				StringSet<CharString> split2;
-				strSplit(split2, referenceids[p.second]);
+         int count = 1;
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
+            }
+            count++;
+         }
+         n.unlock();
+      } 
+      else
+      {
+         n.lock();
 
-				if(options.outputFileName == NULL)
-				{
-					cout << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
-				} else {
-					outfile << p.first << "\t" << length(referenceseqs[p.second]) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << split2[0] << endl;
-				}
-				
-			}
-			n.unlock();
-		} 
-		else if(options.output_format == "blastlike")
-		{
-			n.lock();
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ " << queryid << endl;
+         }
+         else
+         {
+            outfile << "############################ " << queryid << endl;
+         }
 
-			if(options.outputFileName == NULL)
-			{
-				cout << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
-			} else {
-				outfile << "RefID\tQryID\tRefLen\tQryLen\tRefGC\tQryGC\tHitRank\tScore" << endl;
-			}
-			
-			int count = 1;
-			for(pair<double, int> p: results)
-			{
-
-				if(options.outputFileName == NULL)
-				{
-					cout << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
-				} else {
-					outfile << referenceids[p.second] << "\t" << queryid << "\t" << length(referenceseqs[p.second]) << "\t" << length(queryseq) << "\t" << gc_ratio(referenceseqs[p.second]) << "\t" << gc_ratio(queryseq) << "\t" << count << "\t" << p.first << endl;
-				}
-				count++;
-			}
-			n.unlock();
-
-		} 
-		else
-		{
-			n.lock();
-
-			if(options.outputFileName == NULL)
-			{
-				cout << "############################ " << queryid << endl;
-			} else {
-	                	outfile << "############################ " << queryid << endl;
-			}
-
-                	for(pair<double, int> p: results)
-                	{
-				if(options.outputFileName == NULL)
-				{
-					cout << referenceids[p.second] << " " << p.first << endl;
-				} else {
-                			outfile << referenceids[p.second] << " " << p.first << endl;
-				}
-                	}
-			n.unlock();
-		}
-	}
-
-	return 0;
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << " " << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << " " << p.first << endl;
+            }
+         }
+         n.unlock();
+      }
+   }
+   return 0;
 }
 
 int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
