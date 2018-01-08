@@ -283,86 +283,90 @@ int mainloop(ModifyStringOptions options)
 	return 0;
 }
 
-int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, StringSet<String<AminoAcid>> pairwiseseq)
+int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
+             StringSet<String<AminoAcid>> pairwiseseq)
 {
-        //not sure about this loop condition
-        while(current_row < length(pairwiseid))
-        {
-                //get row locally and increment it
-                int i;
-                r.lock();
-                i = current_row;
-                if(i >= length(pairwiseid))
-                        return 0;
-                current_row++;
-                r.unlock();
+   //not sure about this loop condition
+   while(current_row < length(pairwiseid))
+   {
+      //get row locally and increment it
+      int i;
+      r.lock();
+      i = current_row;
+      if(i >= length(pairwiseid))
+         return 0;
+      current_row++;
+      r.unlock();
 
-		String<AminoAcid> seq;
-		if(options.noreverse == false)
-			seq = doRevCompl(pairwiseseq[i]);
+      String<AminoAcid> seq;
+      if(options.noreverse == false)
+         seq = doRevCompl(pairwiseseq[i]);
 
-		//map<string, unsigned int> querycounts = count(seq, options.klen);
-		map<string, unsigned int> querycounts;
-		if(options.mask.size() > 0)
-			querycounts = count(seq, options.klen, options.mask);
-		else
-			querycounts = count(seq, options.klen);
+      map<string, unsigned int> querycounts;
+      if(options.mask.size() > 0)
+         querycounts = count(seq, options.klen, options.mask);
+      else
+         querycounts = count(seq, options.klen);
 
-		map<string, double> querymarkov;
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
-		{
-			//querymarkov = markov(options.klen, seq, options.markovOrder, kmer_count_map);
-			querymarkov = markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map);
-		}
+      map<string, double> querymarkov;
+      if(options.type == "d2s" || options.type == "hao" || 
+         options.type == "d2star" || options.type == "dai")
+      {
+         querymarkov = markov(options.effectiveLength, seq, 
+                              options.markovOrder, kmer_count_map);
+      }
 
-		for(int j = 0; j < i; j++)
-                {
-			double dist;
-			String<AminoAcid> refseq;
-			if(options.noreverse == false)
-				refseq = doRevCompl(pairwiseseq[j]);
+      for(int j = 0; j < i; j++)
+      {
+         double dist;
+         String<AminoAcid> refseq;
+         if(options.noreverse == false)
+            refseq = doRevCompl(pairwiseseq[j]);
 
-			map<string, unsigned int> refcounts;
-			if(options.mask.size() > 0)
-				refcounts = count(refseq, options.klen, options.mask);
-			else
-				refcounts = count(refseq, options.klen);
+         map<string, unsigned int> refcounts;
+         if(options.mask.size() > 0)
+            refcounts = count(refseq, options.klen, options.mask);
+         else
+            refcounts = count(refseq, options.klen);
 
-			map<string, double> refmarkov;
-			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
-			{
-				//refmarkov = markov(options.klen, refseq, options.markovOrder, kmer_count_map);
-				refmarkov = markov(options.effectiveLength, refseq, options.markovOrder, kmer_count_map);
-			}
+         map<string, double> refmarkov;
+         if(options.type == "d2s" || options.type == "hao" || 
+            options.type == "d2star" || options.type == "dai")
+         {
+            refmarkov = markov(options.effectiveLength, refseq, 
+                               options.markovOrder, kmer_count_map);
+         }
 			
-			if(options.type == "kmer")
-                        	dist = euler(options, refcounts, querycounts);
-                        else if(options.type == "d2")
-                        	dist = d2(options, refcounts, querycounts);
-                        else if(options.type == "d2s")
-                        	dist = d2s(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-                        else if(options.type == "d2star")
-                        	dist = d2star(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-                        else if(options.type == "dai")
-                                dist = dai(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-                        else if(options.type == "hao")
-                        	dist = hao(options, kmer_count_map, refcounts, refmarkov, querycounts, querymarkov);
-                        else if(options.type == "manhattan")
-                        	dist = manhattan(options, refcounts, querycounts);
-                        else if(options.type == "chebyshev")
-                        	dist = chebyshev(options, refcounts, querycounts);
-                        else if(options.type == "bc")
-                                dist = bray_curtis_distance(options, refcounts, querycounts);
-                        else if(options.type == "ngd")
-                                dist = normalised_google_distance(options, refcounts, querycounts);
-
-			
-			array_threaded[i][j] = dist;
-			array_threaded[j][i] = dist;
-		}
-        }
-
-        return 0;
+         if(options.type == "kmer")
+            dist = euler(options, refcounts, querycounts);
+         else if(options.type == "d2")
+            dist = d2(options, refcounts, querycounts);
+         else if(options.type == "d2s")
+            dist = d2s(options, kmer_count_map, refcounts, refmarkov, 
+                       querycounts, querymarkov);
+         else if(options.type == "d2star")
+            dist = d2star(options, kmer_count_map, refcounts, refmarkov, 
+                          querycounts, querymarkov);
+         else if(options.type == "dai")
+            dist = dai(options, kmer_count_map, refcounts, refmarkov, 
+                       querycounts, querymarkov);
+         else if(options.type == "hao")
+            dist = hao(options, kmer_count_map, refcounts, refmarkov, 
+                       querycounts, querymarkov);
+         else if(options.type == "manhattan")
+            dist = manhattan(options, refcounts, querycounts);
+         else if(options.type == "chebyshev")
+            dist = chebyshev(options, refcounts, querycounts);
+         else if(options.type == "bc")
+            dist = bray_curtis_distance(options, refcounts, querycounts);
+         else if(options.type == "ngd")
+            dist = normalised_google_distance(options, refcounts, querycounts);
+		
+         array_threaded[i][j] = dist;
+         array_threaded[j][i] = dist;
+      }
+   }
+   return 0;
 }
 
 int threaded_pw(ModifyStringOptions options)
