@@ -26,7 +26,8 @@ add_definitions (${SEQAN_DEFINITIONS})
 add_definitions ( -DSEQAN_DISABLE_VERSION_CHECK )
 
 # Add CXX flags found by find_package (SeqAn).
-set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -lgmp -Wl,-no-whole-archive")
+#set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -lgmp -Wl,-no-whole-archive")
+set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
 
 # Add executable and link against SeqAn dependencies.
 add_executable (kast distance.cpp utils.cpp kast.cpp)

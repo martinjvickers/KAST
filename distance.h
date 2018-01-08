@@ -13,7 +13,7 @@
 #include <thread>
 #include <map>
 #include <vector>
-#include <gmp.h>
+//#include <gmp.h>
 #include "common.h"
 
 double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 

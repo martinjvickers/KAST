@@ -39,7 +39,7 @@ SOFTWARE.
 #include <map>
 #include <vector>
 #include "common.h"
-#include <gmp.h>
+//#include <gmp.h>
 #include "distance.h"
 #include "utils.h"
 using namespace seqan;
