@@ -350,12 +350,8 @@ double dai(ModifyStringOptions options, map<string, bool> ourkmers,
       double fQi = qC / (float)qN;
       double r_sigma = fRi * rP;
       double q_sigma = fQi * qP;
-      cout << "r_sigma " << rC << " " << fRi << " " << rP << endl;
-      cout << "q_sigma " << qC << " " << fQi << " " << qP << endl;
       double temp1 = 0.0;
       double temp2 = 0.0;
-    
-      cout << p.first << "\t" << r_sigma << "\t" << q_sigma << endl;
 
       // I added this if statement here. I'm not sure if this breaks
       // something, but basically we only do the calculation on kmers
@@ -368,17 +364,13 @@ double dai(ModifyStringOptions options, map<string, bool> ourkmers,
             double temp = (float)(r_sigma+q_sigma);
             double temp3 = (2 * r_sigma) / (float)temp;
             double temp4 = (2 * q_sigma) / (float)temp;
-            cout << temp << "\t" << temp3 << "\t" << temp4 << endl;
             temp1 = r_sigma*log(temp3);
             temp2 = q_sigma*log(temp4);
-            cout << temp << "\t" << temp1 << "\t" << temp2 << endl;
          }
          tempX += temp1;
          tempY += temp2;
       }
    }
-
-   cout << tempX << "\t" << tempY << "\t" << n<< endl;
 
    if(tempX == 0.0 && tempY == 0.0)
       return 0.0;

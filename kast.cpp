@@ -56,6 +56,40 @@ ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
 
+int pairwise_matrix_test(ModifyStringOptions options)
+{
+   //so I'd need a pairwise set of records
+   SeqFileIn pairwiseFileIn;
+   StringSet<String<AminoAcid>> pairwiseseq;
+   StringSet<CharString> pairwiseid;
+
+   if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
+   {
+      cerr << "Error: could not open file ";
+      cerr << toCString(options.pairwiseFileName) << endl;
+      return 1;
+   }
+
+   readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);
+
+//   array_threaded.resize(size);
+ //  for(int i = 0; i < size; i++)
+  //    array_threaded[i].resize(size);
+
+   for (unsigned rowIndex = 0; rowIndex < length(pairwiseid); ++rowIndex)
+   {
+      for (unsigned colIndex = rowIndex; colIndex < length(pairwiseid); ++colIndex)
+      {
+
+         
+
+      }
+   }
+
+   close(pairwiseFileIn);   
+   return 0;
+}
+
 //main threaded loop
 int mainloop(ModifyStringOptions options)
 {
@@ -524,7 +558,18 @@ int main(int argc, char const ** argv)
 
    if(options.pairwiseFileName != NULL)
    {
+      // maybe I should make secondry version
+      clock_t start;
+      start = clock();
       threaded_pw(options);
+      std::cout << "Time: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+
+      start = clock();
+      pairwise_matrix_test(options);
+      std::cout << "Time: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+
+      // new one
+      
    }
    else if (options.referenceFileName != NULL && options.queryFileName != NULL)
    {
