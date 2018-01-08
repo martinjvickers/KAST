@@ -27,13 +27,13 @@ SOFTWARE.
 */
 
 #include <iostream>
-#include <seqan/sequence.h>  // CharString, ...
-#include <seqan/stream.h>    // to stream a CharString into cout
+#include <seqan/sequence.h>
+#include <seqan/stream.h>
 #include <seqan/file.h>
 #include <seqan/arg_parse.h>
 #include <seqan/seq_io.h>
-#include <math.h>       /* sqrt */
-#include <seqan/store.h> /* FragmentStore */
+#include <math.h>
+#include <seqan/store.h>
 #include <string>
 #include <thread>
 #include <map>
@@ -367,76 +367,78 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid, Stri
 
 int threaded_pw(ModifyStringOptions options)
 {
-        //so I'd need a pairwise set of records
-        SeqFileIn pairwiseFileIn;
-        StringSet<String<AminoAcid>> pairwiseseq;
-        StringSet<CharString> pairwiseid;
+   //so I'd need a pairwise set of records
+   SeqFileIn pairwiseFileIn;
+   StringSet<String<AminoAcid>> pairwiseseq;
+   StringSet<CharString> pairwiseid;
 
-        if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
-        {
-                cerr << "Error: could not open file " << toCString(options.pairwiseFileName) << endl;
-                return 1;
-        }
+   if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
+   {
+      cerr << "Error: could not open file ";
+      cerr << toCString(options.pairwiseFileName) << endl;
+      return 1;
+   }
 
-        readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);
+   readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);
 
-        //sort out our global matrix
-        const int size = length(pairwiseid);
-        int last = 1;
-        array_threaded.resize(size);
-        for(int i = 0; i < size; i++)
-                array_threaded[i].resize(size);
+   //sort out our global matrix
+   const int size = length(pairwiseid);
+   int last = 1;
+   array_threaded.resize(size);
+   for(int i = 0; i < size; i++)
+      array_threaded[i].resize(size);
 
-        //run our threads, this is where we do the work
-        //thread workers[options.num_threads];
-        int arraySize = options.num_threads;
-        thread * workers = new thread[arraySize];
-        for(int w = 0; w < options.num_threads; w++)
-        {
-                workers[w] = thread(pwthread, options, pairwiseid, pairwiseseq);
-        }
+   //run our threads, this is where we do the work
+   int arraySize = options.num_threads;
+   thread * workers = new thread[arraySize];
+   for(int w = 0; w < options.num_threads; w++)
+   {
+      workers[w] = thread(pwthread, options, pairwiseid, pairwiseseq);
+   }
 
-        //do not exit until all the threads have finished
-        for(int w = 0; w < options.num_threads; w++)
-        {
-                workers[w].join();
-        }
+   //do not exit until all the threads have finished
+   for(int w = 0; w < options.num_threads; w++)
+   {
+      workers[w].join();
+   }
 
-	//print out in phylyp mode
-	if(options.phylyp == true)
-	{
-		if(options.outputFileName == NULL)
-                {
-			cout << length(pairwiseid) << endl;
-		} else {
-			outfile << length(pairwiseid) << endl;
-		}
+   //print out in phylyp mode
+   if(options.phylyp == true)
+   {
+      if(options.outputFileName == NULL)
+      {
+         cout << length(pairwiseid) << endl;
+      }
+      else
+      {
+         outfile << length(pairwiseid) << endl;
+      }
 
-		for(int i = 0; i < length(pairwiseid); i++)
-                {
-                        StringSet<CharString> split;
-                        strSplit(split, pairwiseid[i]);
-			int cutsize = 10;
-                        //CharString qName = namecut(split[0], cutsize);
-			CharString qName = split[0];
-			qName = namecut(qName, cutsize);
+      for(int i = 0; i < length(pairwiseid); i++)
+      {
+         StringSet<CharString> split;
+         strSplit(split, pairwiseid[i]);
+         int cutsize = 10;
+         CharString qName = split[0];
+         qName = namecut(qName, cutsize);
 
-			if(options.outputFileName == NULL)
-			{
-				cout << qName << "\t";
-				for(int j = 0; j < length(pairwiseid); j++)
-					cout << array_threaded[i][j] << "\t";
-				cout << endl;
-			} else {
-				outfile << qName << "\t";
-                                for(int j = 0; j < length(pairwiseid); j++)
-                                        outfile << array_threaded[i][j] << "\t";
-                                outfile << endl;
-			}
-		}
-	}
-
-        return 0;
+         if(options.outputFileName == NULL)
+         {
+            cout << qName << "\t";
+            for(int j = 0; j < length(pairwiseid); j++)
+               cout << array_threaded[i][j] << "\t";
+            cout << endl;
+         }
+         else
+         {
+               outfile << qName << "\t";
+               for(int j = 0; j < length(pairwiseid); j++)
+                  outfile << array_threaded[i][j] << "\t";
+               outfile << endl;
+         }
+      }   
+   }
+   return 0;
 }
 
 int main(int argc, char const ** argv)
