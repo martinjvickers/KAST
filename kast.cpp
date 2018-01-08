@@ -441,105 +441,111 @@ int threaded_pw(ModifyStringOptions options)
 
 int main(int argc, char const ** argv)
 {
-	//parse our options
-	ModifyStringOptions options;
-	seqan::ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
+   //parse our options
+   ModifyStringOptions options;
+   ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
-	try {
-		outfile.open(toCString(options.outputFileName), std::ios_base::out);
-	} catch (const ifstream::failure& e) {
-		cout << "Error: could not open output file " << toCString(options.outputFileName) << endl;
-		return 1; //if you can't open the output file then why bother trying to run the rest
-	}
+   try
+   {
+      outfile.open(toCString(options.outputFileName), std::ios_base::out);
+   }
+   catch (const ifstream::failure& e)
+   {
+      cout << "Error: could not open output file ";
+      cout << toCString(options.outputFileName) << endl;
+      return 1; 
+   }
 
-	options.effectiveLength = options.klen;
-	if(parseMask(options, options.effectiveLength) == 1)
-		return 1;
+   options.effectiveLength = options.klen;
+   if(parseMask(options, options.effectiveLength) == 1)
+      return 1;
 
-	if(options.pairwiseFileName != NULL)
-        {
-		//do pairwise
-		threaded_pw(options);
-	}
-	else if (options.referenceFileName != NULL && options.queryFileName != NULL)
-        {
-		//read in reference
-//		SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
-		try 
-		{
-			SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
-			//cout << "Attempting to read the records " << endl;
-			readRecords(referenceids, referenceseqs, seqRefFileIn);
-			//cout << "There are " << length(referenceids) << " " << length(referenceseqs) << " in the reference" << endl;
-		} 
-		catch (IOError const & e)
-        	{
-			cout << "Could not read in records " << endl;
-			cout << e.what() << endl;
-			return 1;
-		}
-		catch (ParseError const & e)
-                {
-			cout << "There is a formating error in " << options.referenceFileName << endl << e.what() << endl;
-                        return 1;
-                }
-		catch (...)
-		{
-			return 1;
-		}
+   if(options.pairwiseFileName != NULL)
+   {
+      //do pairwise
+      threaded_pw(options);
+   }
+   else if (options.referenceFileName != NULL && options.queryFileName != NULL)
+   {
+      //read in reference
+      try 
+      {
+         SeqFileIn seqRefFileIn(toCString(options.referenceFileName));
+         readRecords(referenceids, referenceseqs, seqRefFileIn);
+      } 
+      catch (IOError const & e)
+      {
+         cout << "Could not read in records " << endl;
+         cout << e.what() << endl;
+         return 1;
+      }
+      catch (ParseError const & e)
+      {
+         cout << "There is a formating error in ";
+         cout << options.referenceFileName << endl << e.what() << endl;
+         return 1;
+      }
+      catch (...)
+      {
+         return 1;
+      }
 
-		if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "dai")
-		{
-			kmer_count_map = makecomplete(options);
-		}
-		else if(options.type == "d2s-opt")
-		{
-			kmer_count_map = makequick(options, referenceseqs);
-		}
+      if(options.type == "d2s" || options.type == "hao" || 
+         options.type == "d2star" || options.type == "dai")
+      {
+         kmer_count_map = makecomplete(options);
+      }
+      else if(options.type == "d2s-opt")
+      {
+         kmer_count_map = makequick(options, referenceseqs);
+      }
 
-		if(options.debug == true)
-                        cout << " Getting ready to read reference" << endl;
+      if(options.debug == true)
+         cout << " Getting ready to read reference" << endl;
 
-		//read reference and counts into memory
-		for(int i = 0; i < length(referenceids); i++)
-		{
-			String<AminoAcid> seq;
-			if(options.noreverse == false)
-				seq = doRevCompl(referenceseqs[i]);
-			else
-				seq = referenceseqs[i];
+      //read reference and counts into memory
+      for(int i = 0; i < length(referenceids); i++)
+      {
+         String<AminoAcid> seq;
+         if(options.noreverse == false)
+            seq = doRevCompl(referenceseqs[i]);
+         else
+            seq = referenceseqs[i];
 
-			// ensure counts are done if mask is done
-			if(options.mask.size() > 0)
-				ref_counts_vec.push_back(count(seq, options.klen, options.mask));
-			else
-				ref_counts_vec.push_back(count(seq, options.klen));
+         // ensure counts are done if mask is done
+         if(options.mask.size() > 0)
+            ref_counts_vec.push_back(count(seq, options.klen, options.mask));
+         else
+            ref_counts_vec.push_back(count(seq, options.klen));
 
-			if(options.type == "d2s" || options.type == "hao" || options.type == "d2star" || options.type == "d2s-opt" || options.type == "dai")
-			{
-				//ref_markov_vec.push_back(markov(options.klen, seq, options.markovOrder, kmer_count_map));
-				ref_markov_vec.push_back(markov(options.effectiveLength, seq, options.markovOrder, kmer_count_map));
-			}
-		}
+         if(options.type == "d2s" || options.type == "hao" || 
+            options.type == "d2star" || options.type == "d2s-opt" || 
+            options.type == "dai")
+         {
+            ref_markov_vec.push_back(markov(options.effectiveLength, seq,
+                                     options.markovOrder, kmer_count_map));
+         }
+      }
 
-		if(!open(queryFileIn, (toCString(options.queryFileName))))
-		{
-			cerr << "Error: could not open file " << toCString(options.queryFileName) << endl;
-			return 1;
-		}
+      if(!open(queryFileIn, (toCString(options.queryFileName))))
+      {
+         cerr << "Error: could not open file ";
+         cerr << toCString(options.queryFileName) << endl;
+         return 1;
+      }
 
-		int arraySize = options.num_threads;
-		thread * workers = new thread[arraySize];
+      int arraySize = options.num_threads;
+      thread * workers = new thread[arraySize];
 
-		for(int w = 0; w < options.num_threads; w++)
-		{
-			workers[w] = thread(mainloop, options);
-		}
+      for(int w = 0; w < options.num_threads; w++)
+      {
+         workers[w] = thread(mainloop, options);
+      }
 
-		for(int w = 0; w < options.num_threads; w++)
-		{
-			workers[w].join();
-		}
-	}
-	return 0;
+      for(int w = 0; w < options.num_threads; w++)
+      {
+         workers[w].join();
+      }
+   }
+   return 0;
 }
