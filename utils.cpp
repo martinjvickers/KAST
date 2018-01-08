@@ -112,54 +112,58 @@ seqan::ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & option
         return seqan::ArgumentParser::PARSE_OK;
 }
 
-        //I need to check that if we are using skip-mers, then we need to check that these are sensible
-                //skip-mer mask must all be 0/1's
-                //skip-mer mask should be the same number of characters as the kmer size
-                //all skipmers shoud have the same number of 1's across masks
+/*
+I need to check that if we are using skip-mers, then we need to check that 
+these are sensible.
+  * skip-mer mask must all be 0/1's
+  * skip-mer mask should be the same number of characters as the kmer size
+  * all skipmers shoud have the same number of 1's across masks
+*/
 int parseMask(ModifyStringOptions options, int &effectiveKlen)
 {
-	bool first = true;
+   bool first = true;
 
-        for(auto m : options.mask)
-        {
-		// all should be the same number of characters as the klen
-                if(length(m) != options.klen)
-                {
-                        cerr << "ERROR: Mask sizes should be the same size as the K-Mer length."<< endl;
-                        return 1;
-                }
+   for(auto m : options.mask)
+   {
+      // all should be the same number of characters as the klen
+      if(length(m) != options.klen)
+      {
+         cerr << "ERROR: Mask sizes should be the same size ";
+         cerr << "as the K-Mer length." << endl;
+         return 1;
+      }
 
-                int counter = 0;
+      int counter = 0;
 
-		// checks to see that the mask is only made of 0/1's
-                for(int i = 0; i < length(m); i++)
-                {
-                        if(m[i] != '0' && m[i] != '1')
-                        {
-                                cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
-                                return 1;
-                        }
+      // checks to see that the mask is only made of 0/1's
+      for(int i = 0; i < length(m); i++)
+      {
+         if(m[i] != '0' && m[i] != '1')
+         {
+            cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
+            return 1;
+         }
 
-                        if(m[i] == '1')
-                                counter++;
-                }
+         if(m[i] == '1')
+            counter++;
+      }
 
-		if(first == true)
-		{
-			effectiveKlen = counter;
-			first = false;
-		}	
-		else 
-		{
-			if(counter != effectiveKlen)
-			{
-				cerr << "ERROR: The number of 0's and 1's in each mask should be the same e.g. 10001, 11000, 00011" << endl;
-				return 1;
-			}
-		}
-        }
-
-	return 0;
+      if(first == true)
+      {
+         effectiveKlen = counter;
+         first = false;
+      }	
+      else 
+      {
+         if(counter != effectiveKlen)
+         {
+            cerr << "ERROR: The number of 0's and 1's in each mask ";
+            cerr << "should be the same e.g. 10001, 11000, 00011" << endl;
+            return 1;
+         }
+      }
+   }
+   return 0;
 }
 
 AminoAcid getRevCompl(AminoAcid const & nucleotide)
@@ -254,46 +258,39 @@ double gc_ratio(String<AminoAcid> sequence)
         return (double)gc/(double)agct;
 }
 
-map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map)
+map<string, double> markov(int klen, String<AminoAcid> sequence, 
+                           int markovOrder, map<string, bool> kmer_count_map)
 {
-	//cout << "Calculating markov for " << endl;
-	//cout << sequence << endl;
+   map<string, double> markovmap;
+   double sum_prob = 0.0;
 
-        map<string, double> markovmap;
-        double sum_prob = 0.0;
+   map<string, unsigned int> markovcounts = count(sequence, markovOrder);
+   double tot = 0;
 
-        map<string, unsigned int> markovcounts = count(sequence, markovOrder);
-        double tot = 0;
+   for(pair<string, unsigned int> p: markovcounts)
+   {
+      tot = tot + p.second;
+   }
 
-	//for(auto m : markovcounts)
-	//	cout << m.first << " " << m.second << endl;
+   for(pair<string, bool> p: kmer_count_map)
+   {
+      double prob = 1.0;
+      Dna5String kmer = p.first;
 
-        for(pair<string, unsigned int> p: markovcounts)
-        {
-                tot = tot + p.second;
-        }
-
-        for(pair<string, bool> p: kmer_count_map)
-        {
-                double prob = 1.0;
-                Dna5String kmer = p.first;
-
-                for(int l = 0; l <= (length(kmer))-markovOrder; l++)
-                {
-                        int j = l + markovOrder;
-                        string inf;
-                        assign(inf,infix(kmer, l, j));
-                        prob = prob * ((double)markovcounts[inf] / (double)tot);
-			//cout << "mN " <<  inf << " " << p.first << " " << prob << " " << ((double)markovcounts[inf] / (double)tot) << " " << tot << endl;
-                }
-                markovmap[p.first] = prob;
-		//cout << p.first << " " << prob << endl;
-        }
-
-        return markovmap;
+      for(int l = 0; l <= (length(kmer))-markovOrder; l++)
+      {
+         int j = l + markovOrder;
+         string inf;
+         assign(inf,infix(kmer, l, j));
+         prob = prob * ((double)markovcounts[inf] / (double)tot);
+      }
+      markovmap[p.first] = prob;
+   }
+   return markovmap;
 }
 
-map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs)
+map<string, bool> makequick(ModifyStringOptions options, StringSet<String<AminoAcid>> referenceseqs)
+//map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs)
 {
 	map<string, bool> quickmers;
 

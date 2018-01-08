@@ -92,7 +92,8 @@ int mainloop(ModifyStringOptions options)
 
       map<string, double> querymarkov;
       if(options.type == "d2s" || options.type == "hao" || 
-         options.type == "d2star" || options.type == "dai")
+         options.type == "d2star" || options.type == "dai" ||
+         options.type == "d2s-opt")
       {
          querymarkov = markov(options.effectiveLength, seq, 
                               options.markovOrder, kmer_count_map);
@@ -171,7 +172,8 @@ int mainloop(ModifyStringOptions options)
 
             map<string, double> refmarkov;
             if(options.type == "d2s" || options.type == "hao" || 
-               options.type == "d2star" || options.type == "dai")
+               options.type == "d2star" || options.type == "dai" ||
+               options.type == "d2s-opt")
             {
                refmarkov = markov(options.effectiveLength, rseq, 
                                   options.markovOrder, kmer_count_map);
@@ -182,7 +184,7 @@ int mainloop(ModifyStringOptions options)
                dist = euler(options, refcounts, querycounts);
             else if(options.type == "d2")
                dist = d2(options, refcounts, querycounts);
-            else if(options.type == "d2s")
+            else if(options.type == "d2s" || options.type == "d2s-opt")
                dist = d2s(options, kmer_count_map, refcounts, refmarkov, 
                           querycounts, querymarkov);
             else if(options.type == "d2star")
@@ -351,7 +353,8 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
 
       map<string, double> querymarkov;
       if(options.type == "d2s" || options.type == "hao" || 
-         options.type == "d2star" || options.type == "dai")
+         options.type == "d2star" || options.type == "dai" ||
+         options.type == "d2s-opt")
       {
          querymarkov = markov(options.effectiveLength, seq, 
                               options.markovOrder, kmer_count_map);
@@ -372,17 +375,18 @@ int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
 
          map<string, double> refmarkov;
          if(options.type == "d2s" || options.type == "hao" || 
-            options.type == "d2star" || options.type == "dai")
+            options.type == "d2star" || options.type == "dai" ||
+            options.type == "d2s-opt")
          {
             refmarkov = markov(options.effectiveLength, refseq, 
                                options.markovOrder, kmer_count_map);
          }
-			
+
          if(options.type == "kmer")
             dist = euler(options, refcounts, querycounts);
          else if(options.type == "d2")
             dist = d2(options, refcounts, querycounts);
-         else if(options.type == "d2s")
+         else if(options.type == "d2s" || options.type == "d2s-opt")
             dist = d2s(options, kmer_count_map, refcounts, refmarkov, 
                        querycounts, querymarkov);
          else if(options.type == "d2star")
@@ -432,6 +436,17 @@ int threaded_pw(ModifyStringOptions options)
    array_threaded.resize(size);
    for(int i = 0; i < size; i++)
       array_threaded[i].resize(size);
+
+   // create kmer_count_map
+   if(options.type == "d2s" || options.type == "hao" ||
+      options.type == "d2star" || options.type == "dai")
+   {
+      kmer_count_map = makecomplete(options);
+   }
+   else if(options.type == "d2s-opt")
+   {
+      kmer_count_map = makequick(options, pairwiseseq);
+   }
 
    //run our threads, this is where we do the work
    int arraySize = options.num_threads;
@@ -509,7 +524,6 @@ int main(int argc, char const ** argv)
 
    if(options.pairwiseFileName != NULL)
    {
-      //do pairwise
       threaded_pw(options);
    }
    else if (options.referenceFileName != NULL && options.queryFileName != NULL)

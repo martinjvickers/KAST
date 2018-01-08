@@ -31,7 +31,8 @@ map<string, unsigned int> count(String<AminoAcid> sequence, int klen, vector<Cha
 double gc_ratio(String<AminoAcid> sequence);
 map<string, double> markov(int klen, String<AminoAcid> sequence, int markovOrder, map<string, bool> kmer_count_map);
 map<string, bool> makecomplete(ModifyStringOptions options);
-map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs);
+map<string, bool> makequick(ModifyStringOptions options, StringSet<String<AminoAcid>> referenceseqs);
+//map<string, bool> makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs);
 //int makequick(ModifyStringOptions options, StringSet<Dna5String> referenceseqs, map<string, bool> quickkmers);
 int ipow(int base, int exp);
 CharString namecut(CharString seq, int val);

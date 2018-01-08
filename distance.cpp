@@ -357,6 +357,10 @@ double dai(ModifyStringOptions options, map<string, bool> ourkmers,
     
       cout << p.first << "\t" << r_sigma << "\t" << q_sigma << endl;
 
+      // I added this if statement here. I'm not sure if this breaks
+      // something, but basically we only do the calculation on kmers
+      // that exist in both sequences. This d2tools implementions
+      // simply bombs out if this situation is encountered
       if(rC != 0 && qC != 0)
       {
          if(r_sigma != q_sigma)
