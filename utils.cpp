@@ -245,7 +245,9 @@ String<AminoAcid> doRevCompl(String<AminoAcid> seq)
    return allSeq;
 }
 
-
+/*
+   Return a map of all the kmers in a sequence
+*/
 map<string, unsigned int> count(String<AminoAcid> sequence, int klen)
 {
    int total = 0;
