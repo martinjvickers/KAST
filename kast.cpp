@@ -58,10 +58,9 @@ vector< vector<double> > array_threaded;
 
 int pairwise_matrix_test(ModifyStringOptions options)
 {
-   //so I'd need a pairwise set of records
    SeqFileIn pairwiseFileIn;
-   StringSet<String<AminoAcid>> pairwiseseq;
-   StringSet<CharString> pairwiseid;
+   CharString pwid;
+   String<AminoAcid> pwseq;
 
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
@@ -70,24 +69,45 @@ int pairwise_matrix_test(ModifyStringOptions options)
       return 1;
    }
 
-   readRecords(pairwiseid, pairwiseseq, pairwiseFileIn);
+   vector<pair<CharString, map<string, unsigned int>>> pw_counts;
 
-//   array_threaded.resize(size);
- //  for(int i = 0; i < size; i++)
-  //    array_threaded[i].resize(size);
-
-   for (unsigned rowIndex = 0; rowIndex < length(pairwiseid); ++rowIndex)
+   while(!atEnd(pairwiseFileIn))
    {
-      for (unsigned colIndex = rowIndex; colIndex < length(pairwiseid); ++colIndex)
+      readRecord(pwid, pwseq, pairwiseFileIn);
+      pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
+   }
+
+   close(pairwiseFileIn);
+
+   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
+   {
+      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
       {
+         double dist;
+         if(options.type == "kmer")
+            dist = euler(options, pw_counts[rI].second, pw_counts[cI].second);
+         else if(options.type == "d2")
+            dist = d2(options, pw_counts[rI].second, pw_counts[cI].second);
+         else if(options.type == "manhattan")
+            dist = manhattan(options, pw_counts[rI].second, 
+                             pw_counts[cI].second);
+         else if(options.type == "chebyshev")
+            dist = chebyshev(options, pw_counts[rI].second, 
+                             pw_counts[cI].second);
+         else if(options.type == "bc")
+            dist = bray_curtis_distance(options, pw_counts[rI].second, 
+                                        pw_counts[cI].second);
+         else if(options.type == "ngd")
+            dist = normalised_google_distance(options, pw_counts[rI].second, 
+                                              pw_counts[cI].second);
 
-         
-
+         array_threaded[rI][cI] = dist;
+         array_threaded[cI][rI] = dist;
       }
    }
 
-   close(pairwiseFileIn);   
    return 0;
+
 }
 
 //main threaded loop
@@ -562,14 +582,16 @@ int main(int argc, char const ** argv)
       clock_t start;
       start = clock();
       threaded_pw(options);
-      std::cout << "Time: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
-
-      start = clock();
-      pairwise_matrix_test(options);
-      std::cout << "Time: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+      cout << "Time: ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
 
       // new one
-      
+      start = clock();
+      pairwise_matrix_test(options);
+      cout << "Time: ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
    }
    else if (options.referenceFileName != NULL && options.queryFileName != NULL)
    {
