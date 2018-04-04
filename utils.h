@@ -22,5 +22,8 @@ map<string, bool> makequick(ModifyStringOptions options,
 int ipow(int base, int exp);
 CharString namecut(CharString seq, int val);
 int parseMask(ModifyStringOptions options, int &effectiveKlen);
+int printPhylyp(ModifyStringOptions options,    
+                vector<pair<CharString, map<string, unsigned int>>> pw_counts,
+                vector< vector<double>> &array_threaded_internal);
 
 #endif

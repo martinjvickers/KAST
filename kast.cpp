@@ -60,6 +60,7 @@ int pairwise_matrix_test(ModifyStringOptions options)
    SeqFileIn pairwiseFileIn;
    CharString pwid;
    String<AminoAcid> pwseq;
+   vector< vector<double> > array_threaded_internal;
 
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
@@ -77,6 +78,8 @@ int pairwise_matrix_test(ModifyStringOptions options)
    }
 
    close(pairwiseFileIn);
+
+   array_threaded_internal.resize(pw_counts.size(), vector<double>(pw_counts.size(), 0.0));
 
    for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
    {
@@ -100,10 +103,12 @@ int pairwise_matrix_test(ModifyStringOptions options)
             dist = normalised_google_distance(options, pw_counts[rI].second, 
                                               pw_counts[cI].second);
 
-         array_threaded[rI][cI] = dist;
-         array_threaded[cI][rI] = dist;
+         array_threaded_internal[rI][cI] = dist;
+         array_threaded_internal[cI][rI] = dist;
       }
    }
+
+   printPhylyp(options, pw_counts, array_threaded_internal);
 
    return 0;
 
@@ -579,11 +584,11 @@ int main(int argc, char const ** argv)
    {
       // maybe I should make secondry version
       clock_t start;
-      start = clock();
-      threaded_pw(options);
-      cout << "Time: ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
+      //start = clock();
+      //threaded_pw(options);
+      //cout << "Time: ";
+      //cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      //cout << " ms" << endl;
 
       // new one
       start = clock();

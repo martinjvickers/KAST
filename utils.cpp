@@ -450,3 +450,83 @@ CharString namecut(CharString seq, int val)
    }
 }
 
+int printPhylyp(ModifyStringOptions options, 
+                vector<pair<CharString, map<string, unsigned int>>> pw_counts,
+                vector<vector<double>> &array_threaded_internal)
+{
+   ofstream outfile_new;
+
+   try
+   {
+      outfile_new.open(toCString(options.outputFileName), std::ios_base::out);
+   }
+   catch (const ifstream::failure& e)
+   {
+      cout << "Error: could not open output file ";
+      cout << toCString(options.outputFileName) << endl;
+      return 1;
+   }
+
+   if(options.outputFileName == NULL)
+   {
+      cout << pw_counts.size() << endl;
+   }
+   else
+   {
+      outfile_new << pw_counts.size() << endl;
+   }
+
+   for(int i = 0; i < pw_counts.size(); i++)
+   {
+      StringSet<CharString> split;
+      strSplit(split, pw_counts[i].first);
+      int cutsize = 10;
+      CharString qName = split[0];
+      qName = namecut(qName, cutsize);
+
+      if(options.outputFileName == NULL)
+      {
+         cout << qName << "\t";
+         for(int j = 0; j < pw_counts.size(); j++)
+            cout << array_threaded_internal[i][j] << "\t";
+         cout << endl;
+      }
+      else
+      {
+         outfile_new << qName << "\t";
+         for(int j = 0; j < pw_counts.size(); j++)
+            outfile_new << array_threaded_internal[i][j] << "\t";
+         outfile_new << endl;
+      }
+   }
+
+   close(outfile_new);
+
+/*
+   for(int i = 0; i < length(pairwiseid); i++)
+   {
+      StringSet<CharString> split;
+      strSplit(split, pairwiseid[i]);
+      int cutsize = 10;
+      CharString qName = split[0];
+      qName = namecut(qName, cutsize);
+
+      if(options.outputFileName == NULL)
+      {
+         cout << qName << "\t";
+         for(int j = 0; j < length(pairwiseid); j++)
+            cout << array_threaded[i][j] << "\t";
+         cout << endl;
+      }
+      else
+      {
+         outfile << qName << "\t";
+         for(int j = 0; j < length(pairwiseid); j++)
+            outfile << array_threaded[i][j] << "\t";
+         outfile << endl;
+      }
+   }
+*/
+
+   return 0;
+}
