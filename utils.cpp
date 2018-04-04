@@ -44,8 +44,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     distance please refer to the wiki ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type", 
-                  "d2 kmer d2s d2s-opt d2star manhattan \
-                   chebyshev hao dai bc ngd");
+               "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai bc ngd");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 
@@ -503,4 +502,198 @@ int printPhylyp(ModifyStringOptions options,
    close(outfile_new);
 
    return 0;
+}
+
+int printResult(ModifyStringOptions options, CharString &queryid,
+                ofstream &outfile, String<AminoAcid> &queryseq,
+                map<double, int> &results, StringSet<CharString> &referenceids,
+                StringSet<String<AminoAcid>> &referenceseqs)
+{
+      if(options.output_format == "tabular")
+      {
+         StringSet<CharString> split;
+         strSplit(split, queryid);
+         CharString qName = split[0];
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ ";
+            cout << length(queryseq) << "\t" << gc_ratio(queryseq);
+            cout << "\t" << qName << endl;
+         }
+         else
+         {
+            outfile << "############################ ";
+            outfile << length(queryseq) << "\t" << gc_ratio(queryseq);
+            outfile << "\t" << qName << endl;
+         }
+
+         for(pair<double, int> p: results)
+         {
+            StringSet<CharString> split2;
+            strSplit(split2, referenceids[p.second]);
+            if(options.outputFileName == NULL)
+            {
+               cout << p.first << "\t" << length(referenceseqs[p.second]);
+               cout << "\t" << gc_ratio(referenceseqs[p.second]);
+               cout << "\t" << split2[0] << endl;
+            }
+            else
+            {
+               outfile << p.first << "\t" << length(referenceseqs[p.second]);
+               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
+               outfile << "\t" << split2[0] << endl;
+            }
+         }
+      }
+      else if(options.output_format == "blastlike")
+      {
+         if(options.outputFileName == NULL)
+         {
+            cout << "RefID\tQryID\tRefLen\tQryLen\t";
+            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+         else
+         {
+            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
+            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+
+         int count = 1;
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << "\t" << queryid << "\t";
+               cout << length(referenceseqs[p.second]) << "\t";
+               cout << length(queryseq) << "\t";
+               cout << gc_ratio(referenceseqs[p.second]) << "\t";
+               cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               cout << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << "\t" << queryid << "\t";
+               outfile << length(referenceseqs[p.second]) << "\t";
+               outfile << length(queryseq) << "\t";
+               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
+               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               outfile << p.first << endl;
+            }
+            count++;
+         }
+
+      }
+      else
+      {
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ " << queryid << endl;
+         }
+         else
+         {
+            outfile << "############################ " << queryid << endl;
+         }
+
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << " " << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << " " << p.first << endl;
+            }
+         }
+      }
+
+/*
+
+         for(pair<double, int> p: results)
+         {
+            StringSet<CharString> split2;
+            strSplit(split2, referenceids[p.second]);
+
+            if(options.outputFileName == NULL)
+            {
+               cout << p.first << "\t" << length(referenceseqs[p.second]);
+               cout << "\t" << gc_ratio(referenceseqs[p.second]);
+               cout << "\t" << split2[0] << endl;
+            }
+            else
+            {
+               outfile << p.first << "\t" << length(referenceseqs[p.second]);
+               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
+               outfile << "\t" << split2[0] << endl;
+            }
+         }
+         n.unlock();
+      }
+      else if(options.output_format == "blastlike")
+      {
+         n.lock();
+
+         if(options.outputFileName == NULL)
+         {
+            cout << "RefID\tQryID\tRefLen\tQryLen\t";
+            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+         else
+         {
+            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
+            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+
+         int count = 1;
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << "\t" << queryid << "\t";
+               cout << length(referenceseqs[p.second]) << "\t";
+               cout << length(queryseq) << "\t";
+               cout << gc_ratio(referenceseqs[p.second]) << "\t";
+               cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               cout << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << "\t" << queryid << "\t";
+               outfile << length(referenceseqs[p.second]) << "\t";
+               outfile << length(queryseq) << "\t";
+               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
+               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               outfile << p.first << endl;
+            }
+            count++;
+         }
+         n.unlock();
+      }
+      else
+      {
+         n.lock();
+
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ " << queryid << endl;
+         }
+         else
+         {
+            outfile << "############################ " << queryid << endl;
+         }
+
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << " " << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << " " << p.first << endl;
+            }
+         }
+         n.unlock();
+      }
+*/
 }

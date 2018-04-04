@@ -79,7 +79,8 @@ int pairwise_matrix_test(ModifyStringOptions options)
 
    close(pairwiseFileIn);
 
-   array_threaded_internal.resize(pw_counts.size(), vector<double>(pw_counts.size(), 0.0));
+   array_threaded_internal.resize(pw_counts.size(), 
+                                  vector<double>(pw_counts.size(), 0.0));
 
    for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
    {
@@ -274,112 +275,10 @@ int mainloop(ModifyStringOptions options)
          }
       }
 
-      if(options.output_format == "tabular")
-      {
-         n.lock();
-
-         StringSet<CharString> split;
-         strSplit(split, queryid);
-         CharString qName = split[0];
-         if(options.outputFileName == NULL)
-         {
-            cout << "############################ ";
-            cout << length(queryseq) << "\t" << gc_ratio(queryseq);
-            cout << "\t" << qName << endl;
-         }
-         else
-         {
-            outfile << "############################ ";
-            outfile << length(queryseq) << "\t" << gc_ratio(queryseq);
-            outfile << "\t" << qName << endl;
-         }
-
-         for(pair<double, int> p: results)
-         {
-            StringSet<CharString> split2;
-            strSplit(split2, referenceids[p.second]);
-
-            if(options.outputFileName == NULL)
-            {
-               cout << p.first << "\t" << length(referenceseqs[p.second]);
-               cout << "\t" << gc_ratio(referenceseqs[p.second]);
-               cout << "\t" << split2[0] << endl;
-            }
-            else
-            {
-               outfile << p.first << "\t" << length(referenceseqs[p.second]);
-               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
-               outfile << "\t" << split2[0] << endl;
-            }			
-         }
-         n.unlock();
-      } 
-      else if(options.output_format == "blastlike")
-      {
-         n.lock();
-
-         if(options.outputFileName == NULL)
-         {
-            cout << "RefID\tQryID\tRefLen\tQryLen\t";
-            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
-         }
-         else
-         {
-            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
-            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
-         }
-
-         int count = 1;
-         for(pair<double, int> p: results)
-         {
-            if(options.outputFileName == NULL)
-            {
-               cout << referenceids[p.second] << "\t" << queryid << "\t";
-               cout << length(referenceseqs[p.second]) << "\t";
-               cout << length(queryseq) << "\t";
-               cout << gc_ratio(referenceseqs[p.second]) << "\t";
-               cout << gc_ratio(queryseq) << "\t" << count << "\t";
-               cout << p.first << endl;
-            }
-            else
-            {
-               outfile << referenceids[p.second] << "\t" << queryid << "\t";
-               outfile << length(referenceseqs[p.second]) << "\t";
-               outfile << length(queryseq) << "\t";
-               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
-               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
-               outfile << p.first << endl;
-            }
-            count++;
-         }
-         n.unlock();
-      } 
-      else
-      {
-         n.lock();
-
-         if(options.outputFileName == NULL)
-         {
-            cout << "############################ " << queryid << endl;
-         }
-         else
-         {
-            outfile << "############################ " << queryid << endl;
-         }
-
-         for(pair<double, int> p: results)
-         {
-            if(options.outputFileName == NULL)
-            {
-               cout << referenceids[p.second] << " " << p.first << endl;
-            }
-            else
-            {
-               outfile << referenceids[p.second] << " " << p.first << endl;
-            }
-         }
-         n.unlock();
-      }
+      n.lock();
+      printResult(options, queryid, outfile, queryseq, results,
+                  referenceids, referenceseqs);
+      n.unlock();
    }
    return 0;
 }
