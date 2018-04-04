@@ -502,31 +502,5 @@ int printPhylyp(ModifyStringOptions options,
 
    close(outfile_new);
 
-/*
-   for(int i = 0; i < length(pairwiseid); i++)
-   {
-      StringSet<CharString> split;
-      strSplit(split, pairwiseid[i]);
-      int cutsize = 10;
-      CharString qName = split[0];
-      qName = namecut(qName, cutsize);
-
-      if(options.outputFileName == NULL)
-      {
-         cout << qName << "\t";
-         for(int j = 0; j < length(pairwiseid); j++)
-            cout << array_threaded[i][j] << "\t";
-         cout << endl;
-      }
-      else
-      {
-         outfile << qName << "\t";
-         for(int j = 0; j < length(pairwiseid); j++)
-            outfile << array_threaded[i][j] << "\t";
-         outfile << endl;
-      }
-   }
-*/
-
    return 0;
 }
