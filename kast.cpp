@@ -55,12 +55,43 @@ ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
 
+
+/*
+   TODO: mjv08
+
+   The way I think I'm going to tackle this, for now (brain dump)...
+
+   I don't want to have to care at the readRecord level what type of 
+   alphabet we have. But, we know the type of distance measure so in 
+   theory we should be able to say, "you're using the wrong measure
+   on your dataset", e.g ngd on a protein input. However, this may be
+   something someone wishes to do, so it might not be a good idea.
+
+   Also, defaults are supposed to be different, e.g. we don't do
+   reverse compl on AminoAcids.
+
+   The dream would be the following;
+
+   Read the sequence into a TPattern or THost or TSequence (is this correct?!, 
+   can I make anything up here?) I define TSeqquence like this;
+
+   typedef String<TAlphabet> TSequence;
+
+   
+
+*/
 int pairwise_matrix_test(ModifyStringOptions options)
 {
    SeqFileIn pairwiseFileIn;
    CharString pwid;
    String<AminoAcid> pwseq;
    vector< vector<double> > array_threaded_internal;
+
+   // this is me messing around here...
+   typedef Dna5 TAlphabet;
+   typedef String<TAlphabet> TSequence;
+   TSequence seq;
+   // end-ish of mess
 
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
@@ -73,12 +104,19 @@ int pairwise_matrix_test(ModifyStringOptions options)
 
    while(!atEnd(pairwiseFileIn))
    {
-      readRecord(pwid, pwseq, pairwiseFileIn);
-      pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
+      //readRecord(pwid, pwseq, pairwiseFileIn);
+      //pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
+
+      readRecord(pwid, seq, pairwiseFileIn); // last-last mess
+      count(seq, options.klen);
+      cout << seq << endl;
+      
    }
+
 
    close(pairwiseFileIn);
 
+/*
    array_threaded_internal.resize(pw_counts.size(), 
                                   vector<double>(pw_counts.size(), 0.0));
 
@@ -110,7 +148,7 @@ int pairwise_matrix_test(ModifyStringOptions options)
    }
 
    printPhylyp(options, pw_counts, array_threaded_internal);
-
+*/
    return 0;
 
 }
