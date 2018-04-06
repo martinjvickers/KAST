@@ -75,9 +75,22 @@ vector< vector<double> > array_threaded;
    Read the sequence into a TPattern or THost or TSequence (is this correct?!, 
    can I make anything up here?) I define TSeqquence like this;
 
+   typedef Dna5 TAlphabet;
    typedef String<TAlphabet> TSequence;
+   TSequence seq;
 
-   
+   // this allows me to check what the sequence alphabet is
+   if(IsSameType<TAlphabet, Dna5>::VALUE || IsSameType<TAlphabet, Rna5>::VALUE)
+
+   typedef typename Size<TAlphabet>::Type TSize;
+   TSize alphSize = ValueSize<TAlphabet>::VALUE;
+
+   typedef typename Size<Dna5>::Type TSizeDna5;
+   TSizeDna5 dnaalphSize = ValueSize<Dna5>::VALUE;
+
+   cout << "HiYa"<< endl;
+   cout << "Current Alphabet\t" << alphSize << "\tDna5:\t" << dnaalphSize << "\tAA:\t" << ValueSize<AminoAcid>::VALUE << endl;
+
 
 */
 int pairwise_matrix_test(ModifyStringOptions options)
@@ -86,12 +99,6 @@ int pairwise_matrix_test(ModifyStringOptions options)
    CharString pwid;
    String<AminoAcid> pwseq;
    vector< vector<double> > array_threaded_internal;
-
-   // this is me messing around here...
-   typedef Dna5 TAlphabet;
-   typedef String<TAlphabet> TSequence;
-   TSequence seq;
-   // end-ish of mess
 
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
@@ -104,19 +111,13 @@ int pairwise_matrix_test(ModifyStringOptions options)
 
    while(!atEnd(pairwiseFileIn))
    {
-      //readRecord(pwid, pwseq, pairwiseFileIn);
-      //pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
-
-      readRecord(pwid, seq, pairwiseFileIn); // last-last mess
-      count(seq, options.klen);
-      cout << seq << endl;
-      
+      readRecord(pwid, pwseq, pairwiseFileIn);
+      pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
    }
 
 
    close(pairwiseFileIn);
 
-/*
    array_threaded_internal.resize(pw_counts.size(), 
                                   vector<double>(pw_counts.size(), 0.0));
 
@@ -148,7 +149,7 @@ int pairwise_matrix_test(ModifyStringOptions options)
    }
 
    printPhylyp(options, pw_counts, array_threaded_internal);
-*/
+
    return 0;
 
 }
