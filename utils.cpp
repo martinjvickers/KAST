@@ -244,58 +244,6 @@ String<AminoAcid> doRevCompl(String<AminoAcid> seq)
    return allSeq;
 }
 
-/*
-   Return a map of all the kmers in a sequence
-*/
-map<string, unsigned int> count(String<AminoAcid> sequence, int klen)
-{
-   int total = 0;
-   map<string, unsigned int> map;
-   for(int i = 0; i <= length(sequence)-klen; i++)
-   {
-      string kmer;
-      assign(kmer,infix(sequence, i, i+klen));
-      size_t found = kmer.find("N");
-
-      if(found > kmer.size())
-      {
-         long long int count = map[kmer];
-         map[kmer] = count + 1;
-         total++;
-      }
-   }
-   return map;
-}
-
-map<string, unsigned int> count(String<AminoAcid> sequence, int klen, 
-                                vector<CharString> mask)
-{
-   int total = 0;
-   map<string, unsigned int> map;
-   for(int i = 0; i <= length(sequence)-klen; i++)
-   {
-      string kmer;
-      assign(kmer,infix(sequence, i, i+klen));
-
-      //so kmer has the wider bit we care about
-      //now go through the mask and append kmers
-      for(auto m : mask)
-      {
-         CharString masked_kmer;
-         for(int loc = 0; loc < length(m); loc++)
-         {
-            if(m[loc] == '1')
-               append(masked_kmer,kmer[loc]);
-         }
-			
-         unsigned int count = map[toCString(masked_kmer)];
-         map[toCString(masked_kmer)] = count + 1;
-         //total++;
-      }
-   }
-   return map;
-}
-
 double gc_ratio(String<AminoAcid> sequence)
 {
    int gc = 0;

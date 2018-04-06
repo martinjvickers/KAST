@@ -10,9 +10,59 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                              int argc, char const ** argv);
 AminoAcid getRevCompl(AminoAcid const & nucleotide);
 String<AminoAcid> doRevCompl(String<AminoAcid> seq);
-map<string, unsigned int> count(String<AminoAcid> sequence, int klen);
-map<string, unsigned int> count(String<AminoAcid> sequence, int klen, 
-                                vector<CharString> mask);
+
+/*
+   Generic function to return kmer counts
+*/
+template <typename TAlphabet>
+map<string, unsigned int> count(String<TAlphabet> const & seq, int klen)
+{
+   map<string, unsigned int> map;
+   for(unsigned i = 0; i <= length(seq) - klen; i++)
+   {
+      string kmer;
+      assign(kmer,infix(seq, i, i+klen));
+      size_t found = kmer.find("N");
+      if(found > kmer.size())
+      {
+         unsigned int count = map[kmer];
+         map[kmer] = count + 1;
+      }
+   }
+   return map;
+};
+
+/*
+   Generic function to return kmer counts but with a mask vector
+*/
+template <typename TAlphabet>
+map<string, unsigned int> count(String<TAlphabet> sequence, int klen, 
+                                vector<CharString> mask)
+{
+   map<string, unsigned int> map;
+   for(int i = 0; i <= length(sequence)-klen; i++)
+   {
+      string kmer;
+      assign(kmer,infix(sequence, i, i+klen));
+
+      // so kmer has the wider bit we care about
+      // now go through the mask and append kmers
+      for(auto m : mask)
+      {
+         CharString masked_kmer;
+         for(int loc = 0; loc < length(m); loc++)
+         {
+            if(m[loc] == '1')
+               append(masked_kmer,kmer[loc]);
+         }
+                        
+         unsigned int count = map[toCString(masked_kmer)];
+         map[toCString(masked_kmer)] = count + 1;
+      }
+   }
+   return map;
+};
+
 double gc_ratio(String<AminoAcid> sequence);
 map<string, double> markov(int klen, String<AminoAcid> sequence, 
                            int markovOrder, map<string, bool> kmer_count_map);
