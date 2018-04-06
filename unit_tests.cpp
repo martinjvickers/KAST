@@ -29,18 +29,49 @@ SOFTWARE.
 #include "distance.h"
 #include "utils.h"
 
-//map<string, unsigned int> count(String<AminoAcid> sequence, int klen, vector<CharString> mask)
-
+/*
+   A simple masked kmer count test
+*/
 int count_mask_test()
 {
-	int klen = 5;
-        String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-        ModifyStringOptions options;
-        options.klen = klen;
-	vector<CharString> vec;
-	vec.push_back("00111");
-	map<string, unsigned int> querycounts = count(qryseq, klen, vec);
-	return 0;
+   // define options
+   ModifyStringOptions options;
+   options.klen = 5;
+
+   // give seqence and known results
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGG";
+   map<string, unsigned int> knownRes;
+   vector<string> v = {"GCA","CAG","AGC","GCG","CGT","GTA","TAC","ACG","CGA",
+                       "GAA","AAC","ACC","CCT","CTA","TAC","ACT","CTG","TGG"};
+   for(auto i : v)
+      knownRes[i]++;
+
+   // give a mask
+   vector<CharString> vec;
+   vec.push_back("00111");
+
+   // run counts
+   map<string, unsigned int> querycounts = count(qryseq, options.klen, vec);
+
+   // are there the same number of counts?
+   if(knownRes.size() != querycounts.size())
+   {
+      cerr << "ERROR: Masked counts does not match number of known counts" << endl;
+      return 1;
+   }
+
+   // check to see if they're identical
+   for(auto i : querycounts)
+   {
+      if(knownRes[i.first] != i.second)
+      {
+         cerr << "ERROR: " << i.first << "\t" <<knownRes[i.first] << "\t";
+         cerr << i.second << endl;
+         return 1;
+      }
+   }
+
+   return 0;
 }
 
 int zero_sized_seq_count()
