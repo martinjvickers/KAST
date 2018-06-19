@@ -41,6 +41,7 @@ SOFTWARE.
 #include "common.h"
 #include "distance.h"
 #include "utils.h"
+#include "tbb/tbb.h"
 using namespace seqan;
 using namespace std;
 
@@ -55,6 +56,7 @@ ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
 
+using namespace tbb;
 
 /*
    TODO: mjv08
@@ -93,8 +95,30 @@ vector< vector<double> > array_threaded;
 
 
 */
+void distance_thread(map<string, unsigned int> q1, map<string, unsigned int> q2, int i1, int i2, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options)
+{
+   double dist;
+
+   if(options.type == "kmer")
+      dist = euler(options, q1, q2);
+   else if(options.type == "d2")
+      dist = d2(options, q1, q2);
+   else if(options.type == "manhattan")
+      dist = manhattan(options, q1, q2);
+   else if(options.type == "chebyshev")
+      dist = chebyshev(options, q1, q2);
+   else if(options.type == "bc")
+      dist = bray_curtis_distance(options, q1, q2);
+   else if(options.type == "ngd")
+      dist = normalised_google_distance(options, q1, q2);
+
+   array_threaded_internal[i1][i2] = dist;
+   array_threaded_internal[i2][i1] = dist;
+}
+
 int pairwise_matrix_test(ModifyStringOptions options)
 {
+   /* Read in the input file */
    SeqFileIn pairwiseFileIn;
    CharString pwid;
    String<AminoAcid> pwseq;
@@ -107,47 +131,42 @@ int pairwise_matrix_test(ModifyStringOptions options)
       return 1;
    }
 
+   /* Calculate counts  */
    vector<pair<CharString, map<string, unsigned int>>> pw_counts;
 
    while(!atEnd(pairwiseFileIn))
    {
       readRecord(pwid, pwseq, pairwiseFileIn);
-      pw_counts.push_back(make_pair(pwid, count(pwseq, options.klen)));
+      String<AminoAcid> refseq;
+      if(options.noreverse == false)
+         refseq = doRevCompl(pwseq);
+      pw_counts.push_back(make_pair(pwid, count(refseq, options.klen)));
    }
-
 
    close(pairwiseFileIn);
 
+   /* Store the results */
    array_threaded_internal.resize(pw_counts.size(), 
                                   vector<double>(pw_counts.size(), 0.0));
 
-   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
+   // create kmer_count_map if doing a markov model
+   if(options.type == "d2s" || options.type == "hao" ||
+      options.type == "d2star" || options.type == "dai")
    {
-      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
-      {
-         double dist;
-         if(options.type == "kmer")
-            dist = euler(options, pw_counts[rI].second, pw_counts[cI].second);
-         else if(options.type == "d2")
-            dist = d2(options, pw_counts[rI].second, pw_counts[cI].second);
-         else if(options.type == "manhattan")
-            dist = manhattan(options, pw_counts[rI].second, 
-                             pw_counts[cI].second);
-         else if(options.type == "chebyshev")
-            dist = chebyshev(options, pw_counts[rI].second, 
-                             pw_counts[cI].second);
-         else if(options.type == "bc")
-            dist = bray_curtis_distance(options, pw_counts[rI].second, 
-                                        pw_counts[cI].second);
-         else if(options.type == "ngd")
-            dist = normalised_google_distance(options, pw_counts[rI].second, 
-                                              pw_counts[cI].second);
-
-         array_threaded_internal[rI][cI] = dist;
-         array_threaded_internal[cI][rI] = dist;
-      }
+      kmer_count_map = makecomplete(options);
    }
 
+   vector<thread> vectorOfThreads;
+
+   /* Calculate the distances */
+   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
+      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
+         vectorOfThreads.push_back(thread(distance_thread, pw_counts[rI].second, pw_counts[cI].second, rI, cI, std::ref(array_threaded_internal), options));
+
+   for(auto &thread : vectorOfThreads)
+      thread.join();
+
+   /* Print the results */
    printPhylyp(options, pw_counts, array_threaded_internal);
 
    return 0;
@@ -322,6 +341,7 @@ int mainloop(ModifyStringOptions options)
    return 0;
 }
 
+/*
 int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
              StringSet<String<AminoAcid>> pairwiseseq)
 {
@@ -496,6 +516,7 @@ int threaded_pw(ModifyStringOptions options)
    }
    return 0;
 }
+*/
 
 int main(int argc, char const ** argv)
 {
@@ -522,11 +543,14 @@ int main(int argc, char const ** argv)
    {
       // maybe I should make secondry version
       clock_t start;
-      //start = clock();
-      //threaded_pw(options);
-      //cout << "Time: ";
-      //cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      //cout << " ms" << endl;
+
+/*
+      start = clock();
+      threaded_pw(options);
+      cout << "Time: ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
+*/
 
       // new one
       start = clock();
