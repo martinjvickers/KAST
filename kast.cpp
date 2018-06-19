@@ -41,7 +41,7 @@ SOFTWARE.
 #include "common.h"
 #include "distance.h"
 #include "utils.h"
-#include "tbb/tbb.h"
+
 using namespace seqan;
 using namespace std;
 
@@ -55,8 +55,6 @@ StringSet<String<AminoAcid>> referenceseqs;
 ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
-
-using namespace tbb;
 
 /*
    TODO: mjv08
