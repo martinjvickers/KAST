@@ -1,5 +1,108 @@
 ###Try some profiling
 
+
+
+### Doing some threading for PW
+
+This is done on the 32GB 16C VM using the 17 contig yeast genome. Note that threading per sequence means the resulting sequence is out of order. I guess I could solve this by sorting it somehow.
+
+#### 1 ) If I create a thread per sequence
+
+```
+
+Time: 1.17231e+06 ms
+	Command being timed: "./kast2 -p yeast.fasta -k 11"
+	User time (seconds): 1157.35
+	System time (seconds): 15.21
+	Percent of CPU this job got: 761%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:34.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 9025448
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2266004
+	Voluntary context switches: 716187
+	Involuntary context switches: 16900
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+```
+
+#### 2 ) Sequential counting per sequence
+
+```
+Time: 1.15425e+06 ms
+	Command being timed: "./kast -p yeast.fasta -k 11"
+	User time (seconds): 1140.70
+	System time (seconds): 13.72
+	Percent of CPU this job got: 506%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:47.76
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 8399288
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2100595
+	Voluntary context switches: 836861
+	Involuntary context switches: 73039
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+```
+
+#### 3 ) 
+
+
+```
+Time: 1.27365e+06 ms
+	Command being timed: "./kast5 -p example_data/yeast.fasta -k 11"
+	User time (seconds): 1243.09
+	System time (seconds): 30.90
+	Percent of CPU this job got: 817%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:35.77
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12023124
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 3015963
+	Voluntary context switches: 2233228
+	Involuntary context switches: 49441
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+```
+
+
+
+
+
+
+
+
 ###Pairwise timings 1 to 4 cores;
 
 ```

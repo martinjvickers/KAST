@@ -162,6 +162,11 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    return ArgumentParser::PARSE_OK;
 }
 
+void huh()
+{
+
+}
+
 /*
 I need to check that if we are using skip-mers, then we need to check that 
 these are sensible.

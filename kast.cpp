@@ -93,25 +93,91 @@ vector< vector<double> > array_threaded;
 
 
 */
-void distance_thread(map<string, unsigned int> q1, map<string, unsigned int> q2, int i1, int i2, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options)
+int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn, vector<pair<CharString, map<string, unsigned int>>> &pw_counts, mutex &read, mutex &write)
 {
-   double dist;
+   CharString pwid;
+   String<AminoAcid> pwseq;
 
-   if(options.type == "kmer")
-      dist = euler(options, q1, q2);
-   else if(options.type == "d2")
-      dist = d2(options, q1, q2);
-   else if(options.type == "manhattan")
-      dist = manhattan(options, q1, q2);
-   else if(options.type == "chebyshev")
-      dist = chebyshev(options, q1, q2);
-   else if(options.type == "bc")
-      dist = bray_curtis_distance(options, q1, q2);
-   else if(options.type == "ngd")
-      dist = normalised_google_distance(options, q1, q2);
+   while(1)
+   {
+      read.lock();
+      if(!atEnd(pairwiseFileIn))
+      {
+         readRecord(pwid, pwseq, pairwiseFileIn);
+      }
+      else
+      {
+         read.unlock();
+         return 0;
+      }
+      read.unlock();
 
-   array_threaded_internal[i1][i2] = dist;
-   array_threaded_internal[i2][i1] = dist;
+      String<AminoAcid> refseq = pwseq;
+      if(options.noreverse == false)
+         refseq = doRevCompl(pwseq);
+
+      pair< CharString, map<string, unsigned int> > meh = make_pair(pwid, count(refseq, options.klen));
+      write.lock();
+      pw_counts.push_back(meh);
+      write.unlock();
+   }
+
+}
+
+int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_counts, unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options, mutex &location)
+{
+   unsigned row, column;
+
+   while(1)
+   {
+      location.lock();
+      row = rI;
+      column = cI;
+      //   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
+      //      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
+
+      if(cI < pw_counts.size())
+      {
+         cI++;
+      }
+      else if(cI >= pw_counts.size() && rI < pw_counts.size())
+      {
+         cI = rI;
+         rI++;
+         location.unlock();
+         continue;
+      }
+      else if(!(rI < pw_counts.size()))
+      {
+         location.unlock();
+         return 0;
+      }
+      location.unlock();
+
+      if(row < pw_counts.size() && column < pw_counts.size())
+      {
+         map<string, unsigned int> q1 = pw_counts[column].second;
+         map<string, unsigned int> q2 = pw_counts[row].second;
+         double dist;
+
+         if(options.type == "kmer")
+            dist = euler(options, q1, q2);
+         else if(options.type == "d2")
+            dist = d2(options, q1, q2);
+         else if(options.type == "manhattan")
+            dist = manhattan(options, q1, q2);
+         else if(options.type == "chebyshev")
+            dist = chebyshev(options, q1, q2);
+         else if(options.type == "bc")
+            dist = bray_curtis_distance(options, q1, q2);
+         else if(options.type == "ngd")
+            dist = normalised_google_distance(options, q1, q2);
+
+         array_threaded_internal[row][column] = dist;
+         array_threaded_internal[column][row] = dist;
+
+      }
+   }
 }
 
 int pairwise_matrix_test(ModifyStringOptions options)
@@ -132,14 +198,25 @@ int pairwise_matrix_test(ModifyStringOptions options)
    /* Calculate counts  */
    vector<pair<CharString, map<string, unsigned int>>> pw_counts;
 
-   while(!atEnd(pairwiseFileIn))
-   {
-      readRecord(pwid, pwseq, pairwiseFileIn);
-      String<AminoAcid> refseq;
-      if(options.noreverse == false)
-         refseq = doRevCompl(pwseq);
-      pw_counts.push_back(make_pair(pwid, count(refseq, options.klen)));
-   }
+   mutex read, write;
+
+   vector<thread> vectorOfSeqs;
+   unsigned int n = std::thread::hardware_concurrency();
+   int cores = options.num_threads;
+
+   cout << "Found " << n << " usable cpu cores. Using " << cores << " as specified"  << endl;
+
+   cout << "Creating read/count threads." << endl;
+
+   for(unsigned i = 0; i < cores; i++)
+      vectorOfSeqs.push_back(thread(count_threads, options, ref(pairwiseFileIn), ref(pw_counts), ref(read), ref(write)));
+
+   cout << "Finished creating read/count threads. Waiting for threads to complete..." << endl;
+
+   for(auto &thread : vectorOfSeqs)
+      thread.join();
+
+   cout << "Read/count threads completed. " << endl;
 
    close(pairwiseFileIn);
 
@@ -156,13 +233,21 @@ int pairwise_matrix_test(ModifyStringOptions options)
 
    vector<thread> vectorOfThreads;
 
+   cout << "Starting threaded matrix dist" << endl;
+
    /* Calculate the distances */
-   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
-      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
-         vectorOfThreads.push_back(thread(distance_thread, pw_counts[rI].second, pw_counts[cI].second, rI, cI, std::ref(array_threaded_internal), options));
+   mutex location;
+   unsigned rI = 0;
+   unsigned cI = 0;
+   for(unsigned i = 0; i < cores; i++)
+      vectorOfThreads.push_back(thread(distance_thread, ref(pw_counts), ref(rI), ref(cI), std::ref(array_threaded_internal), options, ref(location)));
+
+   cout << "Finished Creating Distance Threads. Waiting for threads to complete..." << endl;
 
    for(auto &thread : vectorOfThreads)
       thread.join();
+
+   cout << "Distance threads completed. Writing out." << endl;
 
    /* Print the results */
    printPhylyp(options, pw_counts, array_threaded_internal);

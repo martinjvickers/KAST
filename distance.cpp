@@ -144,23 +144,58 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
    long long unsigned int rN = 0;
    long long unsigned int qN = 0;
 
+   int id = rand();
+
+   clock_t start;
+   start = clock();
+
+   /* This has really increase performance!*/
    for(pair<string, unsigned int> p: refcounts)
-      rN = rN + refcounts[p.first];
-
+      rN = rN + p.second;
    for(pair<string, unsigned int> p: querycounts)
-      qN = qN + querycounts[p.first];
+      qN = qN + p.second;
 
-   //create a unified map
+   if(options.debug == true)
+   {
+      cout << "OPTION 2: id=" << id << " ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
+      start = clock();
+   }
+
+   double rN_new = (double)rN;
+   double qN_new = (double)qN;
+
+   // create a unified map
    map<string, unsigned int> ourkmers;
    ourkmers = refcounts;
    ourkmers.insert(querycounts.begin(),querycounts.end());
 
+   if(options.debug == true)
+   {
+      cout << "OPTION 3: id=" << id << " size=" << ourkmers.size() << " ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
+      start = clock();
+   }
+
+   // sum 
    for(pair<string, unsigned int> p: ourkmers)
    {
       double rF = refcounts[p.first] / (double)rN;
       double qF = querycounts[p.first] / (double)qN;
+//      double rF = refcounts[p.first] / rN_new;
+//      double qF = querycounts[p.first] / qN_new;
       score = score + (pow((rF - qF), 2));
    }
+
+   if(options.debug == true)
+   {
+      cout << "Time distance: " << id << " ";
+      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
+      cout << " ms" << endl;
+   }
+
    return pow(score, 0.5);
 }
 

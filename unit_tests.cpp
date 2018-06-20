@@ -74,17 +74,30 @@ int count_mask_test()
    return 0;
 }
 
-int zero_sized_seq_count()
+int zero_sized_seq_count_3()
 {
-        int klen = 3;
-        String<AminoAcid> qryseq = doRevCompl("");
-        ModifyStringOptions options;
-        options.klen = klen;
-        map<string, unsigned int> querycounts = count(qryseq, klen);
-	if(querycounts.size() == 0)
-	        return 0;
-	else
-		return 1;
+   int klen = 3;
+   String<AminoAcid> qryseq = doRevCompl("");
+   ModifyStringOptions options;
+   options.klen = klen;
+   map<string, unsigned int> querycounts = count(qryseq, klen);
+   if(querycounts.size() == 0)
+      return 0;
+   else
+      return 1;
+}
+
+int zero_sized_seq_count_5()
+{
+   int klen = 5;
+   String<AminoAcid> qryseq = doRevCompl("");
+   ModifyStringOptions options;
+   options.klen = klen;
+   map<string, unsigned int> querycounts = count(qryseq, klen);
+   if(querycounts.size() == 0)
+      return 0;
+   else
+      return 1;
 }
 
 int testd2star(){
@@ -638,14 +651,24 @@ int main(int argc, char const ** argv)
       cout << "[PASSED] - Masked Count test" << endl;
    }
 
-   if(zero_sized_seq_count() != 0)
+   if(zero_sized_seq_count_3() != 0)
    {
-      cout << "[FAILED] - Zero Sized Seq Count Test" << endl;
+      cout << "[FAILED] - Zero Sized K=3 Seq Count Test" << endl;
       returncode = 1;
    }
    else
    {
-      cout << "[PASSED] - Zero Sized Seq Count Test" << endl;
+      cout << "[PASSED] - Zero Sized K=3 Seq Count Test" << endl;
+   }
+
+   if(zero_sized_seq_count_5() != 0)
+   {
+      cout << "[FAILED] - Zero Sized K=5 Seq Count Test" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Zero Sized K=5 Seq Count Test" << endl;
    }
 
    return returncode;

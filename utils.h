@@ -10,12 +10,13 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                              int argc, char const ** argv);
 AminoAcid getRevCompl(AminoAcid const & nucleotide);
 String<AminoAcid> doRevCompl(String<AminoAcid> seq);
+void huh();
 
 /*
    Generic function to return kmer counts
 */
 template <typename TAlphabet>
-map<string, unsigned int> count(String<TAlphabet> const & seq, int klen)
+map<string, unsigned int> count_mc(String<TAlphabet> const & seq, int klen)
 {
    map<string, unsigned int> map;
    for(unsigned i = 0; i <= length(seq) - klen; i++)
@@ -32,6 +33,33 @@ map<string, unsigned int> count(String<TAlphabet> const & seq, int klen)
    return map;
 };
 
+
+/*
+   Generic function to return kmer counts
+map<string, unsigned int> count(String<TAlphabet> const & seq, int klen)
+
+*/
+template <typename TAlphabet>
+map<string, unsigned int> count(String<TAlphabet> seq, int klen)
+{
+   map<string, unsigned int> map;
+   if(length(seq) >= klen)
+   {
+      for(unsigned i = 0; i <= length(seq) - klen; i++)
+      {
+         string kmer;
+         assign(kmer,infix(seq, i, i+klen));
+         size_t found = kmer.find("N");
+         if(found > kmer.size())
+         {
+            unsigned int count = map[kmer];
+            map[kmer] = count + 1;
+         }
+      }
+   }
+   return map;
+};
+
 /*
    Generic function to return kmer counts but with a mask vector
 */
@@ -40,24 +68,28 @@ map<string, unsigned int> count(String<TAlphabet> sequence, int klen,
                                 vector<CharString> mask)
 {
    map<string, unsigned int> map;
-   for(int i = 0; i <= length(sequence)-klen; i++)
-   {
-      string kmer;
-      assign(kmer,infix(sequence, i, i+klen));
 
-      // so kmer has the wider bit we care about
-      // now go through the mask and append kmers
-      for(auto m : mask)
+   if(length(sequence) >= klen)
+   {
+      for(int i = 0; i <= length(sequence)-klen; i++)
       {
-         CharString masked_kmer;
-         for(int loc = 0; loc < length(m); loc++)
+         string kmer;
+         assign(kmer,infix(sequence, i, i+klen));
+
+         // so kmer has the wider bit we care about
+         // now go through the mask and append kmers
+         for(auto m : mask)
          {
-            if(m[loc] == '1')
-               append(masked_kmer,kmer[loc]);
-         }
+            CharString masked_kmer;
+            for(int loc = 0; loc < length(m); loc++)
+            {
+               if(m[loc] == '1')
+                  append(masked_kmer,kmer[loc]);
+            }
                         
-         unsigned int count = map[toCString(masked_kmer)];
-         map[toCString(masked_kmer)] = count + 1;
+            unsigned int count = map[toCString(masked_kmer)];
+            map[toCString(masked_kmer)] = count + 1;
+         }
       }
    }
    return map;
