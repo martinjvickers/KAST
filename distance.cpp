@@ -1,4 +1,5 @@
 #include "distance.h"
+#include <unordered_map>
 
 double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 
            map<string, unsigned int> refcounts, map<string, double> refmarkov, 
@@ -144,24 +145,10 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
    long long unsigned int rN = 0;
    long long unsigned int qN = 0;
 
-   int id = rand();
-
-   clock_t start;
-   start = clock();
-
-   /* This has really increase performance!*/
    for(pair<string, unsigned int> p: refcounts)
       rN = rN + p.second;
    for(pair<string, unsigned int> p: querycounts)
       qN = qN + p.second;
-
-   if(options.debug == true)
-   {
-      cout << "OPTION 2: id=" << id << " ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
-      start = clock();
-   }
 
    double rN_new = (double)rN;
    double qN_new = (double)qN;
@@ -171,33 +158,50 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
    ourkmers = refcounts;
    ourkmers.insert(querycounts.begin(),querycounts.end());
 
-   if(options.debug == true)
+   // sum 
+   for(pair<string, unsigned int> p: ourkmers)
    {
-      cout << "OPTION 3: id=" << id << " size=" << ourkmers.size() << " ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
-      start = clock();
+      double rF = refcounts[p.first] / (double)rN;
+      double qF = querycounts[p.first] / (double)qN;
+      score = score + (pow((rF - qF), 2));
    }
+
+   return pow(score, 0.5);
+}
+
+/*Unordered map version*/
+/*
+double euler(ModifyStringOptions options, unordered_map<string, unsigned int> refcounts,
+             unordered_map<string, unsigned int> querycounts)
+{
+   double score = 0.0;
+   long long unsigned int rN = 0;
+   long long unsigned int qN = 0;
+
+   for(pair<string, unsigned int> p: refcounts)
+      rN = rN + p.second;
+   for(pair<string, unsigned int> p: querycounts)
+      qN = qN + p.second;
+
+   double rN_new = (double)rN;
+   double qN_new = (double)qN;
+
+   // create a unified map
+   unordered_map<string, unsigned int> ourkmers;
+   ourkmers = refcounts;
+   ourkmers.insert(querycounts.begin(),querycounts.end());
 
    // sum 
    for(pair<string, unsigned int> p: ourkmers)
    {
       double rF = refcounts[p.first] / (double)rN;
       double qF = querycounts[p.first] / (double)qN;
-//      double rF = refcounts[p.first] / rN_new;
-//      double qF = querycounts[p.first] / qN_new;
       score = score + (pow((rF - qF), 2));
-   }
-
-   if(options.debug == true)
-   {
-      cout << "Time distance: " << id << " ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
    }
 
    return pow(score, 0.5);
 }
+*/
 
 double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, 
           map<string, unsigned int> querycounts)
@@ -231,10 +235,10 @@ double manhattan(ModifyStringOptions options,
    long long unsigned int qN = 0;
 
    for(pair<string, unsigned int> p: refcounts)
-      rN = rN + refcounts[p.first];
+      rN = rN + p.second;
 
    for(pair<string, unsigned int> p: querycounts)
-      qN = qN + querycounts[p.first];
+      qN = qN + p.second;
 
    //create a unified map
    map<string, unsigned int> ourkmers;
@@ -260,10 +264,10 @@ double chebyshev(ModifyStringOptions options,
    double temp = 0.0;
 
    for(pair<string, unsigned int> p: refcounts)
-      rN = rN + refcounts[p.first];
+      rN = rN + p.second;
 
    for(pair<string, unsigned int> p: querycounts)
-      qN = qN + querycounts[p.first];
+      qN = qN + p.second;
 
    //create a unified map
    map<string, unsigned int> ourkmers;
@@ -292,17 +296,17 @@ double normalised_google_distance(ModifyStringOptions options,
    map<string, unsigned int> min_qr;
 
    for(pair<string, unsigned int> p: querycounts)
-      sumqC += querycounts[p.first];
+      sumqC += p.second;
 
    for(pair<string, unsigned int> p: refcounts)
    {
-      sumrC += refcounts[p.first];
+      sumrC += p.second;
       if(querycounts.find(p.first) != querycounts.end())
       {
-         if(querycounts[p.first] < refcounts[p.first])
+         if(querycounts[p.first] < p.second)
             min_qr[p.first] = querycounts[p.first];
          else
-            min_qr[p.first] = refcounts[p.first];
+            min_qr[p.first] = p.second;
       }
    }
 

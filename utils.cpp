@@ -162,10 +162,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    return ArgumentParser::PARSE_OK;
 }
 
-void huh()
-{
 
-}
+
 
 /*
 I need to check that if we are using skip-mers, then we need to check that 
@@ -402,61 +400,6 @@ CharString namecut(CharString seq, int val)
    }
 }
 
-int printPhylyp(ModifyStringOptions options, 
-                vector<pair<CharString, map<string, unsigned int>>> pw_counts,
-                vector<vector<double>> &array_threaded_internal)
-{
-   ofstream outfile_new;
-
-   try
-   {
-      outfile_new.open(toCString(options.outputFileName), std::ios_base::out);
-   }
-   catch (const ifstream::failure& e)
-   {
-      cout << "Error: could not open output file ";
-      cout << toCString(options.outputFileName) << endl;
-      return 1;
-   }
-
-   if(options.outputFileName == NULL)
-   {
-      cout << pw_counts.size() << endl;
-   }
-   else
-   {
-      outfile_new << pw_counts.size() << endl;
-   }
-
-   for(int i = 0; i < pw_counts.size(); i++)
-   {
-      StringSet<CharString> split;
-      strSplit(split, pw_counts[i].first);
-      int cutsize = 10;
-      CharString qName = split[0];
-      qName = namecut(qName, cutsize);
-
-      if(options.outputFileName == NULL)
-      {
-         cout << qName << "\t";
-         for(int j = 0; j < pw_counts.size(); j++)
-            cout << array_threaded_internal[i][j] << "\t";
-         cout << endl;
-      }
-      else
-      {
-         outfile_new << qName << "\t";
-         for(int j = 0; j < pw_counts.size(); j++)
-            outfile_new << array_threaded_internal[i][j] << "\t";
-         outfile_new << endl;
-      }
-   }
-
-   close(outfile_new);
-
-   return 0;
-}
-
 int printResult(ModifyStringOptions options, CharString &queryid,
                 ofstream &outfile, String<AminoAcid> &queryseq,
                 map<double, int> &results, StringSet<CharString> &referenceids,
@@ -559,4 +502,61 @@ int printResult(ModifyStringOptions options, CharString &queryid,
             }
          }
       }
+}
+
+// Count is overloaded rather than a template because we only work with two Alphabets
+map<String<AminoAcid>, unsigned int> count_test(String<AminoAcid> seq, int klen, bool noreverse)
+{
+   map<String<AminoAcid>, unsigned int> counts;
+   if(length(seq) >= klen)
+   {
+      for(unsigned i = 0; i <= length(seq) - klen; i++)
+      {
+         String<AminoAcid> kmer;
+         assign(kmer,infix(seq, i, i+klen));
+
+         // if kmer contains an 'X', probably should not count that kmer
+         counts[kmer]++;
+      }
+   }
+
+   return counts;
+}
+
+map<String<Dna5>, unsigned int> count_test(String<Dna5> seq, int klen, bool noreverse)
+{
+   map<String<Dna5>, unsigned int> counts;
+   if(length(seq) >= klen)
+   {
+      for(unsigned i = 0; i <= length(seq) - klen; i++)
+      {
+         String<Dna5> kmer;
+         assign(kmer,infix(seq, i, i+klen));
+
+         // checks for existance of 'N'
+         bool N_exists = false;
+         for(unsigned k = 0; k < length(kmer); k++)
+         {
+            if(kmer[k] == 'N')
+            {
+               N_exists = true;
+            }
+         }
+
+         // +1 kmer if no 'N'
+         if(N_exists == false)
+         {
+            counts[kmer]++;
+
+            // now reverse complement it
+            if(noreverse == false)
+            {
+               reverseComplement(kmer);
+               counts[kmer]++;
+            }
+         }
+      }
+   }
+
+   return counts;
 }

@@ -100,6 +100,14 @@ int zero_sized_seq_count_5()
       return 1;
 }
 
+int make_complete_test()
+{
+   int klen = 3;
+   makecomplete(klen, Dna());
+
+   return 0;
+}
+
 int testd2star(){
 
         int klen = 3;
@@ -205,6 +213,38 @@ int testd2s(){
 
         return 0;
 }
+
+int testd2s_template(){
+
+        int klen = 3;
+        int markovOrder = 1;
+        bool noreverse = false;
+        String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+        String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+        map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
+        map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
+
+        vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
+
+        map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
+        map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
+
+        double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+
+        double expected = 0.432463894423;
+
+        double epsilon = 0.000001;
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+        return 0;
+}
+
 
 int testd2s_m2(){
 
@@ -330,6 +370,56 @@ int testeuler(){
 	return 0;
 }
 
+int testeuler_template_AA(){
+
+        int klen = 3;
+        bool noreverse = false;
+        String<AminoAcid> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+        String<AminoAcid> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+        ModifyStringOptions options;
+        map<String<AminoAcid>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
+        map<String<AminoAcid>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+
+        double dist = euler(options, refcounts, querycounts);
+        double expected = 0.103056;
+        double epsilon = 0.000001;
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+
+        return 0;
+}
+
+int testeuler_template_DNA(){
+
+        int klen = 3;
+        bool noreverse = false;
+        String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+        String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+        ModifyStringOptions options;
+        map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
+        map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+
+        double dist = euler(options, refcounts, querycounts);
+        double expected = 0.103056;
+        double epsilon = 0.000001;
+        if(abs(dist - expected) < epsilon)
+        {
+                return 0;
+        } else {
+                printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+                return 1;
+        }
+
+        return 0;
+}
+
 int testd2(){
 
         int klen = 3;
@@ -418,6 +508,43 @@ int testCount_1()
         return 0;
 }
 
+int testCount_1_template()
+{
+        String<Dna5> seq = "NTGACTGACTGACTGACTGACTGACTGACTGACN";
+        int klen = 3;
+        bool noreverse = true;
+        map<String<Dna5>, unsigned int> counts = count_test(seq, klen, noreverse);
+
+        for(pair<String<Dna5>, unsigned int> p: counts)
+        {
+                if(p.first == "TGA" && p.second != 8)
+                {
+                        cout << "TGA should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
+                else if(p.first == "GAC" && p.second != 8)
+                {
+                        cout << "GAC should occur 8 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
+                else if(p.first == "ACT" && p.second != 7)
+                {
+                        cout << "ACT should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
+                else if(p.first == "CTG" && p.second != 7)
+                {
+                        cout << "CTG should occur 7 times in str: " << seq << " but it's being counted " << p.second << " times." << endl;
+                        return 1;
+                }
+                else if(p.first != "GAC" && p.first != "TGA" && p.first != "ACT" && p.first != "CTG")
+                {
+                        cout << "We have an unknown 3mer in this test: " << p.first << endl;
+                        return 1;
+                }
+        }
+        return 0;
+}
 
 /*Simple test of reverse compliment*/
 int testRevCompl_1()
@@ -485,6 +612,9 @@ int main(int argc, char const ** argv)
 {
    int returncode = 0;
 
+   clock_t start;
+   start = clock();
+
    //testing reverse compliments
    if(testRevCompl_1() != 0)
    {
@@ -495,6 +625,8 @@ int main(int argc, char const ** argv)
       cout << "[PASSED] - Test reverse compliment" << endl;
    }
 
+   start = clock();
+
    if(testRevCompl_2() != 0)
    {
       returncode = 1;
@@ -504,6 +636,8 @@ int main(int argc, char const ** argv)
       cout << "[PASSED] - Test Single Base getRevCompl" << endl;
    }
 
+   start = clock();
+
    //test counting
    if(testCount_1() != 0)
    {
@@ -511,8 +645,20 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test Count" << endl;
+      cout << "[PASSED] - Test Count " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
+
+   if(testCount_1_template() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
 
    //test distances
    if(testeuler() != 0)
@@ -521,8 +667,35 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test Euler" << endl;
+      cout << "[PASSED] - Test Euler " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
+
+   //test distances
+/*
+   //This one should fail 
+   if(testeuler_template_AA() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Euler AminoAcid" << endl;
+   }
+*/
+
+   //test distances
+   if(testeuler_template_DNA() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Euler Dna5 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
 
    if(testd2() != 0)
    {
@@ -530,8 +703,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test d2" << endl;
+      cout << "[PASSED] - Test d2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
    if(testmanhattan() != 0)
    {
@@ -539,8 +714,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test Manhattan" << endl;
+      cout << "[PASSED] - Test Manhattan " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
    if(testd2s() != 0)
    {
@@ -548,8 +725,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test d2s" << endl;
+      cout << "[PASSED] - Test d2s " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
    if(testd2s_m2() != 0)
    {
@@ -557,8 +736,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test d2s m 2" << endl;
+      cout << "[PASSED] - Test d2s m 2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
 /*
 	if(testd2s_d2tools() != 0)
@@ -576,8 +757,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test d2star" << endl;
+      cout << "[PASSED] - Test d2star " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
    if(testchebyshev() != 0)
    {
@@ -585,8 +768,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-       cout << "[PASSED] - Test Chebyshev" << endl;
+       cout << "[PASSED] - Test Chebyshev " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
 
 /*
         if(testhao() != 0)
@@ -609,6 +794,7 @@ int main(int argc, char const ** argv)
    {
       cout << "[PASSED] - Smaller cutsize" << endl;
    }
+
 
    if(length(namecut("TGACTGACTGAC", cutsize)) != cutsize)
    {
@@ -670,6 +856,32 @@ int main(int argc, char const ** argv)
    {
       cout << "[PASSED] - Zero Sized K=5 Seq Count Test" << endl;
    }
+
+   start = clock();
+
+   if(make_complete_test() != 0)
+   {
+      cout << "[FAILED] - " << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - " << endl;
+   }
+
+   start = clock();
+
+   if(testd2s_template() != 0)
+   {
+      cout << "[FAILED] - Test d2s template" << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2s template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
 
    return returncode;
 

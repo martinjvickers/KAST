@@ -37,10 +37,12 @@ SOFTWARE.
 #include <string>
 #include <thread>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include "common.h"
 #include "distance.h"
 #include "utils.h"
+#include <seqan/alignment_free.h>
 
 using namespace seqan;
 using namespace std;
@@ -56,47 +58,15 @@ ofstream outfile; //output file
 int current_row = 0;
 vector< vector<double> > array_threaded;
 
-/*
-   TODO: mjv08
-
-   The way I think I'm going to tackle this, for now (brain dump)...
-
-   I don't want to have to care at the readRecord level what type of 
-   alphabet we have. But, we know the type of distance measure so in 
-   theory we should be able to say, "you're using the wrong measure
-   on your dataset", e.g ngd on a protein input. However, this may be
-   something someone wishes to do, so it might not be a good idea.
-
-   Also, defaults are supposed to be different, e.g. we don't do
-   reverse compl on AminoAcids.
-
-   The dream would be the following;
-
-   Read the sequence into a TPattern or THost or TSequence (is this correct?!, 
-   can I make anything up here?) I define TSeqquence like this;
-
-   typedef Dna5 TAlphabet;
-   typedef String<TAlphabet> TSequence;
-   TSequence seq;
-
-   // this allows me to check what the sequence alphabet is
-   if(IsSameType<TAlphabet, Dna5>::VALUE || IsSameType<TAlphabet, Rna5>::VALUE)
-
-   typedef typename Size<TAlphabet>::Type TSize;
-   TSize alphSize = ValueSize<TAlphabet>::VALUE;
-
-   typedef typename Size<Dna5>::Type TSizeDna5;
-   TSizeDna5 dnaalphSize = ValueSize<Dna5>::VALUE;
-
-   cout << "HiYa"<< endl;
-   cout << "Current Alphabet\t" << alphSize << "\tDna5:\t" << dnaalphSize << "\tAA:\t" << ValueSize<AminoAcid>::VALUE << endl;
-
-
-*/
-int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn, vector<pair<CharString, map<string, unsigned int>>> &pw_counts, mutex &read, mutex &write)
+template <typename TAlphabet>
+int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn, 
+                  vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, 
+                  mutex &read, mutex &write,
+                  vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts,
+                  vector<String<TAlphabet>> &kmer_count_map)
 {
    CharString pwid;
-   String<AminoAcid> pwseq;
+   String<TAlphabet> pwseq;
 
    while(1)
    {
@@ -112,19 +82,37 @@ int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn, vector
       }
       read.unlock();
 
-      String<AminoAcid> refseq = pwseq;
+      String<TAlphabet> refseq = pwseq;
       if(options.noreverse == false)
          refseq = doRevCompl(pwseq);
 
-      pair< CharString, map<string, unsigned int> > meh = make_pair(pwid, count(refseq, options.klen));
+      pair< CharString, map<String<TAlphabet>, unsigned int> > meh = make_pair(pwid, count_test(refseq, options.klen, options.noreverse));
+      pair< CharString, map<String<TAlphabet>, double>> meh_markov;
+
+      // If markov type, calculate markov counts
+      if(options.type == "d2s" || options.type == "hao" ||
+         options.type == "d2star" || options.type == "dai")
+      {
+         meh_markov = make_pair(pwid, markov_test(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
+      }
+
+      // lock both because we want both the markov and counts to be in the same position
+      // in their respective vectors
       write.lock();
       pw_counts.push_back(meh);
+      if(options.type == "d2s" || options.type == "hao" ||
+         options.type == "d2star" || options.type == "dai")
+      {
+         mv_counts.push_back(meh_markov);
+      }
       write.unlock();
+
    }
 
 }
 
-int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_counts, unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options, mutex &location)
+template <typename TAlphabet>
+int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options, mutex &location, vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts, vector<String<TAlphabet>> &kmer_count_map)
 {
    unsigned row, column;
 
@@ -133,8 +121,6 @@ int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_coun
       location.lock();
       row = rI;
       column = cI;
-      //   for(unsigned rI = 0; rI < pw_counts.size(); ++rI)
-      //      for(unsigned cI = rI; cI < pw_counts.size(); ++cI)
 
       if(cI < pw_counts.size())
       {
@@ -156,8 +142,19 @@ int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_coun
 
       if(row < pw_counts.size() && column < pw_counts.size())
       {
-         map<string, unsigned int> q1 = pw_counts[column].second;
-         map<string, unsigned int> q2 = pw_counts[row].second;
+         map<String<TAlphabet>, unsigned int> q1 = pw_counts[column].second;
+         map<String<TAlphabet>, unsigned int> q2 = pw_counts[row].second;
+
+         map<String<TAlphabet>, double> m1;
+         map<String<TAlphabet>, double> m2;
+
+         if(options.type == "d2s" || options.type == "hao" ||
+            options.type == "d2star" || options.type == "dai")
+         {
+            m1 = mv_counts[column].second;
+            m2 = mv_counts[row].second;
+         }
+
          double dist;
 
          if(options.type == "kmer")
@@ -172,6 +169,14 @@ int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_coun
             dist = bray_curtis_distance(options, q1, q2);
          else if(options.type == "ngd")
             dist = normalised_google_distance(options, q1, q2);
+         else if(options.type == "d2s")
+            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+         else if(options.type == "hao")
+            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+         else if(options.type == "d2star")
+            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+         else if(options.type == "dai")
+            dist = d2s(kmer_count_map, q1, m1, q2, m2);
 
          array_threaded_internal[row][column] = dist;
          array_threaded_internal[column][row] = dist;
@@ -180,14 +185,21 @@ int distance_thread(vector<pair<CharString, map<string, unsigned int>>> &pw_coun
    }
 }
 
-int pairwise_matrix_test(ModifyStringOptions options)
+template <typename TAlphabet>
+int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
-   /* Read in the input file */
+   // Read in the input file
    SeqFileIn pairwiseFileIn;
    CharString pwid;
-   String<AminoAcid> pwseq;
-   vector< vector<double> > array_threaded_internal;
+   String<TAlphabet> pwseq;
+   vector< vector<double> > array_threaded_internal; // stores the distance matrix
+   vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> pw_counts; 
 
+   // things for markov distances
+   vector<String<TAlphabet>> kmer_count_map;
+   vector<pair<CharString, map<String<TAlphabet>, double>>> mv_counts;
+
+   // Open fasta/fastq file
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
@@ -195,67 +207,59 @@ int pairwise_matrix_test(ModifyStringOptions options)
       return 1;
    }
 
-   /* Calculate counts  */
-   vector<pair<CharString, map<string, unsigned int>>> pw_counts;
-
+   // Create thread vector and mutex's
    mutex read, write;
-
    vector<thread> vectorOfSeqs;
    unsigned int n = std::thread::hardware_concurrency();
-   int cores = options.num_threads;
-
-   cout << "Found " << n << " usable cpu cores. Using " << cores << " as specified"  << endl;
-
-   cout << "Creating read/count threads." << endl;
-
-   for(unsigned i = 0; i < cores; i++)
-      vectorOfSeqs.push_back(thread(count_threads, options, ref(pairwiseFileIn), ref(pw_counts), ref(read), ref(write)));
-
-   cout << "Finished creating read/count threads. Waiting for threads to complete..." << endl;
-
-   for(auto &thread : vectorOfSeqs)
-      thread.join();
-
-   cout << "Read/count threads completed. " << endl;
-
-   close(pairwiseFileIn);
-
-   /* Store the results */
-   array_threaded_internal.resize(pw_counts.size(), 
-                                  vector<double>(pw_counts.size(), 0.0));
+   unsigned int cores = options.num_threads;
 
    // create kmer_count_map if doing a markov model
    if(options.type == "d2s" || options.type == "hao" ||
       options.type == "d2star" || options.type == "dai")
    {
-      kmer_count_map = makecomplete(options);
+      kmer_count_map = makecomplete(options.klen, alphabetType);
    }
 
+   cout << "About to count" << endl;
+
+   // thread to count // here, I think, if it's markov based, the thread also does the markov count
+   for(unsigned i = 0; i < cores; i++)
+      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn), ref(pw_counts), ref(read), ref(write), ref(mv_counts), ref(kmer_count_map) ));
+
+   for(auto &thread : vectorOfSeqs)
+      thread.join();
+
+   cout << "Fin counting" << endl;
+
+   close(pairwiseFileIn);
+
+   // Store the results 
+   array_threaded_internal.resize(pw_counts.size(), 
+                                  vector<double>(pw_counts.size(), 0.0));
+
+   // Calculate the distances
    vector<thread> vectorOfThreads;
-
-   cout << "Starting threaded matrix dist" << endl;
-
-   /* Calculate the distances */
    mutex location;
    unsigned rI = 0;
    unsigned cI = 0;
+
+   cout << "About to dist " << endl;
+
    for(unsigned i = 0; i < cores; i++)
-      vectorOfThreads.push_back(thread(distance_thread, ref(pw_counts), ref(rI), ref(cI), std::ref(array_threaded_internal), options, ref(location)));
-
-   cout << "Finished Creating Distance Threads. Waiting for threads to complete..." << endl;
-
+      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), ref(cI), std::ref(array_threaded_internal), options, ref(location), ref(mv_counts), ref(kmer_count_map) ));
    for(auto &thread : vectorOfThreads)
       thread.join();
 
-   cout << "Distance threads completed. Writing out." << endl;
+   cout << "Fin dist " << endl;
 
-   /* Print the results */
+   // Print results
    printPhylyp(options, pw_counts, array_threaded_internal);
 
    return 0;
 
 }
 
+/*
 //main threaded loop
 int mainloop(ModifyStringOptions options)
 {
@@ -423,6 +427,7 @@ int mainloop(ModifyStringOptions options)
    }
    return 0;
 }
+*/
 
 /*
 int pwthread(ModifyStringOptions options, StringSet<CharString> pairwiseid,
@@ -624,24 +629,13 @@ int main(int argc, char const ** argv)
 
    if(options.pairwiseFileName != NULL)
    {
-      // maybe I should make secondry version
-      clock_t start;
+      if(options.sequenceType == "prot")
+         pairwise_matrix(options, AminoAcid());
+      else
+         pairwise_matrix(options, Dna5());
+   }
 
 /*
-      start = clock();
-      threaded_pw(options);
-      cout << "Time: ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
-*/
-
-      // new one
-      start = clock();
-      pairwise_matrix_test(options);
-      cout << "Time: ";
-      cout << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000);
-      cout << " ms" << endl;
-   }
    else if (options.referenceFileName != NULL && options.queryFileName != NULL)
    {
       //read in reference
@@ -724,5 +718,7 @@ int main(int argc, char const ** argv)
          workers[w].join();
       }
    }
+*/
+
    return 0;
 }
