@@ -52,7 +52,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    setValidValues(parser, "sequence-type", "nucl prot");
    setDefaultValue(parser, "sequence-type", "nucl");
    addOption(parser, ArgParseOption("f", "output-format",
-             "For Reference/query based usage you can select your output type.",             ArgParseArgument::STRING, "STR"));
+             "For Reference/query based usage you can select your output type.",             
+             ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "output-format", "default tabular blastlike");
    setDefaultValue(parser, "output-format", "default");
    addOption(parser, ArgParseOption("nr", "no-reverse", 
@@ -398,110 +399,6 @@ CharString namecut(CharString seq, int val)
 
       return charSeq;
    }
-}
-
-int printResult(ModifyStringOptions options, CharString &queryid,
-                ofstream &outfile, String<AminoAcid> &queryseq,
-                map<double, int> &results, StringSet<CharString> &referenceids,
-                StringSet<String<AminoAcid>> &referenceseqs)
-{
-      if(options.output_format == "tabular")
-      {
-         StringSet<CharString> split;
-         strSplit(split, queryid);
-         CharString qName = split[0];
-         if(options.outputFileName == NULL)
-         {
-            cout << "############################ ";
-            cout << length(queryseq) << "\t" << gc_ratio(queryseq);
-            cout << "\t" << qName << endl;
-         }
-         else
-         {
-            outfile << "############################ ";
-            outfile << length(queryseq) << "\t" << gc_ratio(queryseq);
-            outfile << "\t" << qName << endl;
-         }
-
-         for(pair<double, int> p: results)
-         {
-            StringSet<CharString> split2;
-            strSplit(split2, referenceids[p.second]);
-            if(options.outputFileName == NULL)
-            {
-               cout << p.first << "\t" << length(referenceseqs[p.second]);
-               cout << "\t" << gc_ratio(referenceseqs[p.second]);
-               cout << "\t" << split2[0] << endl;
-            }
-            else
-            {
-               outfile << p.first << "\t" << length(referenceseqs[p.second]);
-               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
-               outfile << "\t" << split2[0] << endl;
-            }
-         }
-      }
-      else if(options.output_format == "blastlike")
-      {
-         if(options.outputFileName == NULL)
-         {
-            cout << "RefID\tQryID\tRefLen\tQryLen\t";
-            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
-         }
-         else
-         {
-            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
-            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
-         }
-
-         int count = 1;
-         for(pair<double, int> p: results)
-         {
-            if(options.outputFileName == NULL)
-            {
-               cout << referenceids[p.second] << "\t" << queryid << "\t";
-               cout << length(referenceseqs[p.second]) << "\t";
-               cout << length(queryseq) << "\t";
-               cout << gc_ratio(referenceseqs[p.second]) << "\t";
-               cout << gc_ratio(queryseq) << "\t" << count << "\t";
-               cout << p.first << endl;
-            }
-            else
-            {
-               outfile << referenceids[p.second] << "\t" << queryid << "\t";
-               outfile << length(referenceseqs[p.second]) << "\t";
-               outfile << length(queryseq) << "\t";
-               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
-               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
-               outfile << p.first << endl;
-            }
-            count++;
-         }
-
-      }
-      else
-      {
-         if(options.outputFileName == NULL)
-         {
-            cout << "############################ " << queryid << endl;
-         }
-         else
-         {
-            outfile << "############################ " << queryid << endl;
-         }
-
-         for(pair<double, int> p: results)
-         {
-            if(options.outputFileName == NULL)
-            {
-               cout << referenceids[p.second] << " " << p.first << endl;
-            }
-            else
-            {
-               outfile << referenceids[p.second] << " " << p.first << endl;
-            }
-         }
-      }
 }
 
 // Count is overloaded rather than a template because we only work with two Alphabets

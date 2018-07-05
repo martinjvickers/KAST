@@ -238,16 +238,4 @@ int printPhylyp(ModifyStringOptions options,
    return 0;
 };
 
-/*
-int printPhylyp(ModifyStringOptions options,
-                vector<pair<CharString, unordered_map<string, unsigned int>>> pw_counts,
-                vector< vector<double>> &array_threaded_internal);
-int printPhylyp(ModifyStringOptions options,    
-                vector<pair<CharString, map<string, unsigned int>>> pw_counts,
-                vector< vector<double>> &array_threaded_internal);
-*/
-int printResult(ModifyStringOptions options, CharString &queryid,
-                ofstream &outfile, String<AminoAcid> &queryseq,
-                map<double, int> &results, StringSet<CharString> &referenceids,
-                StringSet<String<AminoAcid>> &referenceseqs);
 #endif
