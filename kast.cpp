@@ -412,14 +412,15 @@ int main(int argc, char const ** argv)
    ModifyStringOptions options;
    ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
 
+   // I'm not sure I need this here any more so will look at changing it 
    try
    {
       outfile.open(toCString(options.outputFileName), std::ios_base::out);
    }
    catch (const ifstream::failure& e)
    {
-      cout << "Error: could not open output file ";
-      cout << toCString(options.outputFileName) << endl;
+      cerr << "Error: could not open output file ";
+      cerr << toCString(options.outputFileName) << endl;
       return 1; 
    }
 
@@ -427,12 +428,24 @@ int main(int argc, char const ** argv)
    if(parseMask(options, options.effectiveLength) == 1)
       return 1;
 
+
+   // Running in pairwise mode
    if(options.pairwiseFileName != NULL)
    {
       if(options.sequenceType == "prot")
+      {
          pairwise_matrix(options, AminoAcid());
-      else
+      }
+      else if(options.sequenceType == "nucl")
+      {
          pairwise_matrix(options, Dna5());
+      }
+      else
+      {
+         // there is no other mode
+         cerr << "Error: mode not found - " << options.sequenceType << endl;
+         return 1;
+      }
    }
 
 /*
