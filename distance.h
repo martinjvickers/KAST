@@ -16,13 +16,53 @@
 #include <vector>
 #include "common.h"
 
-// Old Implementation
+// Old Implementations
 double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 
            map<string, unsigned int> refcounts, map<string, double> refmarkov, 
            map<string, unsigned int> querycounts, 
            map<string, double> querymarkov);
 
-// New Template Implementation
+double d2star(ModifyStringOptions options, map<string, bool> ourkmers,
+              map<string, unsigned int> refcounts,
+              map<string, double> refmarkov,
+              map<string, unsigned int> querycounts,
+              map<string, double> querymarkov);
+
+double hao(ModifyStringOptions options, map<string, bool> ourkmers,
+           map<string, unsigned int> refcounts, map<string, double> refmarkov,
+           map<string, unsigned int> querycounts,
+           map<string, double> querymarkov);
+
+double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
+             map<string, unsigned int> querycounts);
+
+double bray_curtis_distance(ModifyStringOptions options,
+                            map<string, unsigned int> refcounts,
+                            map<string, unsigned int> querycounts);
+
+double normalised_google_distance(ModifyStringOptions options,
+                                  map<string, unsigned int> refcounts,
+                                  map<string, unsigned int> querycounts);
+
+double chebyshev(ModifyStringOptions options,
+                 map<string, unsigned int> refcounts,
+                 map<string, unsigned int> querycounts);
+
+double manhattan(ModifyStringOptions options,
+                 map<string, unsigned int> refcounts,
+                 map<string, unsigned int> querycounts);
+
+double d2(ModifyStringOptions options, map<string, unsigned int> refcounts,
+          map<string, unsigned int> querycounts);
+
+double dai(ModifyStringOptions options, map<string, bool> ourkmers,
+              map<string, unsigned int> refcounts,
+              map<string, double> refmarkov,
+              map<string, unsigned int> querycounts,
+              map<string, double> querymarkov);
+
+
+// New Template Implementations
 template <typename TAlphabet>
 double d2s(vector<String<TAlphabet>> ourkmers,
            map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
@@ -47,7 +87,6 @@ double d2s(vector<String<TAlphabet>> ourkmers,
       rN = rN + r.second;
    }
 
-   //for(pair<String<TAlphabet>, bool> p: ourkmers)
    for(auto p : ourkmers)
    {
       double qC = querycounts[p];
@@ -68,21 +107,11 @@ double d2s(vector<String<TAlphabet>> ourkmers,
    return score;
 };
 
-// Old Implementation
-double d2star(ModifyStringOptions options, map<string, bool> ourkmers, 
-              map<string, unsigned int> refcounts, 
-              map<string, double> refmarkov, 
-              map<string, unsigned int> querycounts, 
-              map<string, double> querymarkov);
-
-
-// New Template Implementation
 template <typename TAlphabet>
-double d2star(map<String<TAlphabet>, bool> ourkmers,
-              map<String<TAlphabet>, unsigned int> refcounts,
-              map<String<TAlphabet>, double> refmarkov,
-              map<String<TAlphabet>, unsigned int> querycounts,
-              map<String<TAlphabet>, double> querymarkov)
+double d2star(vector<String<TAlphabet>> ourkmers,
+           map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
+           map<String<TAlphabet>, unsigned int> querycounts,
+           map<String<TAlphabet>, double> querymarkov)
 {
    double D_2Star = 0.0;
    double tempQ = 0.0;
@@ -91,18 +120,22 @@ double d2star(map<String<TAlphabet>, bool> ourkmers,
    unsigned int qN = 0;
    unsigned int rN = 0;
 
-   for(pair<String<TAlphabet>, bool> p: ourkmers)
+   for(auto p : querycounts)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      qN = qN + p.second;
    }
 
-   for(pair<String<TAlphabet>, bool> p: ourkmers)
+   for(auto r : refcounts)
    {
-      double qC = querycounts[p.first];
-      double qP = querymarkov[p.first];
-      double rC = refcounts[p.first];
-      double rP = refmarkov[p.first];
+      rN = rN + r.second;
+   }
+
+   for(auto p : ourkmers)
+   {
+      double qC = querycounts[p];
+      double qP = querymarkov[p];
+      double rC = refcounts[p];
+      double rP = refmarkov[p];
 
       double temp1 = qN * qP;
       double temp2 = rN * rP;
@@ -129,15 +162,8 @@ double d2star(map<String<TAlphabet>, bool> ourkmers,
    return 0.5 * (1 - temp);
 };
 
-// Old Implementation
-double hao(ModifyStringOptions options, map<string, bool> ourkmers, 
-           map<string, unsigned int> refcounts, map<string, double> refmarkov, 
-           map<string, unsigned int> querycounts, 
-           map<string, double> querymarkov);
-
-// New Template Implementation
 template <typename TAlphabet>
-double hao(map<String<TAlphabet>, bool> ourkmers,
+double hao(vector<String<TAlphabet>> ourkmers,
            map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
            map<String<TAlphabet>, unsigned int> querycounts,
            map<String<TAlphabet>, double> querymarkov)
@@ -145,10 +171,14 @@ double hao(map<String<TAlphabet>, bool> ourkmers,
    int qN = 0;
    int rN = 0;
 
-   for(pair<String<TAlphabet>, bool> p: ourkmers)
+   for(auto p : querycounts)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      qN = qN + p.second;
+   }
+
+   for(auto r : refcounts)
+   {
+      rN = rN + r.second;
    }
 
    double tempX = 0.0;
@@ -156,12 +186,12 @@ double hao(map<String<TAlphabet>, bool> ourkmers,
    double tempXY = 0.0;
    double d_Hao = 0.0;
 
-   for(pair<String<TAlphabet>, bool> p: ourkmers)
+   for(auto p : ourkmers)
    {
-      double qC = querycounts[p.first];
-      double qP = querymarkov[p.first];
-      double rC = refcounts[p.first];
-      double rP = refmarkov[p.first];
+      double qC = querycounts[p];
+      double qP = querymarkov[p];
+      double rC = refcounts[p];
+      double rP = refmarkov[p];
 
       double fQi = qC / (double)qN;
       double fRi = rC / (double)rN;
@@ -184,11 +214,6 @@ double hao(map<String<TAlphabet>, bool> ourkmers,
    return (1 - temp) / 2;
 };
 
-// Old Implementation
-double euler(ModifyStringOptions options, map<string, unsigned int> refcounts, 
-             map<string, unsigned int> querycounts);
-
-// New Template Implementation
 template <typename TAlphabet>
 double euler(map<String<TAlphabet>, unsigned int> &refcounts,
              map<String<TAlphabet>, unsigned int> &querycounts)
@@ -221,11 +246,6 @@ double euler(map<String<TAlphabet>, unsigned int> &refcounts,
    return pow(score, 0.5);
 };
 
-// Old Implementation
-double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, 
-          map<string, unsigned int> querycounts);
-
-// New Template Implementation
 template <typename TAlphabet>
 double d2(map<String<TAlphabet>, unsigned int> refcounts,
           map<String<TAlphabet>, unsigned int> querycounts)
@@ -249,11 +269,6 @@ double d2(map<String<TAlphabet>, unsigned int> refcounts,
     long double score = sumqCrC / ((double)sqrt(sumqC2) * (double)sqrt(sumrC2));
     return 0.5*(1-score);
 };
-
-// Old Implementation
-double manhattan(ModifyStringOptions options, 
-                 map<string, unsigned int> refcounts, 
-                 map<string, unsigned int> querycounts);
 
 // New Template Implementation
 template <typename TAlphabet>
@@ -284,13 +299,6 @@ double manhattan(map<String<TAlphabet>, unsigned int> refcounts,
    return score;
 };
 
-
-// Old Implementation
-double chebyshev(ModifyStringOptions options, 
-                 map<string, unsigned int> refcounts, 
-                 map<string, unsigned int> querycounts);
-
-// New Template Implementation
 template <typename TAlphabet>
 double chebyshev(map<String<TAlphabet>, unsigned int> refcounts,
                  map<String<TAlphabet>, unsigned int> querycounts)
@@ -322,12 +330,6 @@ double chebyshev(map<String<TAlphabet>, unsigned int> refcounts,
    return score;
 };
 
-// Old Implementation
-double normalised_google_distance(ModifyStringOptions options, 
-                                  map<string, unsigned int> refcounts, 
-                                  map<string, unsigned int> querycounts);
-
-// New Template Implementation
 template <typename TAlphabet>
 double normalised_google_distance(map<String<TAlphabet>, unsigned int> refcounts,
                                   map<String<TAlphabet>, unsigned int> querycounts)
@@ -375,12 +377,6 @@ double normalised_google_distance(map<String<TAlphabet>, unsigned int> refcounts
    return (sum_max - sum_min_qr) / (sum_all - sum_min);
 };
 
-// Old Implementation
-double bray_curtis_distance(ModifyStringOptions options, 
-                            map<string, unsigned int> refcounts, 
-                            map<string, unsigned int> querycounts);
-
-// New Template Implementation
 template <typename TAlphabet>
 double bray_curtis_distance(map<String<TAlphabet>, unsigned int> refcounts,
                             map<String<TAlphabet>, unsigned int> querycounts)
@@ -404,20 +400,11 @@ double bray_curtis_distance(map<String<TAlphabet>, unsigned int> refcounts,
    return (double)sumMinus/(double)sumPlus;
 };
 
-// Old Implementation
-double dai(ModifyStringOptions options, map<string, bool> ourkmers, 
-              map<string, unsigned int> refcounts, 
-              map<string, double> refmarkov, 
-              map<string, unsigned int> querycounts, 
-              map<string, double> querymarkov);
-
-// New Template Implementation
 template <typename TAlphabet>
-double dai(map<String<TAlphabet>, bool> ourkmers,
-              map<String<TAlphabet>, unsigned int> refcounts,
-              map<String<TAlphabet>, double> refmarkov,
-              map<String<TAlphabet>, unsigned int> querycounts,
-              map<String<TAlphabet>, double> querymarkov)
+double dai(vector<String<TAlphabet>> ourkmers,
+           map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
+           map<String<TAlphabet>, unsigned int> querycounts,
+           map<String<TAlphabet>, double> querymarkov)
 {
    double score = 0.0;
    double S2kr = 0.0;
@@ -428,19 +415,23 @@ double dai(map<String<TAlphabet>, bool> ourkmers,
    int qN = 0;
    int rN = 0;
 
-   for(pair<String<TAlphabet>, bool> p: ourkmers)
+   for(auto p : querycounts)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      qN = qN + p.second;
    }
 
-   for(pair<String<TAlphabet>, unsigned int> p: ourkmers)
+   for(auto r : refcounts)
+   {
+      rN = rN + r.second;
+   }
+
+   for(auto p: ourkmers)
    {
       n++;
-      double rC = refcounts[p.first];
-      double qC = querycounts[p.first];
-      double rP = refmarkov[p.first];
-      double qP = querymarkov[p.first];
+      double rC = refcounts[p];
+      double qC = querycounts[p];
+      double rP = refmarkov[p];
+      double qP = querymarkov[p];
 
       double fRi = rC / (float)rN;
       double fQi = qC / (float)qN;

@@ -54,7 +54,11 @@ int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
 
 
 template <typename TAlphabet>
-int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, ModifyStringOptions options, mutex &location, vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts, vector<String<TAlphabet>> &kmer_count_map)
+int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, 
+                    unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, 
+                    ModifyStringOptions options, mutex &location, 
+                    vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts, 
+                    vector<String<TAlphabet>> &kmer_count_map)
 {
    unsigned row, column;
 
@@ -114,11 +118,11 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
          else if(options.type == "d2s")
             dist = d2s(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "hao")
-            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+            dist = hao(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "d2star")
-            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+            dist = d2star(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "dai")
-            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+            dist = dai(kmer_count_map, q1, m1, q2, m2);
 
          array_threaded_internal[row][column] = dist;
          array_threaded_internal[column][row] = dist;
@@ -166,10 +170,16 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 
    // thread to count // here, I think, if it's markov based, the thread also does the markov count
    for(unsigned i = 0; i < cores; i++)
-      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn), ref(pw_counts), ref(read), ref(write), ref(mv_counts), ref(kmer_count_map) ));
+   {
+      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn), 
+                                    ref(pw_counts), ref(read), ref(write), ref(mv_counts), 
+                                    ref(kmer_count_map) ));
+   }
 
    for(auto &thread : vectorOfSeqs)
+   {
       thread.join();
+   }
 
    cout << "Fin counting" << endl;
 
@@ -188,9 +198,15 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
    cout << "About to dist " << endl;
 
    for(unsigned i = 0; i < cores; i++)
-      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), ref(cI), std::ref(array_threaded_internal), options, ref(location), ref(mv_counts), ref(kmer_count_map) ));
+   {
+      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), 
+                                       ref(cI), std::ref(array_threaded_internal), options, 
+                                       ref(location), ref(mv_counts), ref(kmer_count_map) ));
+   }
    for(auto &thread : vectorOfThreads)
+   {
       thread.join();
+   }
 
    cout << "Fin dist " << endl;
 

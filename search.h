@@ -176,7 +176,8 @@ int search_thread(ModifyStringOptions options,
       map<double, int> results;
 
       // here we can go about search for the nearest
-      if(refcounts.size() != refmarkov.size())
+      if((refcounts.size() != refmarkov.size()) && (options.type == "d2s" || options.type == "hao" ||
+         options.type == "d2star" || options.type == "dai"))
       {
          // should be the same size
          cerr << "ERROR: sizes are not the same " << endl;
@@ -202,11 +203,11 @@ int search_thread(ModifyStringOptions options,
          else if(options.type == "d2s")
             dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
          else if(options.type == "hao")
-            dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
+            dist = hao(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
          else if(options.type == "d2star")
-            dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
+            dist = d2star(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
          else if(options.type == "dai")
-            dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
+            dist = dai(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
 
          // stores the smallest distance results and corresponding location in refSeq
          results.insert(pair<double, int> (dist, i));

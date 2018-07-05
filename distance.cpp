@@ -169,40 +169,6 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
    return pow(score, 0.5);
 }
 
-/*Unordered map version*/
-/*
-double euler(ModifyStringOptions options, unordered_map<string, unsigned int> refcounts,
-             unordered_map<string, unsigned int> querycounts)
-{
-   double score = 0.0;
-   long long unsigned int rN = 0;
-   long long unsigned int qN = 0;
-
-   for(pair<string, unsigned int> p: refcounts)
-      rN = rN + p.second;
-   for(pair<string, unsigned int> p: querycounts)
-      qN = qN + p.second;
-
-   double rN_new = (double)rN;
-   double qN_new = (double)qN;
-
-   // create a unified map
-   unordered_map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(),querycounts.end());
-
-   // sum 
-   for(pair<string, unsigned int> p: ourkmers)
-   {
-      double rF = refcounts[p.first] / (double)rN;
-      double qF = querycounts[p.first] / (double)qN;
-      score = score + (pow((rF - qF), 2));
-   }
-
-   return pow(score, 0.5);
-}
-*/
-
 double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, 
           map<string, unsigned int> querycounts)
 {
