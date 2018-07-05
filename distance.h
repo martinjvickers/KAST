@@ -190,7 +190,7 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
 
 // New Template Implementation
 template <typename TAlphabet>
-double euler(ModifyStringOptions options, map<String<TAlphabet>, unsigned int> &refcounts,
+double euler(map<String<TAlphabet>, unsigned int> &refcounts,
              map<String<TAlphabet>, unsigned int> &querycounts)
 {
    double score = 0.0;
@@ -227,7 +227,7 @@ double d2(ModifyStringOptions options, map<string, unsigned int> refcounts,
 
 // New Template Implementation
 template <typename TAlphabet>
-double d2(ModifyStringOptions options, map<String<TAlphabet>, unsigned int> refcounts,
+double d2(map<String<TAlphabet>, unsigned int> refcounts,
           map<String<TAlphabet>, unsigned int> querycounts)
 {
    long long unsigned int sumqCrC = 0;
@@ -257,8 +257,7 @@ double manhattan(ModifyStringOptions options,
 
 // New Template Implementation
 template <typename TAlphabet>
-double manhattan(ModifyStringOptions options,
-                 map<String<TAlphabet>, unsigned int> refcounts,
+double manhattan(map<String<TAlphabet>, unsigned int> refcounts,
                  map<String<TAlphabet>, unsigned int> querycounts)
 {
    double score = 0.0;
@@ -293,8 +292,7 @@ double chebyshev(ModifyStringOptions options,
 
 // New Template Implementation
 template <typename TAlphabet>
-double chebyshev(ModifyStringOptions options,
-                 map<String<TAlphabet>, unsigned int> refcounts,
+double chebyshev(map<String<TAlphabet>, unsigned int> refcounts,
                  map<String<TAlphabet>, unsigned int> querycounts)
 {
    double score = 0.0;
@@ -331,8 +329,7 @@ double normalised_google_distance(ModifyStringOptions options,
 
 // New Template Implementation
 template <typename TAlphabet>
-double normalised_google_distance(ModifyStringOptions options,
-                                  map<String<TAlphabet>, unsigned int> refcounts,
+double normalised_google_distance(map<String<TAlphabet>, unsigned int> refcounts,
                                   map<String<TAlphabet>, unsigned int> querycounts)
 {
    double score = 0.0;
@@ -385,8 +382,7 @@ double bray_curtis_distance(ModifyStringOptions options,
 
 // New Template Implementation
 template <typename TAlphabet>
-double bray_curtis_distance(ModifyStringOptions options,
-                            map<String<TAlphabet>, unsigned int> refcounts,
+double bray_curtis_distance(map<String<TAlphabet>, unsigned int> refcounts,
                             map<String<TAlphabet>, unsigned int> querycounts)
 {
    double sumMinus = 0.0;

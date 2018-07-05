@@ -100,17 +100,17 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
          double dist;
 
          if(options.type == "kmer")
-            dist = euler(options, q1, q2);
+            dist = euler(q1, q2);
          else if(options.type == "d2")
-            dist = d2(options, q1, q2);
+            dist = d2(q1, q2);
          else if(options.type == "manhattan")
-            dist = manhattan(options, q1, q2);
+            dist = manhattan(q1, q2);
          else if(options.type == "chebyshev")
-            dist = chebyshev(options, q1, q2);
+            dist = chebyshev(q1, q2);
          else if(options.type == "bc")
-            dist = bray_curtis_distance(options, q1, q2);
+            dist = bray_curtis_distance(q1, q2);
          else if(options.type == "ngd")
-            dist = normalised_google_distance(options, q1, q2);
+            dist = normalised_google_distance(q1, q2);
          else if(options.type == "d2s")
             dist = d2s(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "hao")

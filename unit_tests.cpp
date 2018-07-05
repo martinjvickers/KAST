@@ -381,7 +381,7 @@ int testeuler_template_AA(){
         map<String<AminoAcid>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
         map<String<AminoAcid>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
 
-        double dist = euler(options, refcounts, querycounts);
+        double dist = euler(refcounts, querycounts);
         double expected = 0.103056;
         double epsilon = 0.000001;
         if(abs(dist - expected) < epsilon)
@@ -406,7 +406,7 @@ int testeuler_template_DNA(){
         map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
         map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
 
-        double dist = euler(options, refcounts, querycounts);
+        double dist = euler(refcounts, querycounts);
         double expected = 0.103056;
         double epsilon = 0.000001;
         if(abs(dist - expected) < epsilon)
