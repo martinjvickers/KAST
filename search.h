@@ -1,5 +1,111 @@
 
 template <typename TAlphabet>
+int printResult(ModifyStringOptions options, CharString &queryid,
+                ofstream &outfile, String<TAlphabet> &queryseq,
+                map<double, int> &results, StringSet<CharString> &referenceids,
+                StringSet<String<TAlphabet>> &referenceseqs)
+{
+      if(options.output_format == "tabular")
+      {
+         StringSet<CharString> split;
+         strSplit(split, queryid);
+         CharString qName = split[0];
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ ";
+            cout << length(queryseq) << "\t" << gc_ratio(queryseq);
+            cout << "\t" << qName << endl;
+         }
+         else
+         {
+            outfile << "############################ ";
+            outfile << length(queryseq) << "\t" << gc_ratio(queryseq);
+            outfile << "\t" << qName << endl;
+         }
+
+         for(pair<double, int> p: results)
+         {
+            StringSet<CharString> split2;
+            strSplit(split2, referenceids[p.second]);
+            if(options.outputFileName == NULL)
+            {
+               cout << p.first << "\t" << length(referenceseqs[p.second]);
+               cout << "\t" << gc_ratio(referenceseqs[p.second]);
+               cout << "\t" << split2[0] << endl;
+            }
+            else
+            {
+               outfile << p.first << "\t" << length(referenceseqs[p.second]);
+               outfile << "\t" << gc_ratio(referenceseqs[p.second]);
+               outfile << "\t" << split2[0] << endl;
+            }
+         }
+      }
+      else if(options.output_format == "blastlike")
+      {
+         if(options.outputFileName == NULL)
+         {
+            cout << "RefID\tQryID\tRefLen\tQryLen\t";
+            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+         else
+         {
+            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
+            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
+         }
+
+         int count = 1;
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << "\t" << queryid << "\t";
+               cout << length(referenceseqs[p.second]) << "\t";
+               cout << length(queryseq) << "\t";
+               cout << gc_ratio(referenceseqs[p.second]) << "\t";
+               cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               cout << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << "\t" << queryid << "\t";
+               outfile << length(referenceseqs[p.second]) << "\t";
+               outfile << length(queryseq) << "\t";
+               outfile << gc_ratio(referenceseqs[p.second]) << "\t";
+               outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               outfile << p.first << endl;
+            }
+            count++;
+         }
+
+      }
+      else
+      {
+         if(options.outputFileName == NULL)
+         {
+            cout << "############################ " << queryid << endl;
+         }
+         else
+         {
+            outfile << "############################ " << queryid << endl;
+         }
+
+         for(pair<double, int> p: results)
+         {
+            if(options.outputFileName == NULL)
+            {
+               cout << referenceids[p.second] << " " << p.first << endl;
+            }
+            else
+            {
+               outfile << referenceids[p.second] << " " << p.first << endl;
+            }
+         }
+      }
+}
+
+
+template <typename TAlphabet>
 int create_ref_db(StringSet<String<TAlphabet>> &refseqs, 
                   vector<map<String<TAlphabet>, unsigned int>> &refcounts, 
                   vector<map<String<TAlphabet>, double>> &refmarkov,
@@ -30,7 +136,10 @@ int search_thread(ModifyStringOptions options,
                   vector<map<String<TAlphabet>, unsigned int>> &refcounts,
                   vector<map<String<TAlphabet>, double>> &refmarkov,
                   mutex &read, mutex &write, SeqFileIn &qrySeqFileIn,
-                  vector<String<TAlphabet>> &allKmers)
+                  vector<String<TAlphabet>> &allKmers,
+                  StringSet<CharString> &refids,
+                  StringSet<String<TAlphabet>> &refseqs,
+                  ofstream &outfile)
 {
 
    while(1)
@@ -62,6 +171,9 @@ int search_thread(ModifyStringOptions options,
          qrymarkov = markov_test(options.klen, queryseq, options.markovOrder, allKmers, options.noreverse);
 
       }
+
+      // to store the results 
+      map<double, int> results;
 
       // here we can go about search for the nearest
       if(refcounts.size() != refmarkov.size())
@@ -96,7 +208,19 @@ int search_thread(ModifyStringOptions options,
          else if(options.type == "dai")
             dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
 
+         // stores the smallest distance results and corresponding location in refSeq
+         results.insert(pair<double, int> (dist, i));
+         if(results.size() > options.nohits)
+         {
+            map<double, int>::iterator it = results.end();
+            results.erase(--it);
+         }
       }
+
+      write.lock();
+      printResult(options, queryid, outfile, queryseq, results,
+                  refids, refseqs);
+      write.unlock();
    }
 
    return 0;
@@ -106,7 +230,9 @@ template <typename TAlphabet>
 int search_db(ModifyStringOptions options,
               vector<map<String<TAlphabet>, unsigned int>> &refcounts, 
               vector<map<String<TAlphabet>, double>> &refmarkov,
-              vector<String<TAlphabet>> &allKmers)
+              vector<String<TAlphabet>> &allKmers,
+              StringSet<CharString> &refids,
+              StringSet<String<TAlphabet>> &refseqs)
 {
    // open up file
    SeqFileIn qrySeqFileIn;
@@ -117,12 +243,25 @@ int search_db(ModifyStringOptions options,
       return 1;
    }
 
+   ofstream outfile;
+
+   try
+   {
+      outfile.open(toCString(options.outputFileName), std::ios_base::out);
+   }
+   catch (const ifstream::failure& e)
+   {
+      cerr << "Error: could not open output file ";
+      cerr << toCString(options.outputFileName) << endl;
+      return 1;
+   }
+
    mutex read, write;
    vector<thread> vectorOfSeqs;
 
    for(unsigned i = 0; i < options.num_threads; i++)
    {
-      vectorOfSeqs.push_back(thread(search_thread<TAlphabet>, options, ref(refcounts), ref(refmarkov), ref(read), ref(write), ref(qrySeqFileIn), ref(allKmers) ));
+      vectorOfSeqs.push_back(thread(search_thread<TAlphabet>, options, ref(refcounts), ref(refmarkov), ref(read), ref(write), ref(qrySeqFileIn), ref(allKmers), ref(refids), ref(refseqs), ref(outfile) ));
    }
 
    for(auto &thread : vectorOfSeqs)
@@ -169,7 +308,7 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    create_ref_db(refseqs, refcounts, refmarkov, options.klen, options.noreverse, options.type, options.markovOrder, allKmers);
 
    // search
-   search_db(options, refcounts, refmarkov, allKmers);
+   search_db(options, refcounts, refmarkov, allKmers, refids, refseqs);
 
    // print result
 
