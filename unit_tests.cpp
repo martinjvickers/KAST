@@ -1,6 +1,6 @@
 /*
 KAST - 
-Version 0.0.17
+Version 0.0.18
 Written by Dr. Martin Vickers
 
 MIT License
