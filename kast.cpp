@@ -43,6 +43,7 @@ SOFTWARE.
 #include "distance.h"
 #include "utils.h"
 #include "pairwise.h"
+#include "search.h"
 #include <seqan/alignment_free.h>
 
 using namespace seqan;
@@ -439,6 +440,23 @@ int main(int argc, char const ** argv)
       else if(options.sequenceType == "nucl")
       {
          pairwise_matrix(options, Dna5());
+      }
+      else
+      {
+         // there is no other mode
+         cerr << "Error: mode not found - " << options.sequenceType << endl;
+         return 1;
+      }
+   }
+   else if (options.referenceFileName != NULL && options.queryFileName != NULL)
+   {
+      if(options.sequenceType == "prot")
+      {
+         query_ref_search(options, AminoAcid());
+      }
+      else if(options.sequenceType == "nucl")
+      {
+         query_ref_search(options, Dna5());
       }
       else
       {
