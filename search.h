@@ -144,13 +144,13 @@ int search_thread(ModifyStringOptions options,
 
    while(1)
    {
-      String<TAlphabet> queryseq;
+      CharString tempseq;
       CharString queryid;
 
       read.lock();
       if(!atEnd(qrySeqFileIn))
       {
-         readRecord(queryid, queryseq, qrySeqFileIn);
+         readRecord(queryid, tempseq, qrySeqFileIn);
       }
       else
       {
@@ -158,6 +158,11 @@ int search_thread(ModifyStringOptions options,
          return 0;
       }
       read.unlock();
+
+      // Read in the sequence as a CharString and then convert to our
+      // TAlphabet. This is because readRecord doesn't seem to like
+      // reducedAminoAcid
+      String<TAlphabet> queryseq = tempseq;
 
       map<String<TAlphabet>, unsigned int> querycounts;
       querycounts = count_test(queryseq, options.klen, options.noreverse);
@@ -282,8 +287,7 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    // if it's a markov method, just make the complete map, it'll be easier
 
    // read sequences into RAM
-   StringSet<CharString> refids;
-   StringSet<String<TAlphabet>> refseqs;
+/*
    try
    {
       SeqFileIn refSeqFileIn(toCString(options.referenceFileName));
@@ -291,8 +295,36 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    }
    catch (...)
    {
+      cerr << "ERROR " << endl;
       return 1;
    }
+*/
+
+   // open up file
+   SeqFileIn refSeqFileIn;
+   if(!open(refSeqFileIn, (toCString(options.referenceFileName))))
+   {
+      cerr << "Error: could not open reference file ";
+      cerr << toCString(options.referenceFileName) << endl;
+      return 1;
+   }
+
+   StringSet<CharString> refids;
+   StringSet<String<TAlphabet>> refseqs;
+
+   while(!atEnd(refSeqFileIn))
+   {
+      CharString tmprefseq, refid;
+      readRecord(refid, tmprefseq, refSeqFileIn);
+      appendValue(refids, refid);
+      appendValue(refseqs, tmprefseq);
+   }
+
+
+
+
+
+   cout << "Reference read in " << length(refseqs) << endl;
 
    // will store the counts/bg_model
    vector<map<String<TAlphabet>, unsigned int>> refcounts;

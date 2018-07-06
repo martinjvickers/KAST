@@ -63,11 +63,15 @@ int main(int argc, char const ** argv)
    // Running in pairwise mode
    if(options.pairwiseFileName != NULL)
    {
-      if(options.sequenceType == "prot")
+      if(options.sequenceType == "aa")
       {
          pairwise_matrix(options, AminoAcid());
       }
-      else if(options.sequenceType == "nucl")
+      else if(options.sequenceType == "raa")
+      {
+         pairwise_matrix(options, ReducedAminoAcidMurphy10());
+      }
+      else if(options.sequenceType == "dna")
       {
          pairwise_matrix(options, Dna5());
       }
@@ -80,11 +84,15 @@ int main(int argc, char const ** argv)
    }
    else if (options.referenceFileName != NULL && options.queryFileName != NULL)
    {
-      if(options.sequenceType == "prot")
+      if(options.sequenceType == "aa")
       {
          query_ref_search(options, AminoAcid());
       }
-      else if(options.sequenceType == "nucl")
+      else if(options.sequenceType == "raa")
+      {
+         query_ref_search(options, ReducedAminoAcidMurphy10());
+      }
+      else if(options.sequenceType == "dna")
       {
          query_ref_search(options, Dna5());
       }

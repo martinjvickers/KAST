@@ -27,9 +27,12 @@ SOFTWARE.
 #define COMMON_H
 
 #include <seqan/sequence.h>
+#include <seqan/reduced_aminoacid.h>
 
 using namespace seqan;
 using namespace std;
+
+typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
 
 /*
 User defined options struct

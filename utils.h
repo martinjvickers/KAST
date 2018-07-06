@@ -7,6 +7,7 @@
 #include <seqan/arg_parse.h>
 #include <seqan/index.h>
 #include <unordered_map>
+//#include <seqan/reduced_aminoacid.h>
 
 ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, 
                                              int argc, char const ** argv);
@@ -48,6 +49,9 @@ This is what I'm aiming to get across the board now.
 */
 //template <typename AminoAcid>
 map<String<AminoAcid>, unsigned int> count_test(String<AminoAcid> seq, int klen, bool noreverse);
+
+//typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
+map<String<ReducedAminoAcidMurphy10>, unsigned int> count_test(String<ReducedAminoAcidMurphy10> seq, int klen, bool noreverse);
 
 //template <typename Dna5>
 map<String<Dna5>, unsigned int> count_test(String<Dna5> seq, int klen, bool noreverse);

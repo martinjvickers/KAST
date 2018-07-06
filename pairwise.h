@@ -7,14 +7,14 @@ int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
                   vector<String<TAlphabet>> &kmer_count_map)
 {
    CharString pwid;
-   String<TAlphabet> pwseq;
+   CharString tmpseq;
 
    while(1)
    {
       read.lock();
       if(!atEnd(pairwiseFileIn))
       {
-         readRecord(pwid, pwseq, pairwiseFileIn);
+         readRecord(pwid, tmpseq, pairwiseFileIn);
       }
       else
       {
@@ -23,9 +23,10 @@ int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
       }
       read.unlock();
 
-      String<TAlphabet> refseq = pwseq;
-      if(options.noreverse == false)
-         refseq = doRevCompl(pwseq);
+      // Read in the sequence as a CharString and then convert to our
+      // TAlphabet. This is because readRecord doesn't seem to like
+      // reducedAminoAcid
+      String<TAlphabet> refseq = tmpseq;
 
       pair< CharString, map<String<TAlphabet>, unsigned int> > meh = make_pair(pwid, count_test(refseq, options.klen, options.noreverse));
       pair< CharString, map<String<TAlphabet>, double>> meh_markov;

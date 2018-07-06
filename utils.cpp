@@ -49,8 +49,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 
              ArgParseArgument::STRING, "STR"));
-   setValidValues(parser, "sequence-type", "nucl prot");
-   setDefaultValue(parser, "sequence-type", "nucl");
+   setValidValues(parser, "sequence-type", "dna aa raa");
+   setDefaultValue(parser, "sequence-type", "dna");
    addOption(parser, ArgParseOption("f", "output-format",
              "For Reference/query based usage you can select your output type.",             
              ArgParseArgument::STRING, "STR"));
@@ -410,6 +410,26 @@ map<String<AminoAcid>, unsigned int> count_test(String<AminoAcid> seq, int klen,
       for(unsigned i = 0; i <= length(seq) - klen; i++)
       {
          String<AminoAcid> kmer;
+         assign(kmer,infix(seq, i, i+klen));
+
+         // if kmer contains an 'X', probably should not count that kmer
+         counts[kmer]++;
+      }
+   }
+
+   return counts;
+}
+
+//typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
+
+map<String<ReducedAminoAcidMurphy10>, unsigned int> count_test(String<ReducedAminoAcidMurphy10> seq, int klen, bool noreverse)
+{
+   map<String<ReducedAminoAcidMurphy10>, unsigned int> counts;
+   if(length(seq) >= klen)
+   {
+      for(unsigned i = 0; i <= length(seq) - klen; i++)
+      {
+         String<ReducedAminoAcidMurphy10> kmer;
          assign(kmer,infix(seq, i, i+klen));
 
          // if kmer contains an 'X', probably should not count that kmer
