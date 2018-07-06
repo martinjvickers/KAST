@@ -17,6 +17,7 @@
 #include "common.h"
 
 // Old Implementations
+// Deprecated
 double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 
            map<string, unsigned int> refcounts, map<string, double> refmarkov, 
            map<string, unsigned int> querycounts, 

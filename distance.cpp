@@ -1,6 +1,7 @@
 #include "distance.h"
 #include <unordered_map>
 
+// Deprecated
 double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 
            map<string, unsigned int> refcounts, map<string, double> refmarkov, 
            map<string, unsigned int> querycounts, 
@@ -40,6 +41,7 @@ double d2s(ModifyStringOptions options, map<string, bool> ourkmers,
    return score;
 }
 
+// Deprecated
 double d2star(ModifyStringOptions options, map<string, bool> ourkmers, 
               map<string, unsigned int> refcounts, 
               map<string, double> refmarkov, 
@@ -91,6 +93,7 @@ double d2star(ModifyStringOptions options, map<string, bool> ourkmers,
    return 0.5 * (1 - temp);
 }
 
+// Deprecated
 double hao(ModifyStringOptions options, map<string, bool> ourkmers, 
            map<string, unsigned int> refcounts, map<string, double> refmarkov, 
            map<string, unsigned int> querycounts, 
@@ -138,6 +141,7 @@ double hao(ModifyStringOptions options, map<string, bool> ourkmers,
    return (1 - temp) / 2;
 }
 
+// Deprecated
 double euler(ModifyStringOptions options, map<string, unsigned int> refcounts, 
              map<string, unsigned int> querycounts)
 {
@@ -169,6 +173,7 @@ double euler(ModifyStringOptions options, map<string, unsigned int> refcounts,
    return pow(score, 0.5);
 }
 
+// Deprecated
 double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, 
           map<string, unsigned int> querycounts)
 {
@@ -192,6 +197,7 @@ double d2(ModifyStringOptions options, map<string, unsigned int> refcounts,
     return 0.5*(1-score);
 }
 
+// Deprecated
 double manhattan(ModifyStringOptions options, 
                  map<string, unsigned int> refcounts, 
                  map<string, unsigned int> querycounts)
@@ -220,6 +226,7 @@ double manhattan(ModifyStringOptions options,
    return score;
 }
 
+// Deprecated
 double chebyshev(ModifyStringOptions options, 
                  map<string, unsigned int> refcounts, 
                  map<string, unsigned int> querycounts)
@@ -251,6 +258,7 @@ double chebyshev(ModifyStringOptions options,
    return score;
 }
 
+// Deprecated
 double normalised_google_distance(ModifyStringOptions options, 
                                   map<string, unsigned int> refcounts, 
                                   map<string, unsigned int> querycounts)
@@ -298,6 +306,7 @@ double normalised_google_distance(ModifyStringOptions options,
    return (sum_max - sum_min_qr) / (sum_all - sum_min);
 }
 
+// Deprecated
 double bray_curtis_distance(ModifyStringOptions options, 
                             map<string, unsigned int> refcounts, 
                             map<string, unsigned int> querycounts)
@@ -322,6 +331,7 @@ double bray_curtis_distance(ModifyStringOptions options,
 
 }
 
+// Deprecated
 double dai(ModifyStringOptions options, map<string, bool> ourkmers,     
               map<string, unsigned int> refcounts,
               map<string, double> refmarkov,
@@ -384,15 +394,4 @@ double dai(ModifyStringOptions options, map<string, bool> ourkmers,
 
    return score;
 }
-
-
-
-
-
-
-
-
-
-
-
 
