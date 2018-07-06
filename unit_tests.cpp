@@ -29,6 +29,8 @@ SOFTWARE.
 #include "distance.h"
 #include "utils.h"
 
+#include <seqan/reduced_aminoacid.h>
+
 /*
 Overview of testing. NOTE: should test all alphabets (Dna5 and AminoAcid).
 
@@ -191,6 +193,12 @@ int make_complete_5mers()
    vector<String<AminoAcid>> kmers_aa = makecomplete(klen, AminoAcid());
 
    if(length(kmers_aa) != 11881376)
+      return 1;
+
+   // let's test reduced amino acid 
+   typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
+   vector<String<ReducedAminoAcidMurphy10>> kmers_raa = makecomplete(klen, ReducedAminoAcidMurphy10());
+   if(length(kmers_raa) != 59049)
       return 1;
 
    return 0;
@@ -652,6 +660,36 @@ int testeuler_template_AA()
    return 0;
 }
 
+int testeuler_template_Murphy10_AA()
+{
+   typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
+
+   int klen = 3;
+   bool noreverse = false;
+   String<ReducedAminoAcidMurphy10> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<ReducedAminoAcidMurphy10> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   ModifyStringOptions options;
+   map<String<ReducedAminoAcidMurphy10>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
+   map<String<ReducedAminoAcidMurphy10>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+
+   double dist = euler(refcounts, querycounts);
+   double expected = 0.103056;
+   double epsilon = 0.000001;
+   if(abs(dist - expected) < epsilon)
+   {
+      return 0;
+   }
+   else
+   {
+      printf("Test Euler Murphy10 FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      return 1;
+   }
+
+   return 0;
+}
+
+
 int testeuler_template_DNA()
 {
    int klen = 3;
@@ -918,6 +956,21 @@ int testCount_1_template()
    return 0;
 }
 
+int reduced_aminoAcid()
+{
+   // let's test reduced amino acid 
+   typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
+   String<AminoAcid> aas = "ABCDEFGHIJKLMNOPQRSTUVWYZX*";
+   String<ReducedAminoAcidMurphy10> conv = aas;
+   cout << conv << endl;
+
+   unsigned int klen = 3;
+   bool noreverse = false;
+ //  map<String<ReducedAminoAcidMurphy10>, unsigned int> counts = count_test(aas, klen, noreverse);
+
+   return 0;
+}
+
 int main(int argc, char const ** argv)
 {
    int returncode = 0;
@@ -979,6 +1032,17 @@ int main(int argc, char const ** argv)
    else
    {
       cout << "[PASSED] - Test Euler Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testeuler_template_Murphy10_AA() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Euler AA reduced Murphy10 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -1333,6 +1397,18 @@ int main(int argc, char const ** argv)
    }
 
    start = clock();
+
+   if(reduced_aminoAcid() != 0)
+   {
+      cout << "[FAILED] - reduced_aminoAcid " << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - reduced_aminoAcid " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+
 
    return returncode;
 
