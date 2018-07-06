@@ -52,6 +52,8 @@ Overview of testing. NOTE: should test all alphabets (Dna5 and AminoAcid).
 /*
    A simple masked kmer count test
 */
+
+// Deprecated
 int count_mask_test()
 {
    // define options
@@ -94,6 +96,7 @@ int count_mask_test()
    return 0;
 }
 
+// Deprecated
 int zero_sized_seq_count_3()
 {
    int klen = 3;
@@ -131,6 +134,7 @@ int zero_sized_seq_count_3_template_AminoAcid()
       return 1;
 }
 
+// Deprecated
 int zero_sized_seq_count_5()
 {
    int klen = 5;
@@ -204,6 +208,7 @@ int make_complete_5mers()
    return 0;
 }
 
+// Deprecated
 int testd2star(){
 
    int klen = 3;
@@ -271,7 +276,7 @@ int testd2star_template()
    return 0;
 }
 
-
+// Deprecated
 int testhao()
 {
    int klen = 3;
@@ -345,6 +350,7 @@ int testhao_template()
    return 0;
 }
 
+// Deprecated
 int testdai()
 {
    int klen = 3;
@@ -418,7 +424,7 @@ int testdai_template()
    return 0;
 }
 
-
+// Deprecated
 int testd2s()
 {
    int klen = 3;
@@ -486,6 +492,7 @@ int testd2s_template()
    return 0;
 }
 
+// Deprecated
 int testd2s_m2()
 {
    int klen = 3;
@@ -553,6 +560,7 @@ int testd2s_m2_template()
    return 0;
 }
 
+// Deprecated
 int testchebyshev()
 {
    int klen = 3;
@@ -607,6 +615,7 @@ int testchebyshev_template_DNA()
    return 0;
 }
 
+// Deprecated
 int testeuler()
 {
    int klen = 3;
@@ -717,6 +726,7 @@ int testeuler_template_DNA()
    return 0;
 }
 
+// Deprecated
 int testd2()
 {
    int klen = 3;
@@ -771,6 +781,7 @@ int testd2_template_DNA()
    return 0;
 }
 
+// Deprecated
 int testmanhattan()
 {
    int klen = 3;
@@ -879,6 +890,7 @@ int testngd_template_DNA()
    return 0;
 }
 
+// Deprecated
 int testCount_1()
 {
    String<AminoAcid> seq = "NTGACTGACTGACTGACTGACTGACTGACTGACN";
