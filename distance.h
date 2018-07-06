@@ -109,10 +109,10 @@ double d2s(vector<String<TAlphabet>> ourkmers,
 };
 
 template <typename TAlphabet>
-double d2star(vector<String<TAlphabet>> ourkmers,
-           map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
-           map<String<TAlphabet>, unsigned int> querycounts,
-           map<String<TAlphabet>, double> querymarkov)
+double d2star(vector<String<TAlphabet>> &ourkmers,
+           map<String<TAlphabet>, unsigned int> &refcounts, map<String<TAlphabet>, double> &refmarkov,
+           map<String<TAlphabet>, unsigned int> &querycounts,
+           map<String<TAlphabet>, double> &querymarkov)
 {
    double D_2Star = 0.0;
    double tempQ = 0.0;
@@ -137,6 +137,7 @@ double d2star(vector<String<TAlphabet>> ourkmers,
       double qP = querymarkov[p];
       double rC = refcounts[p];
       double rP = refmarkov[p];
+      //cout << "d2star " << p << "\t" << rC << "\t" << rP << "\t" << qC << "\t" << qP << endl;
 
       double temp1 = qN * qP;
       double temp2 = rN * rP;

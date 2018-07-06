@@ -270,6 +270,8 @@ map<string, double> markov(int klen, String<AminoAcid> sequence,
    double sum_prob = 0.0;
 
    map<string, unsigned int> markovcounts = count(sequence, markovOrder);
+   //cout << "Old Markov counts << " << length(markovcounts) << endl;
+
    double tot = 0;
 
    for(pair<string, unsigned int> p: markovcounts)
@@ -290,6 +292,7 @@ map<string, double> markov(int klen, String<AminoAcid> sequence,
          prob = prob * ((double)markovcounts[inf] / (double)tot);
       }
       markovmap[p.first] = prob;
+      //cout << "Old markov " << kmer << "\t" << prob << endl;
    }
    return markovmap;
 }

@@ -98,9 +98,9 @@ map<string, double> markov(int klen, String<AminoAcid> sequence,
 
 // new template markov function
 template <typename TAlphabet>
-map<String<TAlphabet>, double> markov_test(unsigned int klen, String<TAlphabet> sequence,
+map<String<TAlphabet>, double> markov_test(unsigned int klen, String<TAlphabet> &sequence,
                                            unsigned int markovOrder, 
-                                           vector<String<TAlphabet>> kmer_count_map,
+                                           vector<String<TAlphabet>> &kmer_count_map,
                                            bool noreverse)
 {
    map<String<TAlphabet>, double> markovmap;
@@ -125,10 +125,47 @@ map<String<TAlphabet>, double> markov_test(unsigned int klen, String<TAlphabet> 
          assign(inf,infix(kmer, l, j));
          prob = prob * ((double)markovcounts[inf] / (double)tot);
       }
+      //cout << kmer << "\t" << prob << endl;
       markovmap[kmer] = prob;
    }
 
    return markovmap;
+};
+
+
+// new template markov function
+template <typename TAlphabet>
+void markov_test(unsigned int klen, String<TAlphabet> &sequence,
+                 unsigned int markovOrder,
+                 vector<String<TAlphabet>> &kmer_count_map,
+                 bool noreverse, map<String<TAlphabet>, double> &markovmap)
+{
+//   map<String<TAlphabet>, double> markovmap;
+   double sum_prob = 0.0;
+
+   map<String<TAlphabet>, unsigned int> markovcounts = count_test(sequence, markovOrder, noreverse);
+   double tot = 0;
+
+   // calculate sum of counts
+   for(auto p: markovcounts)
+   {
+      tot = tot + p.second;
+   }
+
+   for(auto kmer : kmer_count_map)
+   {
+      double prob = 1.0;
+      for(int l = 0; l <= (length(kmer))-markovOrder; l++)
+      {
+         int j = l + markovOrder;
+         string inf;
+         assign(inf,infix(kmer, l, j));
+         prob = (double)prob * (double)((double)markovcounts[inf] / (double)tot);
+      }
+      markovmap[kmer] = prob;
+   }
+
+   //return markovmap;
 };
 
 
