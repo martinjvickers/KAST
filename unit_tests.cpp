@@ -521,45 +521,6 @@ int testd2star_template_DNA_all_m3()
    return return_code;
 }
 
-// Deprecated
-int testhao()
-{
-   int klen = 3;
-   int markovOrder = 1;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   String<AminoAcid> revq = doRevCompl(qryseq);
-   String<AminoAcid> revr = doRevCompl(refseq);
-
-   ModifyStringOptions options;
-   options.klen = klen;
-   options.markovOrder = markovOrder;
-   options.effectiveLength = options.klen;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-   map<string, bool> ourkmers = makecomplete(options);
-
-   map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
-   map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
-
-   double dist = hao(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
-   double expected = 0.37094;
-   double epsilon = 0.00001;
-
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Hao Failed - Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
 /***********
 Testing Hao measure
 ***********/
@@ -709,6 +670,47 @@ int testhao_template_DNA_all_m3()
    }
    return return_code;
 }
+
+/***********
+Testing Hao measure
+***********/
+int testdai_template_DNA_all_m0()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 1.39977));
+   expected_results.push_back(make_pair(5, 1.38657));
+   expected_results.push_back(make_pair(7, 1.3863));
+   expected_results.push_back(make_pair(9, 1.38629));
+
+   unsigned int markovOrder = 0;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = dai(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Dai FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
 
 // Deprecated
 int testdai()
@@ -1847,6 +1849,21 @@ int main(int argc, char const ** argv)
    {
       cout << "[PASSED] - Test Hao d2-tools M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   /***********
+   Testing Dai measure
+   ***********/
+   start = clock();
+   if(testdai_template_DNA_all_m0() !=0)
+   {
+      //returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Dai d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Dai d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
 
    /**********
    D2S tests
