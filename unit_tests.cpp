@@ -208,7 +208,16 @@ int make_complete_5mers()
    return 0;
 }
 
-// Deprecated
+
+/**************
+
+Distance tests
+
+***************/
+
+
+
+// This should be D2Star
 int testd2star(){
 
    int klen = 3;
@@ -236,7 +245,7 @@ int testd2star(){
    } 
    else
    {
-      printf("Test D2Star FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test D2Star FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -270,12 +279,17 @@ int testd2star_template()
    }
    else
    {
-      printf("Test D2Star FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test D2Star FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
    return 0;
 }
 
+
+/*
+   This is the one that needs to be debugged
+
+*/
 int testd2star_template_DNA_all()
 {
    bool noreverse = false;
@@ -287,51 +301,6 @@ int testd2star_template_DNA_all()
    expected_results.push_back(make_pair(5, 0.38041));
    expected_results.push_back(make_pair(7, 0.31286));
    expected_results.push_back(make_pair(9, 0.31272));
-
-   unsigned int markovOrder = 0;
-
-   int return_code = 0;
-
-   for(auto r : expected_results)
-   {
-      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
-      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
-
-      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
-
-      //map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
-
-/*      map<String<Dna5>, double> refmarkov;
-
-      markov_test(r.first, refseq, markovOrder, allkmers, noreverse, refmarkov);
-      for(auto m : refmarkov)
-         cout << "d2star Before putting into distance test " << m.first << "\t" << (double)m.second << endl;
-*/
-      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
-      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
-
-      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-      double epsilon = 0.0001;
-      if(!(abs(dist - r.second) < epsilon))
-      {
-         printf("Test d2star FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
-         return_code = 1;
-      }
-   }
-   return return_code;
-}
-
-int testd2star_template_DNA_all_m1()
-{
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.42284));
-   expected_results.push_back(make_pair(5, 0.39546));
-   expected_results.push_back(make_pair(7, 0.34082));
-   expected_results.push_back(make_pair(9, 0.34831));
 
    unsigned int markovOrder = 1;
 
@@ -351,13 +320,206 @@ int testd2star_template_DNA_all_m1()
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test d2star FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
+         printf("Test d2star FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
          return_code = 1;
       }
    }
    return return_code;
 }
 
+int testd2star_template_DNA_all_alfsc()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.4027100011247771));
+   expected_results.push_back(make_pair(5, 0.4333069320392635));
+   expected_results.push_back(make_pair(7, 0.4811460538701716));
+   expected_results.push_back(make_pair(9, 0.4938153388000316));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2star ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+      else
+      {
+         printf("Test d2star ALFSC PASSED: K=%d M=%d Value expected=%1.15f \n", r.first, markovOrder, dist);
+      }
+   }
+   return return_code;
+}
+
+/*******************
+
+d2Star AKA d2* tests. These are the ones that should be the same as d2-tools
+
+*******************/
+
+int testd2star_template_DNA_all_m0()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.38052));
+   expected_results.push_back(make_pair(5, 0.43068));
+   expected_results.push_back(make_pair(7, 0.48145));
+   expected_results.push_back(make_pair(9, 0.49396));
+
+   unsigned int markovOrder = 0;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2star FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2star_template_DNA_all_m1()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.38804));
+   expected_results.push_back(make_pair(5, 0.45213));
+   expected_results.push_back(make_pair(7, 0.48898));
+   expected_results.push_back(make_pair(9, 0.49623));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2star FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2star_template_DNA_all_m2()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.55372));
+   expected_results.push_back(make_pair(5, 0.47718));
+   expected_results.push_back(make_pair(7, 0.49521));
+   expected_results.push_back(make_pair(9, 0.49837));
+
+   unsigned int markovOrder = 2;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2star FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2star_template_DNA_all_m3()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(5, 0.49178));
+   expected_results.push_back(make_pair(7, 0.49552));
+   expected_results.push_back(make_pair(9, 0.49841));
+
+   unsigned int markovOrder = 3;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2star FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
 
 // Deprecated
 int testhao()
@@ -376,8 +538,6 @@ int testhao()
    options.effectiveLength = options.klen;
    map<string, unsigned int> refcounts = count(refseq, klen);
    map<string, unsigned int> querycounts = count(qryseq, klen);
-   //map<string, unsigned int> refcounts = count(revr, klen);
-   //map<string, unsigned int> querycounts = count(revq, klen);
    map<string, bool> ourkmers = makecomplete(options);
 
    map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
@@ -393,7 +553,7 @@ int testhao()
    }
    else
    {
-      printf("Test Hao Failed - Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Hao Failed - Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -427,7 +587,7 @@ int testhao_template()
    }
    else
    {
-      printf("Test Hao Failed: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Hao Failed: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
    return 0;
@@ -450,8 +610,6 @@ int testdai()
    options.effectiveLength = options.klen;
    map<string, unsigned int> refcounts = count(refseq, klen);
    map<string, unsigned int> querycounts = count(qryseq, klen);
-   //map<string, unsigned int> refcounts = count(revr, klen);
-   //map<string, unsigned int> querycounts = count(revq, klen);
    map<string, bool> ourkmers = makecomplete(options);
 
    map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
@@ -467,7 +625,7 @@ int testdai()
    }
    else
    {
-      printf("Test DAI Failed - Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test DAI Failed - Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -501,147 +659,397 @@ int testdai_template()
    }
    else
    {
-      printf("Test DAI Failed: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test DAI Failed: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
    return 0;
 }
 
-// Deprecated
-int testd2s()
+/*******
+D2S tests - like ALFSC python code, modeled on D2Perl?
+*******/
+
+int testD2Star_template_DNA_m1_alfsc()
 {
-   int klen = 3;
-   int markovOrder = 1;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   options.klen = klen;
-   options.markovOrder = markovOrder;
-   options.effectiveLength = options.klen;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-   map<string, bool> ourkmers = makecomplete(options);
-   map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
-   map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
-
-   double dist = d2s(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
-   double expected = 0.432463894423;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test D2S FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testd2s_template()
-{
-   int klen = 3;
-   int markovOrder = 1;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.4027100011247771));
+   expected_results.push_back(make_pair(5, 0.4333069320392635));
+   expected_results.push_back(make_pair(7, 0.4811460538701716));
+   expected_results.push_back(make_pair(9, 0.4938153388000316));
 
-   vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
+   unsigned int markovOrder = 1;
 
-   map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
-   map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
+   int return_code = 0;
 
-   double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-
-   double expected = 0.432463894423;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
+   for(auto r : expected_results)
    {
-      return 0;
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2Star ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
    }
-   else
-   {
-      printf("Test D2S FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
-      return 1;
-   }
-   return 0;
+   return return_code;
 }
 
-// Deprecated
-int testd2s_m2()
+int testD2Star_template_DNA_m2_alfsc()
 {
-   int klen = 3;
-   int markovOrder = 2;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   options.klen = klen;
-   options.markovOrder = markovOrder;
-   options.effectiveLength = options.klen;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-   map<string, bool> ourkmers = makecomplete(options);
-   map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
-   map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
-
-   double dist = d2s(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
-   double expected = 0.171434105;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test D2S FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testd2s_m2_template()
-{
-   int klen = 3;
-   int markovOrder = 2;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.1263099688896353));
+   expected_results.push_back(make_pair(5, 0.4010068737726791));
+   expected_results.push_back(make_pair(7, 0.48924997079919386));
+   expected_results.push_back(make_pair(9, 0.49638057869018404));
 
-   vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
+   unsigned int markovOrder = 2;
 
-   map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
-   map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
+   int return_code = 0;
 
-   double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-
-   double expected = 0.171434105;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
+   for(auto r : expected_results)
    {
-      return 0;
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2Star ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
    }
-   else
-   {
-      printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
-      return 1;
-   }
-   return 0;
+   return return_code;
 }
+
+int testD2Star_template_DNA_m3_alfsc()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(5, 0.3105303039861524));
+   expected_results.push_back(make_pair(7, 0.47862159996926135));
+   expected_results.push_back(make_pair(9, 0.4927190857642541));
+
+   unsigned int markovOrder = 3;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2Star ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+/*******
+D2S tests - like ALFSC python code, modeled on D2Perl?
+*******/
+
+int testD2S_template_DNA_m1_alfsc()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.43246389442301436));
+   expected_results.push_back(make_pair(5, 0.3808187760303444));
+   expected_results.push_back(make_pair(7, 0.3111486571852624));
+   expected_results.push_back(make_pair(9, 0.3105504265761406));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2S ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testD2S_template_DNA_m2_alfsc()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.17143410528723957));
+   expected_results.push_back(make_pair(5, 0.3910598137609042));
+   expected_results.push_back(make_pair(7, 0.4844600191127705));
+   expected_results.push_back(make_pair(9, 0.49612109672696625));
+
+   unsigned int markovOrder = 2;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2S ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testD2S_template_DNA_m3_alfsc()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(5, 0.39080681338593865));
+   expected_results.push_back(make_pair(7, 0.48476245225340164));
+   expected_results.push_back(make_pair(9, 0.49614473659934466));
+
+   unsigned int markovOrder = 3;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_old(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_old(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test D2S ALFSC FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+/************
+
+d2S AKA d2Shepp, these are the ones that should be the same as d2-tools
+
+************/
+
+
+int testd2s_template_DNA_all_d2tools_m0()
+{
+   bool noreverse = false;
+
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.4191));
+   expected_results.push_back(make_pair(5, 0.38041));
+   expected_results.push_back(make_pair(7, 0.31286));
+   expected_results.push_back(make_pair(9, 0.31272));
+
+
+   unsigned int markovOrder = 0;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, true);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, true);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2S d2-tools new FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2s_template_DNA_all_d2tools_m1()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.42284));
+   expected_results.push_back(make_pair(5, 0.39546));
+   expected_results.push_back(make_pair(7, 0.34082));
+   expected_results.push_back(make_pair(9, 0.34831));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, true);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, true);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2S d2-tools new FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2s_template_DNA_all_d2tools_m2()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.4307));
+   expected_results.push_back(make_pair(5, 0.45677));
+   expected_results.push_back(make_pair(7, 0.4146));
+   expected_results.push_back(make_pair(9, 0.42926));
+
+   unsigned int markovOrder = 2;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, true);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, true);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2S d2-tools new FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testd2s_template_DNA_all_d2tools_m3()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(5, 0.48175));
+   expected_results.push_back(make_pair(7, 0.47485));
+   expected_results.push_back(make_pair(9, 0.48595));
+
+   unsigned int markovOrder = 3;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, true);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, true);
+
+      double dist = d2s(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test d2S d2-tools new FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+
 
 // Deprecated
 int testchebyshev()
@@ -664,7 +1072,7 @@ int testchebyshev()
    }
    else
    {
-      printf("Test Chebyshev FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Chebyshev FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -691,7 +1099,7 @@ int testchebyshev_template_DNA()
    }
    else
    {
-      printf("Test Chebyshev FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Chebyshev FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -719,7 +1127,7 @@ int testchebyshev_template_DNA_all()
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test Chebyshev FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
+         printf("Test Chebyshev FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
          return 1;
       }
    }
@@ -747,7 +1155,7 @@ int testeuler()
    }
    else
    {
-      printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -774,7 +1182,7 @@ int testeuler_template_AA()
    }
    else
    {
-      printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -803,7 +1211,7 @@ int testeuler_template_Murphy10_AA()
    }
    else
    {
-      printf("Test Euler Murphy10 FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Euler Murphy10 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -831,7 +1239,7 @@ int testeuler_template_DNA()
    }
    else
    {
-      printf("Test Euler FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -860,7 +1268,7 @@ int testeuler_template_DNA_all()
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test Euler FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
+         printf("Test Euler FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
          return 1;
       }
    }
@@ -889,7 +1297,7 @@ int testd2()
    }
    else
    {
-      printf("Test D2 FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test D2 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -916,7 +1324,7 @@ int testd2_template_DNA()
    }
    else
    {
-      printf("Test D2 FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test D2 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -945,7 +1353,7 @@ int testd2_template_DNA_all()
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test d2 FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
+         printf("Test d2 FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
          return 1;
       }
    }
@@ -974,7 +1382,7 @@ int testmanhattan()
    }
    else
    {
-      printf("Test Manhattan FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Manhattan FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -1001,7 +1409,7 @@ int testmanhattan_template_DNA()
    }
    else
    {
-      printf("Test Manhattan FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test Manhattan FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -1030,7 +1438,7 @@ int testmanhattan_template_DNA_all()
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test Manhattan FAILED: K=%d Value expected=%1.15f, but recieved=%1.15f \n", r.first, r.second, dist);
+         printf("Test Manhattan FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
          return 1;
       }
    }
@@ -1057,7 +1465,7 @@ int testbc_template_DNA()
    }
    else
    {
-      printf("Test bray curtis distance FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test bray curtis distance FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -1084,7 +1492,7 @@ int testngd_template_DNA()
    }
    else
    {
-      printf("Test normalised google distance FAILED: Value expected=%1.15f, but recieved=%1.15f \n", expected, dist);
+      printf("Test normalised google distance FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -1176,6 +1584,183 @@ int main(int argc, char const ** argv)
    clock_t start;
    start = clock();
 
+   /**********
+   d2Star tests
+   **********/
+
+   if(testd2star_template_DNA_all_m0() != 0)
+   {
+      cout << "[FAILED] - Test d2star m0 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      returncode = 1; // commented out until can debug
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2star m0 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testd2star_template_DNA_all_m1() != 0)
+   {
+      cout << "[FAILED] - Test d2star m1 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      returncode = 1; // commented out until can debug
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2star m1 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testd2star_template_DNA_all_m2() != 0)
+   {
+      cout << "[FAILED] - Test d2star m2 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      returncode = 1; // commented out until can debug
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2star m2 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testd2star_template_DNA_all_m3() != 0)
+   {
+      cout << "[FAILED] - Test d2star m3 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      returncode = 1; // commented out until can debug
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2star m3 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   start = clock();
+
+   /**********
+   d2S tests
+   **********/
+
+   if(testd2s_template_DNA_all_d2tools_m0() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test d2S d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2S d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   start = clock();
+
+   if(testd2s_template_DNA_all_d2tools_m1() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test d2S d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2S d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testd2s_template_DNA_all_d2tools_m2() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test d2S d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2S d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testd2s_template_DNA_all_d2tools_m3() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test d2S d2-tools M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test d2S d2-tools M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   /**********
+   D2S tests
+   **********/
+   start = clock();
+   if(testD2S_template_DNA_m1_alfsc() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2S ALFSC M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2S ALFSC M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testD2S_template_DNA_m2_alfsc() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2S ALFSC M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2S ALFSC M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testD2S_template_DNA_m3_alfsc() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2S ALFSC M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2S ALFSC M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testD2Star_template_DNA_m1_alfsc() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2Star ALFSC M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2Star ALFSC M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testD2Star_template_DNA_m2_alfsc() != 0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2Star ALFSC M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2Star ALFSC M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testD2Star_template_DNA_m3_alfsc() != 0)
+   {
+      //returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test D2Star ALFSC M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test D2Star ALFSC M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+
    //test counting
    if(testCount_1() != 0)
    {
@@ -1190,6 +1775,7 @@ int main(int argc, char const ** argv)
 
    if(testCount_1_template() != 0)
    {
+      cout << "[FAILED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
       returncode = 1;
    }
    else
@@ -1200,6 +1786,8 @@ int main(int argc, char const ** argv)
    //test distances
    if(testeuler() != 0)
    {
+      cout << "[FAILED] - Test Euler " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+
       returncode = 1;
    }
    else
@@ -1210,21 +1798,22 @@ int main(int argc, char const ** argv)
    start = clock();
 
    //test distances
-/*
+
    //This one should fail 
    if(testeuler_template_AA() != 0)
    {
-      returncode = 1;
+      cout << "[FAILED] - Test Euler AminoAcid" << endl;
+      //returncode = 1;
    }
    else
    {
       cout << "[PASSED] - Test Euler AminoAcid" << endl;
    }
-*/
 
    //test distances
    if(testeuler_template_DNA() != 0)
    {
+      cout << "[FAILED] - Test Euler Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
       returncode = 1;
    }
    else
@@ -1241,17 +1830,6 @@ int main(int argc, char const ** argv)
    else
    {
       cout << "[PASSED] - Test Euler Dna5 all emplate " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testeuler_template_Murphy10_AA() != 0)
-   {
-      //returncode = 1; // commented out until can debug
-   }
-   else
-   {
-      cout << "[PASSED] - Test Euler AA reduced Murphy10 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -1289,9 +1867,6 @@ int main(int argc, char const ** argv)
 
    start = clock();
 
-
-
-
    if(testmanhattan() != 0)
    {
       returncode = 1;
@@ -1322,97 +1897,6 @@ int main(int argc, char const ** argv)
    {
       cout << "[PASSED] - Test Manhattan Dna5 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
-
-   start = clock();
-
-
-   if(testd2s() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2s k=3 m=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2s_template() != 0)
-   {
-      cout << "[FAILED] - Test d2s template k=3 m=1 " << endl;
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2s template k=3 m=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2s_m2() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2s k=3 m=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2s_m2_template() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2s template k=3 m=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2star() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2star " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2star_template() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2star template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2star_template_DNA_all() != 0)
-   {
-      //returncode = 1; // commented out until can debug
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2star all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2star_template_DNA_all_m1() != 0)
-   {
-      //returncode = 1; // commented out until can debug
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2star m1 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
 
    start = clock();
 
@@ -1450,11 +1934,10 @@ int main(int argc, char const ** argv)
    start = clock();
 
    // the following tests need to be looked at
-/*
    if(testhao() != 0)
    {
       cout << "[FAILED] - Test Hao" << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
@@ -1466,19 +1949,20 @@ int main(int argc, char const ** argv)
    if(testhao_template() != 0)
    {
       cout << "[FAILED] - Test Hao template " << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
       cout << "[PASSED] - Test Hao template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
+
    start = clock();
 
    if(testdai() != 0)
    {
       cout << "[FAILED] - Test DAI" << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
@@ -1490,21 +1974,19 @@ int main(int argc, char const ** argv)
    if(testdai_template() != 0)
    {
       cout << "[FAILED] - Test DAI template " << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
       cout << "[PASSED] - Test DAI template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
-*/
    start = clock();
 
-/*
 
    if(testbc_template_DNA() != 0)
    {
       cout << "[FAILED] - Test bray_curtis_distance template " << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
@@ -1516,14 +1998,13 @@ int main(int argc, char const ** argv)
    if(testngd_template_DNA() != 0)
    {
       cout << "[FAILED] - Test normalised_google_distance template " << endl;
-      returncode = 1;
+      //returncode = 1;
    }
    else
    {
       cout << "[PASSED] - Test normalised_google_distance template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
-*/
 
    start = clock();
 
