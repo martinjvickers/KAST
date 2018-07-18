@@ -37,13 +37,18 @@ int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
       {
          meh_markov = make_pair(pwid, markov_test(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
       }
+      else if(options.type == "D2S" || options.type == "D2Star")
+      {
+         meh_markov = make_pair(pwid, markov_old(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
+      }
 
       // lock both because we want both the markov and counts to be in the same position
       // in their respective vectors
       write.lock();
       pw_counts.push_back(meh);
       if(options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai")
+         options.type == "d2star" || options.type == "dai" ||
+         options.type == "D2S" || options.type == "D2Star")
       {
          mv_counts.push_back(meh_markov);
       }
@@ -96,7 +101,8 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
          map<String<TAlphabet>, double> m2;
 
          if(options.type == "d2s" || options.type == "hao" ||
-            options.type == "d2star" || options.type == "dai")
+            options.type == "d2star" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
          {
             m1 = mv_counts[column].second;
             m2 = mv_counts[row].second;
@@ -116,11 +122,11 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
             dist = bray_curtis_distance(q1, q2);
          else if(options.type == "ngd")
             dist = normalised_google_distance(q1, q2);
-         else if(options.type == "d2s")
+         else if(options.type == "d2s" || options.type == "D2S")
             dist = d2s(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "hao")
             dist = hao(kmer_count_map, q1, m1, q2, m2);
-         else if(options.type == "d2star")
+         else if(options.type == "d2star" || options.type == "D2Star")
             dist = d2star(kmer_count_map, q1, m1, q2, m2);
          else if(options.type == "dai")
             dist = dai(kmer_count_map, q1, m1, q2, m2);
@@ -162,7 +168,8 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 
    // create kmer_count_map if doing a markov model
    if(options.type == "d2s" || options.type == "hao" ||
-      options.type == "d2star" || options.type == "dai")
+      options.type == "d2star" || options.type == "dai" ||
+      options.type == "D2Star" || options.type == "D2S")
    {
       kmer_count_map = makecomplete(options.klen, alphabetType);
    }

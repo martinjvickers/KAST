@@ -99,6 +99,8 @@ double d2s(vector<String<TAlphabet>> ourkmers,
       double rCt = rC - (rN*rP);
 
       double dist = sqrt(qCt*qCt + rCt*rCt);
+      if(dist == 0)
+         dist = 1;
       D2S = D2S + (qCt*rCt / dist);
       sum1 = sum1 + (qCt*qCt / dist);
       sum2 = sum2 + (rCt*rCt / dist);
@@ -137,7 +139,6 @@ double d2star(vector<String<TAlphabet>> &ourkmers,
       double qP = querymarkov[p];
       double rC = refcounts[p];
       double rP = refmarkov[p];
-      //cout << "d2star " << p << "\t" << rC << "\t" << rP << "\t" << qC << "\t" << qP << endl;
 
       double temp1 = qN * qP;
       double temp2 = rN * rP;

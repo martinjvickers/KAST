@@ -126,6 +126,10 @@ int create_ref_db(StringSet<String<TAlphabet>> &refseqs,
       {
          refmarkov.push_back(markov_test(klen, refseqs[i], markovOrder, allKmers, noreverse));
       }
+      else if(distType == "D2Star" || distType == "D2S")
+      {
+         refmarkov.push_back(markov_old(klen, refseqs[i], markovOrder, allKmers, noreverse));
+      }
    }
 
    return 0; 
@@ -176,13 +180,17 @@ int search_thread(ModifyStringOptions options,
          qrymarkov = markov_test(options.klen, queryseq, options.markovOrder, allKmers, options.noreverse);
 
       }
+      else if(options.type == "D2Star" || options.type == "D2S")
+      {
+         qrymarkov = markov_old(options.klen, queryseq, options.markovOrder, allKmers, options.noreverse);
+      }
 
       // to store the results 
       map<double, int> results;
 
       // here we can go about search for the nearest
       if((refcounts.size() != refmarkov.size()) && (options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai"))
+         options.type == "d2star" || options.type == "dai" || options.type == "D2Star" || options.type == "D2S"))
       {
          // should be the same size
          cerr << "ERROR: sizes are not the same " << endl;
@@ -205,11 +213,11 @@ int search_thread(ModifyStringOptions options,
             dist = bray_curtis_distance(querycounts, refcounts[i]);
          else if(options.type == "ngd")
             dist = normalised_google_distance(querycounts, refcounts[i]);
-         else if(options.type == "d2s")
+         else if(options.type == "d2s" || options.type == "D2S")
             dist = d2s(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
          else if(options.type == "hao")
             dist = hao(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
-         else if(options.type == "d2star")
+         else if(options.type == "d2star" || options.type == "D2Star")
             dist = d2star(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
          else if(options.type == "dai")
             dist = dai(allKmers, querycounts, qrymarkov, refcounts[i], refmarkov[i]);
@@ -332,7 +340,8 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
 
    vector<String<TAlphabet>> allKmers;
    if(options.type == "d2s" || options.type == "hao" ||
-      options.type == "d2star" || options.type == "dai")
+      options.type == "d2star" || options.type == "dai" ||
+      options.type == "D2Star" || options.type == "D2S")
    {
       allKmers = makecomplete(options.klen, alphabetType);
    }

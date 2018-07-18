@@ -41,10 +41,10 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    addOption(parser, ArgParseOption("t", "distance-type", 
                                     "The method of calculating the distance \
                                     between two sequences. For descriptions of \
-                                    distance please refer to the wiki ",
+                                    distance please refer to the wiki. ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type", 
-               "d2 kmer d2s d2s-opt d2star manhattan chebyshev hao dai bc ngd");
+               "d2 kmer d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 
@@ -270,7 +270,6 @@ map<string, double> markov(int klen, String<AminoAcid> sequence,
    double sum_prob = 0.0;
 
    map<string, unsigned int> markovcounts = count(sequence, markovOrder);
-   //cout << "Old Markov counts << " << length(markovcounts) << endl;
 
    double tot = 0;
 
@@ -292,7 +291,6 @@ map<string, double> markov(int klen, String<AminoAcid> sequence,
          prob = prob * ((double)markovcounts[inf] / (double)tot);
       }
       markovmap[p.first] = prob;
-      //cout << "Old markov " << kmer << "\t" << prob << endl;
    }
    return markovmap;
 }

@@ -106,6 +106,80 @@ map<String<TAlphabet>, double> markov_test(unsigned int klen, String<TAlphabet> 
    map<String<TAlphabet>, double> markovmap;
    double sum_prob = 0.0;
 
+   if(markovOrder == 0)
+   {
+      map<String<TAlphabet>, unsigned int> markovcounts = count_test(sequence, markovOrder+1, (markovOrder+1)<=1);
+      double tot = 0;
+
+      // sum of markov counts
+      for(auto p: markovcounts)
+      {
+         tot = tot + p.second;
+      }
+
+      for(auto kmer : kmer_count_map)
+      {
+         double prob = 1.0;
+         for(int l = 0; l <= (length(kmer))-markovOrder-1; l++)
+         {
+            int j = l + (markovOrder+1);
+            string inf;
+            assign(inf,infix(kmer, l, j));
+            prob = prob * ((double)markovcounts[inf] / (double)tot);
+         }
+         markovmap[kmer] = prob;
+      }
+   }
+   else
+   {
+      map<String<TAlphabet>, unsigned int> markovcounts_more = count_test(sequence, markovOrder+1, (markovOrder+1)<=1);
+      map<String<TAlphabet>, unsigned int> markovcounts = count_test(sequence, markovOrder, markovOrder<=1);
+      double tot = 0;
+      for(auto p: markovcounts)
+         tot = tot + p.second;
+
+      for(auto kmer : kmer_count_map)
+      {
+         string w_start;
+         assign(w_start, infix(kmer, 0, markovOrder));
+         double p_temp = markovcounts[w_start] / tot;
+         for(int l = 0; l <= (length(kmer))-markovOrder-1; l++)
+         {
+            int j = l + (markovOrder);
+            string inf;
+            assign(inf,infix(kmer, l, j));
+
+            // now I need to add A,G,C,T to the end of inf
+            string w1;
+            assign(w1,infix(kmer, l, j+1));
+
+            int nk1 = markovcounts_more[w1];
+            int nk2 = markovcounts_more[inf+'A']+markovcounts_more[inf+'G']+markovcounts_more[inf+'C']+markovcounts_more[inf+'T'];
+            if(nk2 != 0)
+               p_temp = p_temp * ((double)markovcounts_more[w1] / (double)nk2);
+            else
+               p_temp = 0;
+         }
+         markovmap[kmer] = p_temp;
+      }
+   }
+
+   return markovmap;
+};
+
+
+/*
+   This is the markov calculation used by ALFSC-python
+
+*/
+template <typename TAlphabet>
+map<String<TAlphabet>, double> markov_old(unsigned int klen, String<TAlphabet> &sequence,
+                                           unsigned int markovOrder,
+                                           vector<String<TAlphabet>> &kmer_count_map,
+                                           bool noreverse)
+{
+   double sum_prob = 0.0;
+   map<String<TAlphabet>, double> markovmap;
    map<String<TAlphabet>, unsigned int> markovcounts = count_test(sequence, markovOrder, noreverse);
    double tot = 0;
 
@@ -123,15 +197,12 @@ map<String<TAlphabet>, double> markov_test(unsigned int klen, String<TAlphabet> 
          int j = l + markovOrder;
          string inf;
          assign(inf,infix(kmer, l, j));
-         prob = prob * ((double)markovcounts[inf] / (double)tot);
+         prob = (double)prob * (double)((double)markovcounts[inf] / (double)tot);
       }
-      //cout << kmer << "\t" << prob << endl;
       markovmap[kmer] = prob;
    }
-
    return markovmap;
 };
-
 
 // new template markov function
 template <typename TAlphabet>
