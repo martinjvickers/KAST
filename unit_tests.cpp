@@ -560,37 +560,154 @@ int testhao()
    return 0;
 }
 
-int testhao_template()
+/***********
+Testing Hao measure
+***********/
+int testhao_template_DNA_all_m0()
 {
-   int klen = 3;
-   int markovOrder = 1;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.37094));
+   expected_results.push_back(make_pair(5, 0.43642));
+   expected_results.push_back(make_pair(7, 0.4869));
+   expected_results.push_back(make_pair(9, 0.49621));
 
-   vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
+   unsigned int markovOrder = 0;
 
-   map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
-   map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
+   int return_code = 0;
 
-   double dist = hao(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-
-   double expected = 0.37094;
-
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
+   for(auto r : expected_results)
    {
-      return 0;
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = hao(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Hao FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
    }
-   else
+   return return_code;
+}
+
+int testhao_template_DNA_all_m1()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.5112));
+   expected_results.push_back(make_pair(5, 0.48815));
+   expected_results.push_back(make_pair(7, 0.49753));
+   expected_results.push_back(make_pair(9, 0.49918));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0; 
+
+   for(auto r : expected_results)
    {
-      printf("Test Hao Failed: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = hao(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Hao FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
    }
-   return 0;
+   return return_code;
+}
+
+int testhao_template_DNA_all_m2()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.38553));
+   expected_results.push_back(make_pair(5, 0.48473));
+   expected_results.push_back(make_pair(7, 0.49621));
+   expected_results.push_back(make_pair(9, 0.49915));
+
+   unsigned int markovOrder = 2;
+
+   int return_code = 0; 
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = hao(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Hao FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testhao_template_DNA_all_m3()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(5, 0.2804));
+   expected_results.push_back(make_pair(7, 0.40251));
+   expected_results.push_back(make_pair(9, 0.4761));
+
+   unsigned int markovOrder = 3;
+
+   int return_code = 0; 
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = hao(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Hao FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
 }
 
 // Deprecated
@@ -1685,6 +1802,53 @@ int main(int argc, char const ** argv)
    }
 
    /**********
+   Hao Tests
+   **********/
+   start = clock();
+   if(testhao_template_DNA_all_m0() !=0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Hao d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Hao d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+   if(testhao_template_DNA_all_m1() !=0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Hao d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Hao d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+   if(testhao_template_DNA_all_m2() !=0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Hao d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Hao d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+   if(testhao_template_DNA_all_m3() !=0)
+   {
+      returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Hao d2-tools M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Hao d2-tools M=3 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   /**********
    D2S tests
    **********/
    start = clock();
@@ -1930,32 +2094,6 @@ int main(int argc, char const ** argv)
    {
        cout << "[PASSED] - Test Chebyshev all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
-
-   start = clock();
-
-   // the following tests need to be looked at
-   if(testhao() != 0)
-   {
-      cout << "[FAILED] - Test Hao" << endl;
-      //returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Hao " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testhao_template() != 0)
-   {
-      cout << "[FAILED] - Test Hao template " << endl;
-      //returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Hao template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
 
    start = clock();
 
