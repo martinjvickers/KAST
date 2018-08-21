@@ -672,7 +672,7 @@ int testhao_template_DNA_all_m3()
 }
 
 /***********
-Testing Hao measure
+Testing DAI measure
 ***********/
 int testdai_template_DNA_all_m0()
 {
@@ -711,8 +711,79 @@ int testdai_template_DNA_all_m0()
    return return_code;
 }
 
+int testdai_template_DNA_all_m1()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 1.40542));
+   expected_results.push_back(make_pair(5, 1.40542));
+
+   unsigned int markovOrder = 1;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = dai(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Dai FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
+int testdai_template_DNA_all_m2()
+{
+   bool noreverse = false;
+   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
+   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
+
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0));
+   expected_results.push_back(make_pair(5, 0));
+
+   unsigned int markovOrder = 2;
+
+   int return_code = 0;
+
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
+
+      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
+
+      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
+      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
+
+      double dist = dai(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Dai FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
+}
+
 
 // Deprecated
+/*
 int testdai()
 {
    int klen = 3;
@@ -750,7 +821,9 @@ int testdai()
 
    return 0;
 }
+*/
 
+/*
 int testdai_template()
 {
    int klen = 3;
@@ -783,6 +856,7 @@ int testdai_template()
    }
    return 0;
 }
+*/
 
 /*******
 D2S tests - like ALFSC python code, modeled on D2Perl?
@@ -1253,34 +1327,6 @@ int testchebyshev_template_DNA_all()
    return 0;
 }
 
-
-// Deprecated
-int testeuler()
-{
-   int klen = 3;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-	
-   double dist = euler(options, refcounts, querycounts);
-   double expected = 0.103056;
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
 int testeuler_template_AA()
 {
    int klen = 3;
@@ -1301,7 +1347,7 @@ int testeuler_template_AA()
    }
    else
    {
-      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
+      printf("Test Euler AA FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
       return 1;
    }
 
@@ -1806,6 +1852,7 @@ int main(int argc, char const ** argv)
    /**********
    Hao Tests
    **********/
+
    start = clock();
    if(testhao_template_DNA_all_m0() !=0)
    {
@@ -1864,6 +1911,27 @@ int main(int argc, char const ** argv)
       cout << "[PASSED] - Test Dai d2-tools M=0 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
+   start = clock();
+   if(testdai_template_DNA_all_m1() !=0)
+   {
+      //returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Dai d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Dai d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+   if(testdai_template_DNA_all_m2() !=0)
+   {
+      //returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Dai d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Dai d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
 
    /**********
    D2S tests
@@ -1962,18 +2030,6 @@ int main(int argc, char const ** argv)
    else
    {
       cout << "[PASSED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   //test distances
-   if(testeuler() != 0)
-   {
-      cout << "[FAILED] - Test Euler " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Euler " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -2112,29 +2168,6 @@ int main(int argc, char const ** argv)
        cout << "[PASSED] - Test Chebyshev all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
-   start = clock();
-
-   if(testdai() != 0)
-   {
-      cout << "[FAILED] - Test DAI" << endl;
-      //returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test DAI " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testdai_template() != 0)
-   {
-      cout << "[FAILED] - Test DAI template " << endl;
-      //returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test DAI template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
    start = clock();
 
 
