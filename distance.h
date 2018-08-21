@@ -409,7 +409,6 @@ double dai(vector<String<TAlphabet>> ourkmers,
            map<String<TAlphabet>, unsigned int> querycounts,
            map<String<TAlphabet>, double> querymarkov)
 {
-   double score = 0.0;
    double S2kr = 0.0;
    int n = 0;
    double tempX = 0.0;
@@ -436,38 +435,45 @@ double dai(vector<String<TAlphabet>> ourkmers,
       double rP = refmarkov[p];
       double qP = querymarkov[p];
 
-      double fRi = rC / (float)rN;
-      double fQi = qC / (float)qN;
-      double r_sigma = fRi * rP;
-      double q_sigma = fQi * qP;
+      // In the d2-tools implementation of this, for some reason the python code reads
+      // a zero from the wordcount files as 1e-10. This has the effect of ensuring that
+      // there are never any actual zeros in the calculation. I don't know if this is
+      // intentional or accidental, but for now, to ensure this is consistent with 
+      // d2-tools I've reproduced this situation here.
+      if(rC == 0)
+         rC = rC + 0.0000000001;
+      if(qC == 0)
+         qC = qC + 0.0000000001;
+
+      double r_sigma = (float)rC * (float)rP;
+      double q_sigma = (float)qC * (float)qP;
       double temp1 = 0.0;
       double temp2 = 0.0;
 
-      // I added this if statement here. I'm not sure if this breaks
-      // something, but basically we only do the calculation on kmers
-      // that exist in both sequences. This d2tools implementions
-      // simply bombs out if this situation is encountered
-      if(rC != 0 && qC != 0)
+      if(r_sigma == q_sigma)
       {
-         if(r_sigma != q_sigma)
-         {
-            double temp = (float)(r_sigma+q_sigma);
-            double temp3 = (2 * r_sigma) / (float)temp;
-            double temp4 = (2 * q_sigma) / (float)temp;
-            temp1 = r_sigma*log(temp3);
-            temp2 = q_sigma*log(temp4);
-         }
-         tempX += temp1;
-         tempY += temp2;
+         temp1 = 0;
+         temp2 = 0;
       }
+      else
+      {
+         double temp = (float)(r_sigma+q_sigma);
+         double temp3 = (2 * r_sigma) / (float)temp;
+         double temp4 = (2 * q_sigma) / (float)temp;
+
+         temp1 = r_sigma*log(temp3);
+         temp2 = q_sigma*log(temp4);
+      }
+      tempX += temp1;
+      tempY += temp2;
    }
 
    if(tempX == 0.0 && tempY == 0.0)
-      return 0.0;
+      S2kr = 0.0;
    else
-      return (tempX+tempY)/(n+2*log(2.0));
+      S2kr = (tempX+tempY)/n+2*log(2.0);
 
-   return score;
+   return S2kr;
 };
 
 
