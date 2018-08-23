@@ -218,74 +218,6 @@ Distance tests
 
 
 // This should be D2Star
-int testd2star(){
-
-   int klen = 3;
-   int markovOrder = 1;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   options.klen = klen;
-   options.markovOrder = markovOrder;
-   options.effectiveLength = options.klen;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-   map<string, bool> ourkmers = makecomplete(options);
-   map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
-   map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
-
-   double dist = d2star(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
-   double expected = 0.4027100011247771;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   } 
-   else
-   {
-      printf("Test D2Star FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testd2star_template()
-{
-   int klen = 3;
-   int markovOrder = 1;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
-
-   vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
-
-   map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
-   map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
-
-   double dist = d2star(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-
-   double expected = 0.4027100011247771;
-
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test D2Star FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-   return 0;
-}
-
-
 /*
    This is the one that needs to be debugged
 
@@ -719,7 +651,9 @@ int testdai_template_DNA_all_m1()
 
    vector<pair<unsigned int, double>> expected_results;
    expected_results.push_back(make_pair(3, 1.40542));
-   expected_results.push_back(make_pair(5, 1.40542));
+   expected_results.push_back(make_pair(5, 1.38661));
+   expected_results.push_back(make_pair(7, 1.3863));
+   expected_results.push_back(make_pair(9, 1.38629));
 
    unsigned int markovOrder = 1;
 
@@ -745,118 +679,6 @@ int testdai_template_DNA_all_m1()
    }
    return return_code;
 }
-
-int testdai_template_DNA_all_m2()
-{
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0));
-   expected_results.push_back(make_pair(5, 0));
-
-   unsigned int markovOrder = 2;
-
-   int return_code = 0;
-
-   for(auto r : expected_results)
-   {
-      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
-      map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, r.first, noreverse);
-
-      vector<String<Dna5>> allkmers = makecomplete(r.first, Dna5());
-
-      map<String<Dna5>, double> refmarkov = markov_test(r.first, refseq, markovOrder, allkmers, noreverse);
-      map<String<Dna5>, double> qrymarkov = markov_test(r.first, qryseq, markovOrder, allkmers, noreverse);
-
-      double dist = dai(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-      double epsilon = 0.0001;
-      if(!(abs(dist - r.second) < epsilon))
-      {
-         printf("Test Dai FAILED: K=%d M=%d Value expected=%1.15f, but received=%1.15f \n", r.first, markovOrder, r.second, dist);
-         return_code = 1;
-      }
-   }
-   return return_code;
-}
-
-
-// Deprecated
-/*
-int testdai()
-{
-   int klen = 3;
-   int markovOrder = 1;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   String<AminoAcid> revq = doRevCompl(qryseq);
-   String<AminoAcid> revr = doRevCompl(refseq);
-
-   ModifyStringOptions options;
-   options.klen = klen;
-   options.markovOrder = markovOrder;
-   options.effectiveLength = options.klen;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-   map<string, bool> ourkmers = makecomplete(options);
-
-   map<string, double> refmarkov = markov(klen, refseq, markovOrder, ourkmers);
-   map<string, double> querymarkov = markov(klen, qryseq, markovOrder, ourkmers);
-
-   double dist = dai(options, ourkmers, refcounts, refmarkov, querycounts, querymarkov);
-   double expected = 0.37094;
-   double epsilon = 0.00001;
-
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test DAI Failed - Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-*/
-
-/*
-int testdai_template()
-{
-   int klen = 3;
-   int markovOrder = 1;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> qrycounts = count_test(qryseq, klen, noreverse);
-
-   vector<String<Dna5>> allkmers = makecomplete(klen, Dna5());
-
-   map<String<Dna5>, double> refmarkov = markov_test(klen, refseq, markovOrder, allkmers, noreverse);
-   map<String<Dna5>, double> qrymarkov = markov_test(klen, qryseq, markovOrder, allkmers, noreverse);
-
-   double dist = dai(allkmers, refcounts, refmarkov, qrycounts, qrymarkov);
-
-   double expected = 0.37094;
-
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test DAI Failed: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-   return 0;
-}
-*/
 
 /*******
 D2S tests - like ALFSC python code, modeled on D2Perl?
@@ -1242,64 +1064,12 @@ int testd2s_template_DNA_all_d2tools_m3()
    return return_code;
 }
 
+/************
 
+Chebyshev test
+************/
 
-// Deprecated
-int testchebyshev()
-{
-   int klen = 3;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-
-   double dist = chebyshev(options, refcounts, querycounts);
-   double expected = 0.03061;
-   double epsilon = 0.00001;
-
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Chebyshev FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testchebyshev_template_DNA()
-{
-   int klen = 3;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
-
-   double dist = chebyshev(refcounts, querycounts);
-   double expected = 0.03061;
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Chebyshev FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testchebyshev_template_DNA_all()
+int testchebyshev_template_DNA_all_d2tools()
 {
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
@@ -1311,194 +1081,27 @@ int testchebyshev_template_DNA_all()
    expected_results.push_back(make_pair(7, 0.00532));
    expected_results.push_back(make_pair(9, 0.00543));
 
+   int return_code = 0;
+
    for(auto r : expected_results)
    {
       map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
       map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, r.first, noreverse);
 
       double dist = chebyshev(refcounts, querycounts);
+
       double epsilon = 0.0001;
       if(!(abs(dist - r.second) < epsilon))
       {
-         printf("Test Chebyshev FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
-         return 1;
+         printf("Test Chebyshev d2-tools new FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
+         return_code = 1;
       }
    }
-   return 0;
-}
-
-int testeuler_template_AA()
-{
-   int klen = 3;
-   bool noreverse = false;
-   String<AminoAcid> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<AminoAcid> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   ModifyStringOptions options;
-   map<String<AminoAcid>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<AminoAcid>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
-
-   double dist = euler(refcounts, querycounts);
-   double expected = 0.103056;
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Euler AA FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testeuler_template_Murphy10_AA()
-{
-   typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
-
-   int klen = 3;
-   bool noreverse = false;
-   String<ReducedAminoAcidMurphy10> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<ReducedAminoAcidMurphy10> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   ModifyStringOptions options;
-   map<String<ReducedAminoAcidMurphy10>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<ReducedAminoAcidMurphy10>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
-
-   double dist = euler(refcounts, querycounts);
-   double expected = 0.103056;
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Euler Murphy10 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-
-int testeuler_template_DNA()
-{
-   int klen = 3;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
-
-   double dist = euler(refcounts, querycounts);
-   double expected = 0.103056;
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Euler FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testeuler_template_DNA_all()
-{
-   int klen = 3;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.10306));
-   expected_results.push_back(make_pair(5, 0.09317));
-   expected_results.push_back(make_pair(7, 0.10092));
-   expected_results.push_back(make_pair(9, 0.10369));
- 
-   for(auto r : expected_results)
-   {
-      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
-      map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, r.first, noreverse);
-
-      double dist = euler(refcounts, querycounts);
-      double epsilon = 0.0001;
-      if(!(abs(dist - r.second) < epsilon))
-      {
-         printf("Test Euler FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
-         return 1;
-      }
-   }
-   return 0;
-}
-
-
-// Deprecated
-int testd2()
-{
-   int klen = 3;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-
-   double dist = d2(options, refcounts, querycounts);
-   double expected = 0.10619;
-   double epsilon = 0.000001;
-
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test D2 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testd2_template_DNA()
-{
-   int klen = 3;
-   bool noreverse = false;
-   String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
-   String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
-
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
-
-   double dist = d2(refcounts, querycounts);
-   double expected = 0.10619;
-   double epsilon = 0.000001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test D2 FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
+   return return_code;
 }
 
 int testd2_template_DNA_all()
 {
-   int klen = 3;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
@@ -1508,6 +1111,8 @@ int testd2_template_DNA_all()
    expected_results.push_back(make_pair(5, 0.3537));
    expected_results.push_back(make_pair(7, 0.47872));
    expected_results.push_back(make_pair(9, 0.49457));
+
+   int return_code = 0;
 
    for(auto r : expected_results)
    {
@@ -1519,71 +1124,44 @@ int testd2_template_DNA_all()
       if(!(abs(dist - r.second) < epsilon))
       {
          printf("Test d2 FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
-         return 1;
+         return_code = 1;
       }
    }
-   return 0;
+   return return_code;
 }
 
-
-// Deprecated
-int testmanhattan()
+int testeuler_template_DNA_all()
 {
-   int klen = 3;
-   String<AminoAcid> qryseq = doRevCompl("AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG");
-   String<AminoAcid> refseq = doRevCompl("CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA");
-
-   ModifyStringOptions options;
-   map<string, unsigned int> refcounts = count(refseq, klen);
-   map<string, unsigned int> querycounts = count(qryseq, klen);
-
-   double dist = manhattan(options, refcounts, querycounts);
-   double expected = 0.63265;
-   double epsilon = 0.00001;
-
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Manhattan FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
-
-   return 0;
-}
-
-int testmanhattan_template_DNA()
-{
-   int klen = 3;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.10306));
+   expected_results.push_back(make_pair(5, 0.09317));
+   expected_results.push_back(make_pair(7, 0.10092));
+   expected_results.push_back(make_pair(9, 0.10369));
 
-   double dist = manhattan(refcounts, querycounts);
-   double expected = 0.63265;
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test Manhattan FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
+   int return_code = 0;
 
-   return 0;
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, r.first, noreverse);
+
+      double dist = euler(refcounts, querycounts);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test Euler FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
 }
 
 int testmanhattan_template_DNA_all()
 {
-   int klen = 3;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
@@ -1593,6 +1171,8 @@ int testmanhattan_template_DNA_all()
    expected_results.push_back(make_pair(5, 1.45833));
    expected_results.push_back(make_pair(7, 1.91489));
    expected_results.push_back(make_pair(9, 1.97826));
+
+   int return_code = 0;
 
    for(auto r : expected_results)
    {
@@ -1604,64 +1184,70 @@ int testmanhattan_template_DNA_all()
       if(!(abs(dist - r.second) < epsilon))
       {
          printf("Test Manhattan FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
-         return 1;
+         return_code = 1;
       }
    }
-   return 0;
+   return return_code;
 }
 
 int testbc_template_DNA()
 {
-   int klen = 3;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.316326530612));
+   expected_results.push_back(make_pair(5, 0.729166666667));
+   expected_results.push_back(make_pair(7, 0.957446808511));
+   expected_results.push_back(make_pair(9, 0.989130434783));
 
-   double dist = bray_curtis_distance(refcounts, querycounts);
-   double expected = 0.63265;
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test bray curtis distance FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
+   int return_code = 0;
 
-   return 0;
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, r.first, noreverse);
+
+      double dist = bray_curtis_distance(refcounts, querycounts);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test bray_curtis_distance FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
 }
 
 int testngd_template_DNA()
 {
-   int klen = 3;
    bool noreverse = false;
    String<Dna5> qryseq = "AGGCAGCGTACGAACCTACTGGAGTTGCGGTATGGGACCAGGCGACCTCTGATGCAGAGATACAGGAGCGCCGCGCCGGGTCTTCCTTGTAGAAGTCCTG";
    String<Dna5> refseq = "CGGAGACCTCCGTGGACGGGGAAGTCCTGCGCGGGTCAGACGTACGCCCCGATTAGTTGCCCGGACGCCCGGTTGGCAGAAGTGACGGCGACTGCCCTCA";
 
-   ModifyStringOptions options;
-   map<String<Dna5>, unsigned int> refcounts = count_test(refseq, klen, noreverse);
-   map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, klen, noreverse);
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.316326530612));
+   expected_results.push_back(make_pair(5, 0.729166666667));
+   expected_results.push_back(make_pair(7, 0.957446808511));
+   expected_results.push_back(make_pair(9, 0.989130434783));
 
-   double dist = normalised_google_distance(refcounts, querycounts);
-   double expected = 0.63265;
-   double epsilon = 0.00001;
-   if(abs(dist - expected) < epsilon)
-   {
-      return 0;
-   }
-   else
-   {
-      printf("Test normalised google distance FAILED: Value expected=%1.15f, but received=%1.15f \n", expected, dist);
-      return 1;
-   }
+   int return_code = 0;
 
-   return 0;
+   for(auto r : expected_results)
+   {
+      map<String<Dna5>, unsigned int> refcounts = count_test(refseq, r.first, noreverse);
+      map<String<Dna5>, unsigned int> querycounts = count_test(qryseq, r.first, noreverse);
+
+      double dist = normalised_google_distance(refcounts, querycounts);
+      double epsilon = 0.0001;
+      if(!(abs(dist - r.second) < epsilon))
+      {
+         printf("Test normalised_google_distance FAILED: K=%d Value expected=%1.15f, but received=%1.15f \n", r.first, r.second, dist);
+         return_code = 1;
+      }
+   }
+   return return_code;
 }
 
 // Deprecated
@@ -1922,16 +1508,7 @@ int main(int argc, char const ** argv)
       cout << "[PASSED] - Test Dai d2-tools M=1 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
-   start = clock();
-   if(testdai_template_DNA_all_m2() !=0)
-   {
-      //returncode = 1; // commented out until can debug
-      cout << "[FAILED] - Test Dai d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Dai d2-tools M=2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
+   // d2-tools S2 doesn't work for m2 and m3.
 
    /**********
    D2S tests
@@ -2009,53 +1586,14 @@ int main(int argc, char const ** argv)
 
    start = clock();
 
-
-   //test counting
-   if(testCount_1() != 0)
+   if(testchebyshev_template_DNA_all_d2tools() != 0)
    {
-      returncode = 1;
+      //returncode = 1; // commented out until can debug
+      cout << "[FAILED] - Test Chebyshev ALL " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
    else
    {
-      cout << "[PASSED] - Test Count " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testCount_1_template() != 0)
-   {
-      cout << "[FAILED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   //test distances
-
-   //This one should fail 
-   if(testeuler_template_AA() != 0)
-   {
-      cout << "[FAILED] - Test Euler AminoAcid" << endl;
-      //returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Euler AminoAcid" << endl;
-   }
-
-   //test distances
-   if(testeuler_template_DNA() != 0)
-   {
-      cout << "[FAILED] - Test Euler Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Euler Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      cout << "[PASSED] - Test Chebyshev ALL " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -2066,29 +1604,7 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test Euler Dna5 all emplate " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2 " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testd2_template_DNA() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test d2 Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      cout << "[PASSED] - Test Euler Dna5 ALL " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -2099,29 +1615,7 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test d2 Dna5 All template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testmanhattan() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Manhattan " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testmanhattan_template_DNA() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-      cout << "[PASSED] - Test Manhattan Dna5 template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      cout << "[PASSED] - Test d2 Dna5 ALL " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
@@ -2132,44 +1626,10 @@ int main(int argc, char const ** argv)
    }
    else
    {
-      cout << "[PASSED] - Test Manhattan Dna5 all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      cout << "[PASSED] - Test Manhattan Dna5 ALL " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
 
    start = clock();
-
-   if(testchebyshev() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-       cout << "[PASSED] - Test Chebyshev " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testchebyshev_template_DNA() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-       cout << "[PASSED] - Test Chebyshev template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
-   if(testchebyshev_template_DNA_all() != 0)
-   {
-      returncode = 1;
-   }
-   else
-   {
-       cout << "[PASSED] - Test Chebyshev all template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
-   }
-
-   start = clock();
-
 
    if(testbc_template_DNA() != 0)
    {
@@ -2332,6 +1792,31 @@ int main(int argc, char const ** argv)
    {
       cout << "[PASSED] - Make Complete 5-mers (DNA & AA) " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
    }
+
+   start = clock();
+
+   //test counting
+   if(testCount_1() != 0)
+   {
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Count " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
+   start = clock();
+
+   if(testCount_1_template() != 0)
+   {
+      cout << "[FAILED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+      returncode = 1;
+   }
+   else
+   {
+      cout << "[PASSED] - Test Count Template " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << endl;
+   }
+
 
    return returncode;
 
