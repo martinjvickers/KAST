@@ -232,8 +232,7 @@ int search_thread(ModifyStringOptions options,
       }
 
       write.lock();
-      printResult(options, queryid, outfile, queryseq, results,
-                  refids, refseqs);
+      printResult(options, queryid, outfile, queryseq, results, refids, refseqs);
       write.unlock();
    }
 
@@ -292,22 +291,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
 {
    cout << "Performing search based mode" << endl;
 
-   // if it's a markov method, just make the complete map, it'll be easier
-
-   // read sequences into RAM
-/*
-   try
-   {
-      SeqFileIn refSeqFileIn(toCString(options.referenceFileName));
-      readRecords(refids, refseqs, refSeqFileIn);
-   }
-   catch (...)
-   {
-      cerr << "ERROR " << endl;
-      return 1;
-   }
-*/
-
    // open up file
    SeqFileIn refSeqFileIn;
    if(!open(refSeqFileIn, (toCString(options.referenceFileName))))
@@ -328,10 +311,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       appendValue(refseqs, tmprefseq);
    }
 
-
-
-
-
    cout << "Reference read in " << length(refseqs) << endl;
 
    // will store the counts/bg_model
@@ -351,8 +330,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
 
    // search
    search_db(options, refcounts, refmarkov, allKmers, refids, refseqs);
-
-   // print result
 
    return 0;
 }

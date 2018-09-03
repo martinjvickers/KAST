@@ -44,7 +44,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     distance please refer to the wiki. ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type", 
-               "d2 kmer d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd");
+               "d2 kmer d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 

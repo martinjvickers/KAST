@@ -59,9 +59,8 @@ int main(int argc, char const ** argv)
    if(parseMask(options, options.effectiveLength) == 1)
       return 1;
 
-
    // Running in pairwise mode
-   if(options.pairwiseFileName != NULL)
+   if(options.pairwiseFileName != NULL && options.type != "all")
    {
       if(options.sequenceType == "aa")
       {
@@ -74,6 +73,28 @@ int main(int argc, char const ** argv)
       else if(options.sequenceType == "dna")
       {
          pairwise_matrix(options, Dna5());
+      }
+      else
+      {
+         // there is no other mode
+         cerr << "Error: mode not found - " << options.sequenceType << endl;
+         return 1;
+      }
+   }
+   // Running in pairwise mode
+   else if(options.pairwiseFileName != NULL && options.type == "all")
+   {
+      if(options.sequenceType == "aa")
+      {
+         pairwise_all_matrix(options, AminoAcid());
+      }
+      else if(options.sequenceType == "raa")
+      {
+         pairwise_all_matrix(options, ReducedAminoAcidMurphy10());
+      }
+      else if(options.sequenceType == "dna")
+      {
+         pairwise_all_matrix(options, Dna5());
       }
       else
       {
