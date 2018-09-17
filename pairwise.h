@@ -228,8 +228,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 template <typename TAlphabet>
 int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
-   cout << "Hiya" << endl;
-
    SeqFileIn pairwiseFileIn;
    StringSet<CharString> pwids;
    StringSet<String<TAlphabet>> pwseqs;
@@ -274,89 +272,5 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
          
       }
    }
-
-/*
-   // Read in the input file
-   SeqFileIn pairwiseFileIn;
-   CharString pwid;
-   String<TAlphabet> pwseq;
-   vector< vector<double> > array_threaded_internal; // stores the distance matrix
-   vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> pw_counts;
-
-   // things for markov distances
-   vector<String<TAlphabet>> kmer_count_map;
-   vector<pair<CharString, map<String<TAlphabet>, double>>> mv_counts;
-
-   // Open fasta/fastq file
-   if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
-   {
-      cerr << "Error: could not open file ";
-      cerr << toCString(options.pairwiseFileName) << endl;
-      return 1;
-   }
-
-   // Create thread vector and mutex's
-   mutex read, write;
-   vector<thread> vectorOfSeqs;
-   unsigned int n = std::thread::hardware_concurrency();
-   unsigned int cores = options.num_threads;
-
-   // create kmer_count_map if doing a markov model
-   if(options.type == "d2s" || options.type == "hao" ||
-      options.type == "d2star" || options.type == "dai" ||
-      options.type == "D2Star" || options.type == "D2S")
-   {
-      kmer_count_map = makecomplete(options.klen, alphabetType);
-   }
-
-   cout << "About to count" << endl;
-
-   // thread to count // here, I think, if it's markov based, the thread also does the markov count
-   for(unsigned i = 0; i < cores; i++)
-   {
-      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn),
-                                    ref(pw_counts), ref(read), ref(write), ref(mv_counts),
-                                    ref(kmer_count_map) ));
-   }
-
-   for(auto &thread : vectorOfSeqs)
-   {
-      thread.join();
-   }
-
-   cout << "Fin counting" << endl;
-
-   close(pairwiseFileIn);
-
-   // Store the results 
-   array_threaded_internal.resize(pw_counts.size(),
-                                  vector<double>(pw_counts.size(), 0.0));
-
-   // Calculate the distances
-   vector<thread> vectorOfThreads;
-   mutex location;
-   unsigned rI = 0;
-   unsigned cI = 0;
-
-   cout << "About to dist " << endl;
-
-   for(unsigned i = 0; i < cores; i++)
-   {
-      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI),
-                                       ref(cI), std::ref(array_threaded_internal), options,
-                                       ref(location), ref(mv_counts), ref(kmer_count_map) ));
-   }
-   for(auto &thread : vectorOfThreads)
-   {
-      thread.join();
-   }
-
-   cout << "Fin dist " << endl;
-
-   // Print results
-   printPhylyp(options, pw_counts, array_threaded_internal);
-
-   return 0;
-*/
 }
 
