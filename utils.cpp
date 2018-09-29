@@ -49,7 +49,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 
              ArgParseArgument::STRING, "STR"));
-   setValidValues(parser, "sequence-type", "dna aa raa");
+   setValidValues(parser, "sequence-type", "dna aa rna");
    setDefaultValue(parser, "sequence-type", "dna");
    addOption(parser, ArgParseOption("f", "output-format",
              "For Reference/query based usage you can select your output type.",             
