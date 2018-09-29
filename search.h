@@ -201,7 +201,7 @@ int search_thread(ModifyStringOptions options,
       {
          double dist;
 
-         if(options.type == "kmer")
+         if(options.type == "euclid")
             dist = euler(querycounts, refcounts[i]);
          else if(options.type == "d2")
             dist = d2(querycounts, refcounts[i]);

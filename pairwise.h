@@ -110,7 +110,7 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
 
          double dist;
 
-         if(options.type == "kmer")
+         if(options.type == "euclid")
             dist = euler(q1, q2);
          else if(options.type == "d2")
             dist = d2(q1, q2);
@@ -189,8 +189,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       thread.join();
    }
 
-   cout << "Fin counting" << endl;
-
    close(pairwiseFileIn);
 
    // Store the results 
@@ -203,8 +201,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
    unsigned rI = 0;
    unsigned cI = 0;
 
-   cout << "About to dist " << endl;
-
    for(unsigned i = 0; i < cores; i++)
    {
       vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), 
@@ -215,8 +211,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
    {
       thread.join();
    }
-
-   cout << "Fin dist " << endl;
 
    // Print results
    printPhylyp(options, pw_counts, array_threaded_internal);
