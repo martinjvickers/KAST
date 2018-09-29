@@ -238,7 +238,7 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
 
    vector<String<TAlphabet>> kmer_count_map = makecomplete(options.klen, alphabetType);
 
-   cout << "Q1\tQ2\tEuler\td2\tManhattan\tChebyshev\tBC\tNGD\td2s\tHao\td2Star\tdai\n";
+   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\td2s\tHao\td2Star\tdai\tD2S\tD2Star\n";
 
    // let's go through every comparison
    for(unsigned int i = 0; i < length(pwids); i++)
@@ -253,6 +253,11 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
          map<String<TAlphabet>, double> markov_p2 = markov_test(options.klen, pwseqs[j], options.markovOrder, 
                                                                  kmer_count_map, options.noreverse);
 
+         map<String<TAlphabet>, double> markov_o1 = markov_old(options.klen, pwseqs[i], options.markovOrder, 
+                                                               kmer_count_map, options.noreverse);
+         map<String<TAlphabet>, double> markov_o2 = markov_old(options.klen, pwseqs[j], options.markovOrder, 
+                                                               kmer_count_map, options.noreverse);
+
          cout << pwids[i] << "\t" << pwids[j] << "\t" << euler(count_p1, count_p2) << "\t";
          cout << d2(count_p1, count_p2) << "\t" << manhattan(count_p1, count_p2) << "\t";
          cout << bray_curtis_distance(count_p1, count_p2) << "\t";
@@ -261,6 +266,8 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
          cout << hao(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
          cout << d2star(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
          cout << dai(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
+         cout << d2s(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2) << "\t";
+         cout << d2star(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2);
 
          cout << endl;
          
