@@ -111,10 +111,10 @@ double d2s(vector<String<TAlphabet>> ourkmers,
 };
 
 template <typename TAlphabet>
-double d2star(vector<String<TAlphabet>> &ourkmers,
-           map<String<TAlphabet>, unsigned int> &refcounts, map<String<TAlphabet>, double> &refmarkov,
-           map<String<TAlphabet>, unsigned int> &querycounts,
-           map<String<TAlphabet>, double> &querymarkov)
+double d2star(vector<String<TAlphabet>> ourkmers,
+           map<String<TAlphabet>, unsigned int> refcounts, map<String<TAlphabet>, double> refmarkov,
+           map<String<TAlphabet>, unsigned int> querycounts,
+           map<String<TAlphabet>, double> querymarkov)
 {
    double D_2Star = 0.0;
    double tempQ = 0.0;
@@ -218,8 +218,8 @@ double hao(vector<String<TAlphabet>> ourkmers,
 };
 
 template <typename TAlphabet>
-double euler(map<String<TAlphabet>, unsigned int> &refcounts,
-             map<String<TAlphabet>, unsigned int> &querycounts)
+double euler(map<String<TAlphabet>, unsigned int> refcounts,
+             map<String<TAlphabet>, unsigned int> querycounts)
 {
    double score = 0.0;
    long long unsigned int rN = 0;
