@@ -2,7 +2,7 @@
 template <typename TAlphabet>
 int printResult(ModifyStringOptions options, CharString &queryid,
                 ofstream &outfile, String<TAlphabet> &queryseq,
-                map<double, int> &results, StringSet<CharString> &referenceids,
+                multimap<double, int> &results, StringSet<CharString> &referenceids,
                 StringSet<String<TAlphabet>> &referenceseqs)
 {
       if(options.output_format == "tabular")
@@ -186,7 +186,7 @@ int search_thread(ModifyStringOptions options,
       }
 
       // to store the results 
-      map<double, int> results;
+      multimap<double, int> results;
 
       // here we can go about search for the nearest
       if((refcounts.size() != refmarkov.size()) && (options.type == "d2s" || options.type == "hao" ||
