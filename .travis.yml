@@ -34,8 +34,6 @@ before_script:
  #- git clone https://github.com/martinjvickers/KAST.git
 
 script:
- - ls -lath
- - cd KAST
  - cmake ../KAST -DCMAKE_MODULE_PATH=./seqan/util/cmake -DSEQAN_INCLUDE_PATH=./seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
  #- ./unit_tests
