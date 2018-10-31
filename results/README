@@ -1,0 +1,13 @@
+## App test results 
+
+For a simple `diff` based app test to check if we have had changes
+
+Two directories `pairwise` and `search` for both types of operating mode.
+
+### Search mode
+
+Here is an example run of the pairwise result. Using `-k 3`, with `-q yeast.fasta` as a query and `-r seq1.fa` as a reference.
+
+```
+./kast -r example_data/seq1.fa -q example_data/yeast.fasta -k 3 -c 1 -t euclid -o results/search/euclid_k3
+```
