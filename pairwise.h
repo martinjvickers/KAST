@@ -1,70 +1,88 @@
+#include "distance.h"
+#include "utils.h"
+#include "print.h"
+#include <seqan/alignment_free.h>
 
+// for all others
 template <typename TAlphabet>
-int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
-                  vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts,
-                  mutex &read, mutex &write,
-                  vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts,
-                  vector<String<TAlphabet>> &kmer_count_map)
+void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+            String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
 {
-   CharString pwid;
-   CharString tmpseq;
+   // setup markovCounts
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
 
-   while(1)
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
    {
-      read.lock();
-      if(!atEnd(pairwiseFileIn))
+      String<TAlphabet> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
       {
-         readRecord(pwid, tmpseq, pairwiseFileIn);
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
       }
-      else
-      {
-         read.unlock();
-         return 0;
-      }
-      read.unlock();
-
-      // Read in the sequence as a CharString and then convert to our
-      // TAlphabet. This is because readRecord doesn't seem to like
-      // reducedAminoAcid
-      String<TAlphabet> refseq = tmpseq;
-
-      pair< CharString, map<String<TAlphabet>, unsigned int> > meh = make_pair(pwid, count_test(refseq, options.klen, options.noreverse));
-      pair< CharString, map<String<TAlphabet>, double>> meh_markov;
-
-      // If markov type, calculate markov counts
-      if(options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai")
-      {
-         meh_markov = make_pair(pwid, markov_test(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
-      }
-      else if(options.type == "D2S" || options.type == "D2Star")
-      {
-         meh_markov = make_pair(pwid, markov_old(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
-      }
-
-      // lock both because we want both the markov and counts to be in the same position
-      // in their respective vectors
-      write.lock();
-      pw_counts.push_back(meh);
-      if(options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai" ||
-         options.type == "D2S" || options.type == "D2Star")
-      {
-         mv_counts.push_back(meh_markov);
-      }
-      write.unlock();
-
+      markovCounts[i] = prob;
    }
-
 }
 
+// for DNA sequences
+template <>
+void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+            String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
+   {
+      String<Dna> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
+      {
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+      }
+      markovCounts[i] = prob;
+   }
+}
 
 template <typename TAlphabet>
-int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, 
-                    unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, 
-                    ModifyStringOptions options, mutex &location, 
-                    vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts, 
-                    vector<String<TAlphabet>> &kmer_count_map)
+int calcDistance(unsigned & rI, unsigned & cI,
+              vector< vector<double> > & results,
+              mutex & location,
+              StringSet<String<unsigned> > & counts,
+              StringSet<String<double> > & markovCounts,
+              ModifyStringOptions options)
 {
    unsigned row, column;
 
@@ -74,85 +92,63 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
       row = rI;
       column = cI;
 
-      if(cI < pw_counts.size())
+      if(cI < length(counts))
       {
          cI++;
       }
-      else if(cI >= pw_counts.size() && rI < pw_counts.size())
+      else if(cI >= length(counts) && rI < length(counts))
       {
          cI = rI;
          rI++;
          location.unlock();
          continue;
       }
-      else if(!(rI < pw_counts.size()))
+      else if(!(rI < length(counts)))
       {
          location.unlock();
          return 0;
       }
       location.unlock();
 
-      if(row < pw_counts.size() && column < pw_counts.size())
+      if(row < length(counts) && column < length(counts))
       {
-         map<String<TAlphabet>, unsigned int> q1 = pw_counts[column].second;
-         map<String<TAlphabet>, unsigned int> q2 = pw_counts[row].second;
-
-         map<String<TAlphabet>, double> m1;
-         map<String<TAlphabet>, double> m2;
-
-         if(options.type == "d2s" || options.type == "hao" ||
-            options.type == "d2star" || options.type == "dai" ||
-            options.type == "D2S" || options.type == "D2Star")
-         {
-            m1 = mv_counts[column].second;
-            m2 = mv_counts[row].second;
-         }
-
          double dist;
 
          if(options.type == "euclid")
-            dist = euler(q1, q2);
+            dist = euler(counts[row], counts[column]);
          else if(options.type == "d2")
-            dist = d2(q1, q2);
+            dist = d2(counts[row], counts[column]);
          else if(options.type == "manhattan")
-            dist = manhattan(q1, q2);
+            dist = manhattan(counts[row], counts[column]);
          else if(options.type == "chebyshev")
-            dist = chebyshev(q1, q2);
+            dist = chebyshev(counts[row], counts[column]);
          else if(options.type == "bc")
-            dist = bray_curtis_distance(q1, q2);
+            dist = bray_curtis_distance(counts[row], counts[column]);
          else if(options.type == "ngd")
-            dist = normalised_google_distance(q1, q2);
+            dist = normalised_google_distance(counts[row], counts[column]);
          else if(options.type == "d2s" || options.type == "D2S")
-            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+            dist = d2s(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "hao")
-            dist = hao(kmer_count_map, q1, m1, q2, m2);
+            dist = hao(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "d2star" || options.type == "D2Star")
-            dist = d2star(kmer_count_map, q1, m1, q2, m2);
+            dist = d2star(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "dai")
-            dist = dai(kmer_count_map, q1, m1, q2, m2);
+            dist = dai(counts[row], counts[column], markovCounts[row], markovCounts[column]);
 
-         array_threaded_internal[row][column] = dist;
-         array_threaded_internal[column][row] = dist;
-
+         results[row][column] = dist;
+         results[column][row] = dist;
       }
    }
-}
+};
 
 template <typename TAlphabet>
 int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
-   // Read in the input file
+   // Read in the records into memory
    SeqFileIn pairwiseFileIn;
-   CharString pwid;
-   String<TAlphabet> pwseq;
-   vector< vector<double> > array_threaded_internal; // stores the distance matrix
-   vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> pw_counts;
+   StringSet<CharString> pwids;
+   StringSet<String<TAlphabet>> pwseqs;
 
-   // things for markov distances
-   vector<String<TAlphabet>> kmer_count_map;
-   vector<pair<CharString, map<String<TAlphabet>, double>>> mv_counts;
-
-   // Open fasta/fastq file
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
@@ -160,118 +156,149 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       return 1;
    }
 
-   // Create thread vector and mutex's
-   mutex read, write;
-   vector<thread> vectorOfSeqs;
-   unsigned int n = std::thread::hardware_concurrency();
-   unsigned int cores = options.num_threads;
-
-   // create kmer_count_map if doing a markov model
-   if(options.type == "d2s" || options.type == "hao" ||
-      options.type == "d2star" || options.type == "dai" ||
-      options.type == "D2Star" || options.type == "D2S")
+   try
    {
-      kmer_count_map = makecomplete(options.klen, alphabetType);
+      readRecords(pwids, pwseqs, pairwiseFileIn);
+   }
+   catch(Exception const & e)
+   {
+      std::cout << "ERROR: The --sequence-type which was selected was \"";
+      std::cout << options.sequenceType << "\" however when reading the \"";
+      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+      std::cout << e.what() << std::endl;
+      return 1;
    }
 
-   cout << "About to count" << endl;
-
-   // thread to count // here, I think, if it's markov based, the thread also does the markov count
-   for(unsigned i = 0; i < cores; i++)
-   {
-      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn), 
-                                    ref(pw_counts), ref(read), ref(write), ref(mv_counts), 
-                                    ref(kmer_count_map) ));
-   }
-
-   for(auto &thread : vectorOfSeqs)
-   {
-      thread.join();
-   }
-
-   close(pairwiseFileIn);
-
-   // Store the results 
-   array_threaded_internal.resize(pw_counts.size(),
-                                  vector<double>(pw_counts.size(), 0.0));
-
-   // Calculate the distances
+   // set up elements for thread
    vector<thread> vectorOfThreads;
    mutex location;
    unsigned rI = 0;
    unsigned cI = 0;
+   //unsigned int n = std::thread::hardware_concurrency();
+   unsigned int cores = options.num_threads;
 
+   // store the distance calculation results
+   vector< vector<double> > results;
+   results.resize(length(pwseqs), vector<double>(length(pwseqs), 0.0));
+
+   // store the kmer counts in RAM
+   StringSet<String<unsigned> > counts;
+   resize(counts, length(pwseqs));
+
+   StringSet<String<double> > markovCounts;
+
+   for(unsigned i = 0; i < length(pwseqs); i++)
+   {
+      String<TAlphabet> seq = pwseqs[i];
+
+      // if it's DNA, then we usually do revC which means we need
+      // need to specifically define String<Dna5> because reverseComplement
+      // is only implemented for Dna/Dna5
+      if(options.sequenceType == "dna")
+      {
+         String<Dna5> seqf = seq;
+
+         if(options.noreverse == false)
+         {
+            String<Dna5> seqrc = seq;
+            reverseComplement(seqrc);
+            append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
+            append(seqf, seqrc);
+         }
+         countKmers(counts[i], seqf, options.klen);
+
+         if(options.type == "d2s" || options.type == "D2S" ||
+            options.type == "d2star" || options.type == "D2Star" ||
+            options.type == "hao" || options.type == "dai")
+         {
+            resize(markovCounts, length(pwseqs));
+            markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
+         }
+      }
+      else // when doing aa/raa we don't (and can't) do reverse complement
+      {
+         countKmers(counts[i], seq, options.klen);
+         if(options.type == "d2s" || options.type == "D2S" ||
+            options.type == "d2star" || options.type == "D2Star" ||
+            options.type == "hao" || options.type == "dai")
+         {
+            resize(markovCounts, length(pwseqs));
+            markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+         }
+      }
+   }
+
+   // do the distance calculations
    for(unsigned i = 0; i < cores; i++)
    {
-      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), 
-                                       ref(cI), std::ref(array_threaded_internal), options, 
-                                       ref(location), ref(mv_counts), ref(kmer_count_map) ));
+      vectorOfThreads.push_back(thread(calcDistance<TAlphabet>, ref(rI), ref(cI), 
+                                       ref(results), ref(location), ref(counts), 
+                                       ref(markovCounts), options));
    }
+
    for(auto &thread : vectorOfThreads)
    {
       thread.join();
    }
 
    // Print results
-   printPhylyp(options, pw_counts, array_threaded_internal);
+   printPhylyp(options, pwids, results);
 
    return 0;
-
-}
+};
 
 template <typename TAlphabet>
 int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
+   // Read in the records into memory
    SeqFileIn pairwiseFileIn;
    StringSet<CharString> pwids;
    StringSet<String<TAlphabet>> pwseqs;
-   
-   // Open fasta/fastq file
+
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
       cerr << toCString(options.pairwiseFileName) << endl;
       return 1;
    }
-   
-   readRecords(pwids, pwseqs, pairwiseFileIn);
 
-   vector<String<TAlphabet>> kmer_count_map = makecomplete(options.klen, alphabetType);
+   try
+   {
+      readRecords(pwids, pwseqs, pairwiseFileIn);
+   }
+   catch(Exception const & e)
+   {
+      std::cout << "ERROR: The --sequence-type which was selected was \"";
+      std::cout << options.sequenceType << "\" however when reading the \"";
+      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+      std::cout << e.what() << std::endl;
+      return 1;
+   }
 
-   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\td2s\tHao\td2Star\tdai\tD2S\tD2Star\n";
-
-   // let's go through every comparison
+   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\tHao\tdai\tD2S\tD2Star\n";
    for(unsigned int i = 0; i < length(pwids); i++)
    {
       for(unsigned int j = 0; j < length(pwids); j++)
       {
-         map<String<TAlphabet>, unsigned int> count_p1 = count_test(pwseqs[i], options.klen, options.noreverse);
-         map<String<TAlphabet>, unsigned int> count_p2 = count_test(pwseqs[j], options.klen, options.noreverse);
-
-         map<String<TAlphabet>, double> markov_p1 = markov_test(options.klen, pwseqs[i], options.markovOrder, 
-                                                                 kmer_count_map, options.noreverse);
-         map<String<TAlphabet>, double> markov_p2 = markov_test(options.klen, pwseqs[j], options.markovOrder, 
-                                                                 kmer_count_map, options.noreverse);
-
-         map<String<TAlphabet>, double> markov_o1 = markov_old(options.klen, pwseqs[i], options.markovOrder, 
-                                                               kmer_count_map, options.noreverse);
-         map<String<TAlphabet>, double> markov_o2 = markov_old(options.klen, pwseqs[j], options.markovOrder, 
-                                                               kmer_count_map, options.noreverse);
-
-         cout << pwids[i] << "\t" << pwids[j] << "\t" << euler(count_p1, count_p2) << "\t";
-         cout << d2(count_p1, count_p2) << "\t" << manhattan(count_p1, count_p2) << "\t";
-         cout << bray_curtis_distance(count_p1, count_p2) << "\t";
-         cout << normalised_google_distance(count_p1, count_p2) << "\t";
-         cout << d2s(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << hao(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << d2star(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << dai(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << d2s(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2) << "\t";
-         cout << d2star(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2);
+         String<unsigned> counts_i, counts_j;
+         countKmers(counts_i, pwseqs[i], options.klen);
+         countKmers(counts_j, pwseqs[j], options.klen);
+         String<double> markov_i, markov_j;
+         markov(markov_i, counts_i, pwseqs[i], options.klen, options.markovOrder);
+         markov(markov_j, counts_j, pwseqs[j], options.klen, options.markovOrder);
+         
+         cout << pwids[i] << "\t" << pwids[j] << "\t" << euler(counts_i, counts_j);
+         cout << "\t" << d2(counts_i, counts_j) << "\t" << manhattan(counts_i, counts_j);
+         cout << "\t" << bray_curtis_distance(counts_i, counts_j);
+         cout << "\t" << normalised_google_distance(counts_i, counts_j);
+         cout << "\t" << hao(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << dai(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << d2s(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << d2star(counts_i, counts_j, markov_i, markov_j);
 
          cout << endl;
-         
       }
    }
-}
 
+   return 0;
+};

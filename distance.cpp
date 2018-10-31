@@ -1,77 +1,62 @@
 #include "distance.h"
-#include <unordered_map>
 
-// Deprecated
-double d2s(ModifyStringOptions options, map<string, bool> ourkmers, 
-           map<string, unsigned int> refcounts, map<string, double> refmarkov, 
-           map<string, unsigned int> querycounts, 
-           map<string, double> querymarkov)
+double d2s(String<unsigned> const & kmerCounts1,
+           String<unsigned> const & kmerCounts2,
+           String<double> const & markovCounts1,
+           String<double> const & markovCounts2)
 {
-   double score = 0.0;
-   double D2S = 0.0;
+
+   long long int rN = 0;
+   long long int qN = 0;
    double sum1 = 0.0;
    double sum2 = 0.0;
+   double D2S = 0.0;
 
-   int qN = 0;
-   int rN = 0;
-
-   for(pair<string, bool> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
    }
 
-   for(pair<string, bool> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      double qC = querycounts[p.first];
-      double qP = querymarkov[p.first];
-      double rC = refcounts[p.first];
-      double rP = refmarkov[p.first];
-
-      double qCt = qC - (qN*qP);
-      double rCt = rC - (rN*rP);
-
+      double qCt = (long long int)kmerCounts2[i] - ((double)qN*(double)markovCounts2[i]);
+      double rCt = (long long int)kmerCounts1[i] - ((double)rN*(double)markovCounts1[i]);
       double dist = sqrt(qCt*qCt + rCt*rCt);
+      if(dist == 0)
+         dist = 1;
       D2S = D2S + (qCt*rCt / dist);
       sum1 = sum1 + (qCt*qCt / dist);
       sum2 = sum2 + (rCt*rCt / dist);
    }
-   
-   score = 0.5 * (1 - D2S/( sqrt(sum1)*sqrt(sum2) ));
-   return score;
+
+   return 0.5 * (1 - D2S/( sqrt(sum1)*sqrt(sum2) ));
+
 }
 
-// Deprecated
-double d2star(ModifyStringOptions options, map<string, bool> ourkmers, 
-              map<string, unsigned int> refcounts, 
-              map<string, double> refmarkov, 
-              map<string, unsigned int> querycounts, 
-              map<string, double> querymarkov)
+double d2star(String<unsigned> const & kmerCounts1,
+              String<unsigned> const & kmerCounts2,
+              String<double> const & markovCounts1,
+              String<double> const & markovCounts2)
 {
-   double D_2Star = 0.0;
+   uint64_t rN = 0;
+   uint64_t qN = 0;
    double tempQ = 0.0;
    double tempR = 0.0;
+   double D_2Star = 0.0;
 
-   int qN = 0;
-   int rN = 0;
-
-   for(pair<string, bool> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
    }
 
-   for(pair<string, bool> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      double qC = querycounts[p.first];
-      double qP = querymarkov[p.first];
-      double rC = refcounts[p.first];
-      double rP = refmarkov[p.first];
-
-      double temp1 = qN * qP;
-      double temp2 = rN * rP;
-      double cQi_bar = qC - temp1;
-      double cRi_bar = rC - temp2;
+      double temp1 = qN * markovCounts2[i];
+      double temp2 = rN * markovCounts1[i];
+      double cQi_bar = kmerCounts2[i] - temp1;
+      double cRi_bar = kmerCounts1[i] - temp2;
       double temp3 = sqrt(temp1*temp2);
 
       if(temp1 == 0)
@@ -93,200 +78,159 @@ double d2star(ModifyStringOptions options, map<string, bool> ourkmers,
    return 0.5 * (1 - temp);
 }
 
-// Deprecated
-double hao(ModifyStringOptions options, map<string, bool> ourkmers, 
-           map<string, unsigned int> refcounts, map<string, double> refmarkov, 
-           map<string, unsigned int> querycounts, 
-           map<string, double> querymarkov)
+double dai(String<unsigned> const & kmerCounts1,
+           String<unsigned> const & kmerCounts2,
+           String<double> const & markovCounts1,
+           String<double> const & markovCounts2)
 {
-   int qN = 0;
-   int rN = 0;
-
-   for(pair<string, bool> p: ourkmers)
-   {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
-   }
-
+   double S2kr = 0.0;
+   long long int n = 0;
    double tempX = 0.0;
    double tempY = 0.0;
-   double tempXY = 0.0;
-   double d_Hao = 0.0;
 
-   for(pair<string, bool> p: ourkmers)
+   long long int qN = 0;
+   long long int rN = 0;
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      double qC = querycounts[p.first];
-      double qP = querymarkov[p.first];
-      double rC = refcounts[p.first];
-      double rP = refmarkov[p.first];
-
-      double fQi = qC / (double)qN;
-      double fRi = rC / (double)rN;
-      double temp1, temp2;
-      if(qP == 0)
-         temp1 = -1;
-      else
-         temp1 = (fQi / qP) - 1.0;
-                
-      if(rP == 0)
-         temp2 = -1;
-      else
-         temp2 = (fRi / rP) - 1.0;
-
-      tempXY += temp1 * temp2;
-      tempX += temp1 * temp1;
-      tempY += temp2 * temp2;
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
    }
-   double temp = tempXY / (sqrt(tempX) * sqrt(tempY));
-   return (1 - temp) / 2;
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      n++;
+
+      double rC = kmerCounts1[i];
+      double qC = kmerCounts2[i];
+      double rP = markovCounts1[i];
+      double qP = markovCounts2[i];
+      
+      // In the d2-tools implementation of this, for some reason the python code reads
+      // a zero from the wordcount files as 1e-10. This has the effect of ensuring that
+      // there are never any actual zeros in the calculation. I don't know if this is
+      // intentional or accidental, but for now, to ensure this is consistent with 
+      // d2-tools I've reproduced this situation here.
+      if(rC == 0)
+         rC = rC + 0.0000000001;
+      if(qC == 0)
+         qC = qC + 0.0000000001;
+
+      double r_sigma = (float)rC * (float)rP;
+      double q_sigma = (float)qC * (float)qP;
+      double temp1 = 0.0;
+      double temp2 = 0.0;
+
+      if(r_sigma == q_sigma)
+      {
+         temp1 = 0;
+         temp2 = 0;
+      }
+      else
+      {
+         double temp = (float)(r_sigma+q_sigma);
+         double temp3 = (2 * r_sigma) / (float)temp;
+         double temp4 = (2 * q_sigma) / (float)temp;
+
+         temp1 = r_sigma*log(temp3);
+         temp2 = q_sigma*log(temp4);
+      }
+      tempX += temp1;
+      tempY += temp2;
+   }
+
+   if(tempX == 0.0 && tempY == 0.0)
+      S2kr = 0.0;
+   else
+      S2kr = (tempX+tempY)/n+2*log(2.0);
+
+   return S2kr;
 }
 
-// Deprecated
-double euler(ModifyStringOptions options, map<string, unsigned int> refcounts, 
-             map<string, unsigned int> querycounts)
+double hao(String<unsigned> const & kmerCounts1,
+           String<unsigned> const & kmerCounts2,
+           String<double> const & markovCounts1,
+           String<double> const & markovCounts2)
+{
+
+
+}
+
+double d2(String<unsigned> const & kmerCounts1,
+          String<unsigned> const & kmerCounts2)
+{
+   long long int sumqCrC = 0;
+   long long int sumqC2 = 0;
+   long long int sumrC2 = 0;
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      sumqCrC += (long long int)kmerCounts1[i] * (long long int)kmerCounts2[i];
+      sumqC2 += (long long int)kmerCounts1[i] * (long long int)kmerCounts1[i];
+      sumrC2 += (long long int)kmerCounts2[i] * (long long int)kmerCounts2[i];
+    }
+
+    double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
+    return 0.5*(1-score);
+}
+
+double euler(String<unsigned> const & kmerCounts1,
+             String<unsigned> const & kmerCounts2)
 {
    double score = 0.0;
-   long long unsigned int rN = 0;
-   long long unsigned int qN = 0;
+   long long int rN = 0;
+   long long int qN = 0;
 
-   for(pair<string, unsigned int> p: refcounts)
-      rN = rN + p.second;
-   for(pair<string, unsigned int> p: querycounts)
-      qN = qN + p.second;
-
-   double rN_new = (double)rN;
-   double qN_new = (double)qN;
-
-   // create a unified map
-   map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(),querycounts.end());
-
-   // sum 
-   for(pair<string, unsigned int> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      double rF = refcounts[p.first] / (double)rN;
-      double qF = querycounts[p.first] / (double)qN;
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
+   }
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      double rF = kmerCounts1[i] / (double)rN;
+      double qF = kmerCounts2[i] / (double)qN;
       score = score + (pow((rF - qF), 2));
    }
 
    return pow(score, 0.5);
 }
 
-// Deprecated
-double d2(ModifyStringOptions options, map<string, unsigned int> refcounts, 
-          map<string, unsigned int> querycounts)
+double bray_curtis_distance(String<unsigned> const & kmerCounts1,
+                            String<unsigned> const & kmerCounts2)
 {
-   long long unsigned int sumqCrC = 0;
-   long long unsigned int sumqC2 = 0;
-   long long unsigned int sumrC2 = 0;
+   double sumMinus = 0.0;
+   double sumPlus = 0.0;
 
-   //create a unified map
-   map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(),querycounts.end());
-
-   for(pair<string, unsigned int> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      sumqCrC += ((long long unsigned int)refcounts[p.first] * (long long unsigned int)querycounts[p.first]);
-      sumqC2 += ((long long unsigned int)querycounts[p.first] * (long long unsigned int)querycounts[p.first]);
-      sumrC2 += ((long long unsigned int)refcounts[p.first] * (long long unsigned int)refcounts[p.first]);
-    }
-
-    long double score = sumqCrC / ((double)sqrt(sumqC2) * (double)sqrt(sumrC2));
-    return 0.5*(1-score);
-}
-
-// Deprecated
-double manhattan(ModifyStringOptions options, 
-                 map<string, unsigned int> refcounts, 
-                 map<string, unsigned int> querycounts)
-{
-   double score = 0.0;
-   long long unsigned int rN = 0;
-   long long unsigned int qN = 0;
-
-   for(pair<string, unsigned int> p: refcounts)
-      rN = rN + p.second;
-
-   for(pair<string, unsigned int> p: querycounts)
-      qN = qN + p.second;
-
-   //create a unified map
-   map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(), querycounts.end());
-
-   for(pair<string, unsigned int> p: ourkmers)
-   {
-      double rF = refcounts[p.first] / (double)rN;
-      double qF = querycounts[p.first] / (double)qN;
-      score = score + (abs(rF - qF));
+      sumMinus = sumMinus + abs((long long int)kmerCounts2[i] - (long long int)kmerCounts1[i]);
+      sumPlus = sumPlus + abs((long long int)kmerCounts2[i] + (long long int)kmerCounts1[i]);
    }
-   return score;
+
+   double result = (double)sumMinus/(double)sumPlus;
+   return result;
 }
 
-// Deprecated
-double chebyshev(ModifyStringOptions options, 
-                 map<string, unsigned int> refcounts, 
-                 map<string, unsigned int> querycounts)
-{
-   double score = 0.0;
-   long long unsigned int rN = 0;
-   long long unsigned int qN = 0;
-   double temp = 0.0;
-
-   for(pair<string, unsigned int> p: refcounts)
-      rN = rN + p.second;
-
-   for(pair<string, unsigned int> p: querycounts)
-      qN = qN + p.second;
-
-   //create a unified map
-   map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(),querycounts.end());
-
-   for(pair<string, unsigned int> p: ourkmers)
-   {
-      double rF = refcounts[p.first] / (double)rN;
-      double qF = querycounts[p.first] / (double)qN;
-      temp = abs(rF - qF);
-      if(temp > score)
-         score = temp;
-   }
-   return score;
-}
-
-// Deprecated
-double normalised_google_distance(ModifyStringOptions options, 
-                                  map<string, unsigned int> refcounts, 
-                                  map<string, unsigned int> querycounts)
+double normalised_google_distance(String<unsigned> const & kmerCounts1,
+                                  String<unsigned> const & kmerCounts2)
 {
    double score = 0.0;
    double sumqC = 0.0;
    double sumrC = 0.0;
-
-   map<string, unsigned int> min_qr;
-
-   for(pair<string, unsigned int> p: querycounts)
-      sumqC += p.second;
-
-   for(pair<string, unsigned int> p: refcounts)
-   {
-      sumrC += p.second;
-      if(querycounts.find(p.first) != querycounts.end())
-      {
-         if(querycounts[p.first] < p.second)
-            min_qr[p.first] = querycounts[p.first];
-         else
-            min_qr[p.first] = p.second;
-      }
-   }
-
    double sum_min_qr = 0.0;
-   for(pair<string, unsigned int> p: min_qr)
-      sum_min_qr += min_qr[p.first];
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      sumrC += kmerCounts1[i];
+      sumqC += kmerCounts2[i];
+
+      if(kmerCounts1[i] < kmerCounts2[i])
+         sum_min_qr += kmerCounts1[i];
+      else
+         sum_min_qr += kmerCounts2[i];
+   }
 
    double sum_max, sum_min;
 
@@ -294,7 +238,7 @@ double normalised_google_distance(ModifyStringOptions options,
    {
       sum_max = sumqC;
       sum_min = sumrC;
-   } 
+   }
    else
    {
       sum_max = sumrC;
@@ -306,91 +250,50 @@ double normalised_google_distance(ModifyStringOptions options,
    return (sum_max - sum_min_qr) / (sum_all - sum_min);
 }
 
-// Deprecated
-double bray_curtis_distance(ModifyStringOptions options, 
-                            map<string, unsigned int> refcounts, 
-                            map<string, unsigned int> querycounts)
-{
-   double sumMinus = 0.0;
-   double sumPlus = 0.0;
-
-   //create a unified map
-   map<string, unsigned int> ourkmers;
-   ourkmers = refcounts;
-   ourkmers.insert(querycounts.begin(), querycounts.end());
-   
-   for(pair<string, unsigned int> p: ourkmers)
-   {
-      int qC = querycounts[p.first];
-      int rC = refcounts[p.first];
-      sumMinus = sumMinus + abs(qC - rC);
-      sumPlus = sumPlus + abs(qC + rC);
-   }
-
-   return (double)sumMinus/(double)sumPlus;
-
-}
-
-// Deprecated
-double dai(ModifyStringOptions options, map<string, bool> ourkmers,     
-              map<string, unsigned int> refcounts,
-              map<string, double> refmarkov,
-              map<string, unsigned int> querycounts,
-              map<string, double> querymarkov)
+double chebyshev(String<unsigned> const & kmerCounts1,
+                 String<unsigned> const & kmerCounts2)
 {
    double score = 0.0;
-   double S2kr = 0.0;
-   int n = 0;
-   double tempX = 0.0;
-   double tempY = 0.0;
+   long long int rN = 0;
+   long long int qN = 0;
+   double temp = 0.0;
 
-   int qN = 0;
-   int rN = 0;
-
-   for(pair<string, bool> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      qN = qN + querycounts[p.first];
-      rN = rN + refcounts[p.first];
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
    }
 
-   for(pair<string, unsigned int> p: ourkmers)
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      n++;
-      double rC = refcounts[p.first];
-      double qC = querycounts[p.first];
-      double rP = refmarkov[p.first];
-      double qP = querymarkov[p.first];
+      double rF = kmerCounts1[i] / (double)rN;
+      double qF = kmerCounts2[i] / (double)qN;
+      temp = abs(rF - qF);
+      if(temp > score)
+         score = temp;
+   }
+   return score;
+}
 
-      double fRi = rC / (float)rN;
-      double fQi = qC / (float)qN;
-      double r_sigma = fRi * rP;
-      double q_sigma = fQi * qP;
-      double temp1 = 0.0;
-      double temp2 = 0.0;
+double manhattan(String<unsigned> const & kmerCounts1,
+                 String<unsigned> const & kmerCounts2)
+{
+   double score = 0.0;
+   unsigned int rN = 0;
+   unsigned int qN = 0;
 
-      // I added this if statement here. I'm not sure if this breaks
-      // something, but basically we only do the calculation on kmers
-      // that exist in both sequences. This d2tools implementions
-      // simply bombs out if this situation is encountered
-      if(rC != 0 && qC != 0)
-      {
-         if(r_sigma != q_sigma)
-         {
-            double temp = (float)(r_sigma+q_sigma);
-            double temp3 = (2 * r_sigma) / (float)temp;
-            double temp4 = (2 * q_sigma) / (float)temp;
-            temp1 = r_sigma*log(temp3);
-            temp2 = q_sigma*log(temp4);
-         }
-         tempX += temp1;
-         tempY += temp2;
-      }
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      rN = rN + kmerCounts1[i];
+      qN = qN + kmerCounts2[i];
    }
 
-   if(tempX == 0.0 && tempY == 0.0)
-      return 0.0;
-   else
-      return (tempX+tempY)/(n+2*log(2.0));
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      double rF = kmerCounts1[i] / (double)rN;
+      double qF = kmerCounts2[i] / (double)qN;
+      score = score + (abs(rF - qF));
+   }
 
    return score;
 }
