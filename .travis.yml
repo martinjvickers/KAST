@@ -30,7 +30,7 @@ matrix:
 #      install: export CXX="clang++-3.8" CC="clang-3.8"
 
 before_script:
- - git clone https://github.com/seqan/seqan.git seqan
+ - git clone https://github.com/seqan/seqan.git seqan --branch seqan-v2.4.0
  #- git clone https://github.com/martinjvickers/KAST.git
 
 script:
