@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "print.h"
 #include <seqan/alignment_free.h>
+#include <sys/sysinfo.h> 
+
 
 /*
 I need to check that if we are using skip-mers, then we need to check that 
@@ -269,6 +271,36 @@ int calcDistance(unsigned & rI, unsigned & cI,
    }
 };
 
+/*
+   Estimate how much RAM is needed to calculate this
+*/
+template <typename TAlphabet>
+int mem_check(ModifyStringOptions options, int numRecord, TAlphabet const & alphabetType)
+{
+   struct sysinfo myinfo; 
+   unsigned long total_bytes; 
+   sysinfo(&myinfo); 
+
+   total_bytes = myinfo.mem_unit * myinfo.totalram; 
+
+   const unsigned long GIGABYTE = 1024 * 1024 * 1024;
+
+   // calculate kmer count array needed
+   unsigned alphSize = ValueSize<TAlphabet>::VALUE;
+   if(alphSize == 5)
+      alphSize = 4; // remember we initially work with Dna5 but only storage Dna
+   
+   // to store the counts of a single fasta entry
+   unsigned long long int counts_mem = pow(alphSize, options.klen) * sizeof(unsigned);
+
+   if((counts_mem * numRecord) > total_bytes)
+   {
+      cerr << "ERROR: Your machine has " << total_bytes/1024/1024 << " MB RAM but it will require approximately " << (counts_mem*numRecord)/1024/1024 << " MB to calculate." << endl;
+      return 1;
+   }
+   return 0;
+}
+
 template <typename TAlphabet>
 int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
@@ -297,6 +329,10 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       return 1;
    }
 
+   // mem checker
+   if(mem_check(options, length(pwseqs), alphabetType) == 1)
+      return 1;
+
    // set up elements for thread
    vector<thread> vectorOfThreads;
    mutex location;
@@ -311,6 +347,7 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 
    // store the kmer counts in RAM
    StringSet<String<unsigned> > counts;
+   
    resize(counts, length(pwseqs));
 
    StringSet<String<double> > markovCounts;
