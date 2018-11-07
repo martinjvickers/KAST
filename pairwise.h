@@ -1,70 +1,218 @@
+#include "distance.h"
+#include "utils.h"
+#include "print.h"
+#include <seqan/alignment_free.h>
+#include <sys/sysinfo.h> 
 
-template <typename TAlphabet>
-int count_threads(ModifyStringOptions options, SeqFileIn &pairwiseFileIn,
-                  vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts,
-                  mutex &read, mutex &write,
-                  vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts,
-                  vector<String<TAlphabet>> &kmer_count_map)
+
+/*
+I need to check that if we are using skip-mers, then we need to check that 
+these are sensible.
+  * skip-mer mask must all be 0/1's
+  * skip-mer mask should be the same number of characters as the kmer size
+  * all skipmers shoud have the same number of 1's across masks
+*/
+int parseMask(ModifyStringOptions options, int &effectiveKlen)
 {
-   CharString pwid;
-   CharString tmpseq;
+   bool first = true;
 
-   while(1)
+   for(auto m : options.mask)
    {
-      read.lock();
-      if(!atEnd(pairwiseFileIn))
+      // all should be the same number of characters as the klen
+      if(length(m) != options.klen)
       {
-         readRecord(pwid, tmpseq, pairwiseFileIn);
+         cerr << "ERROR: Mask sizes should be the same size ";
+         cerr << "as the K-Mer length." << endl;
+         return 1;
+      }
+
+      int counter = 0;
+
+      // checks to see that the mask is only made of 0/1's
+      for(int i = 0; i < length(m); i++)
+      {
+         if(m[i] != '0' && m[i] != '1')
+         {
+            cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
+            return 1;
+         }
+
+         if(m[i] == '1')
+            counter++;
+      }
+
+      if(first == true)
+      {
+         effectiveKlen = counter;
+         first = false;
       }
       else
       {
-         read.unlock();
-         return 0;
+         if(counter != effectiveKlen)
+         {
+            cerr << "ERROR: The number of 0's and 1's in each mask ";
+            cerr << "should be the same e.g. 10001, 11000, 00011" << endl;
+            return 1;
+         }
       }
-      read.unlock();
-
-      // Read in the sequence as a CharString and then convert to our
-      // TAlphabet. This is because readRecord doesn't seem to like
-      // reducedAminoAcid
-      String<TAlphabet> refseq = tmpseq;
-
-      pair< CharString, map<String<TAlphabet>, unsigned int> > meh = make_pair(pwid, count_test(refseq, options.klen, options.noreverse));
-      pair< CharString, map<String<TAlphabet>, double>> meh_markov;
-
-      // If markov type, calculate markov counts
-      if(options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai")
-      {
-         meh_markov = make_pair(pwid, markov_test(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
-      }
-      else if(options.type == "D2S" || options.type == "D2Star")
-      {
-         meh_markov = make_pair(pwid, markov_old(options.klen, refseq, options.markovOrder, kmer_count_map, options.noreverse));
-      }
-
-      // lock both because we want both the markov and counts to be in the same position
-      // in their respective vectors
-      write.lock();
-      pw_counts.push_back(meh);
-      if(options.type == "d2s" || options.type == "hao" ||
-         options.type == "d2star" || options.type == "dai" ||
-         options.type == "D2S" || options.type == "D2Star")
-      {
-         mv_counts.push_back(meh_markov);
-      }
-      write.unlock();
-
    }
+   return 0;
+};
 
+
+/*markov is the alfsc implementation of the markov calculation;
+  A much simplier version than the other, but I believe this
+  is simply called a Background Model but i could be wrong.
+
+*/
+
+// for all others
+template <typename TAlphabet>
+void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+            String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
+   {
+      String<TAlphabet> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
+      {
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+      }
+      markovCounts[i] = prob;
+   }
 }
 
+// for DNA sequences
+template <>
+void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+              String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
+   {
+      String<Dna> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
+      {
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+      }
+      markovCounts[i] = prob;
+   }
+}
 
 template <typename TAlphabet>
-int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> &pw_counts, 
-                    unsigned &rI, unsigned &cI, vector< vector<double> > & array_threaded_internal, 
-                    ModifyStringOptions options, mutex &location, 
-                    vector<pair<CharString, map<String<TAlphabet>, double>>> &mv_counts, 
-                    vector<String<TAlphabet>> &kmer_count_map)
+void markov_again(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+                  String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+}
+
+/*
+The alternative markov implementation seen in d2tools
+
+I think there is an issue here where when the markovOrder is 0, then we 
+don't reverse complement the count.
+
+0 1 == true
+1 2 == false
+2 3 == false
+3 4 == false
+
+*/
+template <>
+void markov_again<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+                    String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   if(markovOrder == 0)
+   {
+      String<unsigned> markovbg;
+      // this should be run on the original sequence 
+      countKmersNew(markovbg, sequence, markovOrder+1);
+      unsigned tot = 0;
+
+      for(unsigned i = 0; i < length(markovbg); i++)
+         tot = tot + markovbg[i];
+
+      for(unsigned i = 0; i < length(markovCounts); i++)
+      {
+         String<Dna> inf;
+         unhash(inf, i, k);
+         String<unsigned> occurances;
+         countKmersNew(occurances, inf, markovOrder);
+         double prob = 1.0;
+         for(unsigned i = 0; i < length(occurances); i++)
+         {
+            prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+         }
+         markovCounts[i] = prob;
+      }
+
+   }
+   else
+   {
+      String<unsigned> markovbg, markovbg_1;
+      countKmersNew(markovbg, sequence, markovOrder);
+      countKmersNew(markovbg_1, sequence, markovOrder+1);
+      unsigned tot = 0;
+      for(unsigned i = 0; i < length(markovbg); i++)
+         tot = tot + markovbg[i];
+
+      
+   }
+}
+
+template <typename TAlphabet>
+int calcDistance(unsigned & rI, unsigned & cI,
+              vector< vector<double> > & results,
+              mutex & location,
+              StringSet<String<unsigned> > & counts,
+              StringSet<String<double> > & markovCounts,
+              ModifyStringOptions options)
 {
    unsigned row, column;
 
@@ -74,85 +222,93 @@ int distance_thread(vector<pair<CharString, map<String<TAlphabet>, unsigned int>
       row = rI;
       column = cI;
 
-      if(cI < pw_counts.size())
+      if(cI < length(counts))
       {
          cI++;
       }
-      else if(cI >= pw_counts.size() && rI < pw_counts.size())
+      else if(cI >= length(counts) && rI < length(counts))
       {
          cI = rI;
          rI++;
          location.unlock();
          continue;
       }
-      else if(!(rI < pw_counts.size()))
+      else if(!(rI < length(counts)))
       {
          location.unlock();
          return 0;
       }
       location.unlock();
 
-      if(row < pw_counts.size() && column < pw_counts.size())
+      if(row < length(counts) && column < length(counts))
       {
-         map<String<TAlphabet>, unsigned int> q1 = pw_counts[column].second;
-         map<String<TAlphabet>, unsigned int> q2 = pw_counts[row].second;
-
-         map<String<TAlphabet>, double> m1;
-         map<String<TAlphabet>, double> m2;
-
-         if(options.type == "d2s" || options.type == "hao" ||
-            options.type == "d2star" || options.type == "dai" ||
-            options.type == "D2S" || options.type == "D2Star")
-         {
-            m1 = mv_counts[column].second;
-            m2 = mv_counts[row].second;
-         }
-
          double dist;
 
          if(options.type == "euclid")
-            dist = euler(q1, q2);
+            dist = euler(counts[row], counts[column]);
          else if(options.type == "d2")
-            dist = d2(q1, q2);
+            dist = d2(counts[row], counts[column]);
          else if(options.type == "manhattan")
-            dist = manhattan(q1, q2);
+            dist = manhattan(counts[row], counts[column]);
          else if(options.type == "chebyshev")
-            dist = chebyshev(q1, q2);
+            dist = chebyshev(counts[row], counts[column]);
          else if(options.type == "bc")
-            dist = bray_curtis_distance(q1, q2);
+            dist = bray_curtis_distance(counts[row], counts[column]);
          else if(options.type == "ngd")
-            dist = normalised_google_distance(q1, q2);
+            dist = normalised_google_distance(counts[row], counts[column]);
          else if(options.type == "d2s" || options.type == "D2S")
-            dist = d2s(kmer_count_map, q1, m1, q2, m2);
+            dist = d2s(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "hao")
-            dist = hao(kmer_count_map, q1, m1, q2, m2);
+            dist = hao(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "d2star" || options.type == "D2Star")
-            dist = d2star(kmer_count_map, q1, m1, q2, m2);
+            dist = d2star(counts[row], counts[column], markovCounts[row], markovCounts[column]);
          else if(options.type == "dai")
-            dist = dai(kmer_count_map, q1, m1, q2, m2);
+            dist = dai(counts[row], counts[column], markovCounts[row], markovCounts[column]);
 
-         array_threaded_internal[row][column] = dist;
-         array_threaded_internal[column][row] = dist;
-
+         results[row][column] = dist;
+         results[column][row] = dist;
       }
    }
+};
+
+/*
+   Estimate how much RAM is needed to calculate this
+*/
+template <typename TAlphabet>
+int mem_check(ModifyStringOptions options, int numRecord, TAlphabet const & alphabetType)
+{
+   struct sysinfo myinfo; 
+   unsigned long total_bytes; 
+   sysinfo(&myinfo); 
+
+   total_bytes = myinfo.mem_unit * myinfo.totalram; 
+
+   const unsigned long GIGABYTE = 1024 * 1024 * 1024;
+
+   // calculate kmer count array needed
+   unsigned alphSize = ValueSize<TAlphabet>::VALUE;
+   if(alphSize == 5)
+      alphSize = 4; // remember we initially work with Dna5 but only storage Dna
+   
+   // to store the counts of a single fasta entry
+   unsigned long long int counts_mem = pow(alphSize, options.klen) * sizeof(unsigned);
+
+   if((counts_mem * numRecord) > total_bytes)
+   {
+      cerr << "ERROR: Your machine has " << total_bytes/1024/1024 << " MB RAM but it will require approximately " << (counts_mem*numRecord)/1024/1024 << " MB to calculate." << endl;
+      return 1;
+   }
+   return 0;
 }
 
 template <typename TAlphabet>
 int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
-   // Read in the input file
+   // Read in the records into memory
    SeqFileIn pairwiseFileIn;
-   CharString pwid;
-   String<TAlphabet> pwseq;
-   vector< vector<double> > array_threaded_internal; // stores the distance matrix
-   vector<pair<CharString, map<String<TAlphabet>, unsigned int>>> pw_counts;
+   StringSet<CharString> pwids;
+   StringSet<String<TAlphabet>> pwseqs;
 
-   // things for markov distances
-   vector<String<TAlphabet>> kmer_count_map;
-   vector<pair<CharString, map<String<TAlphabet>, double>>> mv_counts;
-
-   // Open fasta/fastq file
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
@@ -160,118 +316,163 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       return 1;
    }
 
-   // Create thread vector and mutex's
-   mutex read, write;
-   vector<thread> vectorOfSeqs;
-   unsigned int n = std::thread::hardware_concurrency();
-   unsigned int cores = options.num_threads;
-
-   // create kmer_count_map if doing a markov model
-   if(options.type == "d2s" || options.type == "hao" ||
-      options.type == "d2star" || options.type == "dai" ||
-      options.type == "D2Star" || options.type == "D2S")
+   try
    {
-      kmer_count_map = makecomplete(options.klen, alphabetType);
+      readRecords(pwids, pwseqs, pairwiseFileIn);
+   }
+   catch(Exception const & e)
+   {
+      std::cout << "ERROR: The --sequence-type which was selected was \"";
+      std::cout << options.sequenceType << "\" however when reading the \"";
+      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+      std::cout << e.what() << std::endl;
+      return 1;
    }
 
-   cout << "About to count" << endl;
+   // mem checker
+   if(mem_check(options, length(pwseqs), alphabetType) == 1)
+      return 1;
 
-   // thread to count // here, I think, if it's markov based, the thread also does the markov count
-   for(unsigned i = 0; i < cores; i++)
-   {
-      vectorOfSeqs.push_back(thread(count_threads<TAlphabet>, options, ref(pairwiseFileIn), 
-                                    ref(pw_counts), ref(read), ref(write), ref(mv_counts), 
-                                    ref(kmer_count_map) ));
-   }
-
-   for(auto &thread : vectorOfSeqs)
-   {
-      thread.join();
-   }
-
-   close(pairwiseFileIn);
-
-   // Store the results 
-   array_threaded_internal.resize(pw_counts.size(),
-                                  vector<double>(pw_counts.size(), 0.0));
-
-   // Calculate the distances
+   // set up elements for thread
    vector<thread> vectorOfThreads;
    mutex location;
    unsigned rI = 0;
    unsigned cI = 0;
+   //unsigned int n = std::thread::hardware_concurrency();
+   unsigned int cores = options.num_threads;
 
+   // store the distance calculation results
+   vector< vector<double> > results;
+   results.resize(length(pwseqs), vector<double>(length(pwseqs), 0.0));
+
+   // store the kmer counts in RAM
+   StringSet<String<unsigned> > counts;
+   
+   resize(counts, length(pwseqs));
+
+   StringSet<String<double> > markovCounts;
+
+   for(unsigned i = 0; i < length(pwseqs); i++)
+   {
+      String<TAlphabet> seq = pwseqs[i];
+
+      // if it's DNA, then we usually do revC which means we need
+      // need to specifically define String<Dna5> because reverseComplement
+      // is only implemented for Dna/Dna5
+      if(options.sequenceType == "dna")
+      {
+         String<Dna5> seqf = seq;
+
+         if(options.noreverse == false)
+         {
+            String<Dna5> seqrc = seq;
+            reverseComplement(seqrc);
+            append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
+            append(seqf, seqrc);
+         }
+         countKmersNew(counts[i], seqf, options.klen);
+
+         if(options.type == "d2s" || options.type == "d2star" ||
+            options.type == "hao" || options.type == "dai")
+         {
+            resize(markovCounts, length(pwseqs));
+            markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
+         }
+//         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
+//         {
+//            resize(markovCounts, length(pwseqs));
+//            markov_again(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
+//         }
+      }
+      else // when doing aa/raa we don't (and can't) do reverse complement
+      {
+         countKmersNew(counts[i], seq, options.klen);
+
+         if(options.type == "d2s" || options.type == "d2star" ||
+            options.type == "hao")
+         {
+            resize(markovCounts, length(pwseqs));
+            markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+         }
+         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
+         {
+            resize(markovCounts, length(pwseqs));
+            markov_again(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+         }
+      }
+   }
+
+   // do the distance calculations
    for(unsigned i = 0; i < cores; i++)
    {
-      vectorOfThreads.push_back(thread(distance_thread<TAlphabet>, ref(pw_counts), ref(rI), 
-                                       ref(cI), std::ref(array_threaded_internal), options, 
-                                       ref(location), ref(mv_counts), ref(kmer_count_map) ));
+      vectorOfThreads.push_back(thread(calcDistance<TAlphabet>, ref(rI), ref(cI), 
+                                       ref(results), ref(location), ref(counts), 
+                                       ref(markovCounts), options));
    }
+
    for(auto &thread : vectorOfThreads)
    {
       thread.join();
    }
 
    // Print results
-   printPhylyp(options, pw_counts, array_threaded_internal);
+   printPhylyp(options, pwids, results);
 
    return 0;
-
-}
+};
 
 template <typename TAlphabet>
 int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
+   // Read in the records into memory
    SeqFileIn pairwiseFileIn;
    StringSet<CharString> pwids;
    StringSet<String<TAlphabet>> pwseqs;
-   
-   // Open fasta/fastq file
+
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
       cerr << toCString(options.pairwiseFileName) << endl;
       return 1;
    }
-   
-   readRecords(pwids, pwseqs, pairwiseFileIn);
 
-   vector<String<TAlphabet>> kmer_count_map = makecomplete(options.klen, alphabetType);
+   try
+   {
+      readRecords(pwids, pwseqs, pairwiseFileIn);
+   }
+   catch(Exception const & e)
+   {
+      std::cout << "ERROR: The --sequence-type which was selected was \"";
+      std::cout << options.sequenceType << "\" however when reading the \"";
+      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+      std::cout << e.what() << std::endl;
+      return 1;
+   }
 
-   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\td2s\tHao\td2Star\tdai\tD2S\tD2Star\n";
-
-   // let's go through every comparison
+   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\tHao\tdai\tD2S\tD2Star\n";
    for(unsigned int i = 0; i < length(pwids); i++)
    {
       for(unsigned int j = 0; j < length(pwids); j++)
       {
-         map<String<TAlphabet>, unsigned int> count_p1 = count_test(pwseqs[i], options.klen, options.noreverse);
-         map<String<TAlphabet>, unsigned int> count_p2 = count_test(pwseqs[j], options.klen, options.noreverse);
-
-         map<String<TAlphabet>, double> markov_p1 = markov_test(options.klen, pwseqs[i], options.markovOrder, 
-                                                                 kmer_count_map, options.noreverse);
-         map<String<TAlphabet>, double> markov_p2 = markov_test(options.klen, pwseqs[j], options.markovOrder, 
-                                                                 kmer_count_map, options.noreverse);
-
-         map<String<TAlphabet>, double> markov_o1 = markov_old(options.klen, pwseqs[i], options.markovOrder, 
-                                                               kmer_count_map, options.noreverse);
-         map<String<TAlphabet>, double> markov_o2 = markov_old(options.klen, pwseqs[j], options.markovOrder, 
-                                                               kmer_count_map, options.noreverse);
-
-         cout << pwids[i] << "\t" << pwids[j] << "\t" << euler(count_p1, count_p2) << "\t";
-         cout << d2(count_p1, count_p2) << "\t" << manhattan(count_p1, count_p2) << "\t";
-         cout << bray_curtis_distance(count_p1, count_p2) << "\t";
-         cout << normalised_google_distance(count_p1, count_p2) << "\t";
-         cout << d2s(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << hao(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << d2star(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << dai(kmer_count_map, count_p1, markov_p1, count_p2, markov_p2) << "\t";
-         cout << d2s(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2) << "\t";
-         cout << d2star(kmer_count_map, count_p1, markov_o1, count_p2, markov_o2);
+         String<unsigned> counts_i, counts_j;
+         countKmersNew(counts_i, pwseqs[i], options.klen);
+         countKmersNew(counts_j, pwseqs[j], options.klen);
+         String<double> markov_i, markov_j;
+         markov(markov_i, counts_i, pwseqs[i], options.klen, options.markovOrder);
+         markov(markov_j, counts_j, pwseqs[j], options.klen, options.markovOrder);
+         
+         cout << pwids[i] << "\t" << pwids[j] << "\t" << euler(counts_i, counts_j);
+         cout << "\t" << d2(counts_i, counts_j) << "\t" << manhattan(counts_i, counts_j);
+         cout << "\t" << bray_curtis_distance(counts_i, counts_j);
+         cout << "\t" << normalised_google_distance(counts_i, counts_j);
+         cout << "\t" << hao(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << dai(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << d2s(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << d2star(counts_i, counts_j, markov_i, markov_j);
 
          cout << endl;
-         
       }
    }
-}
 
+   return 0;
+};

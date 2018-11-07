@@ -13,27 +13,20 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     "Path to the file containing your query \
                                     sequence data.\n", 
                                     ArgParseArgument::INPUT_FILE, "IN"));
-   setValidValues(parser, "query-file", 
-                  toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
    addOption(parser, ArgParseOption("r", "reference-file", 
                                     "Path to the file containing your reference\
                                      sequence data.", 
                                      ArgParseArgument::INPUT_FILE, "IN"));
-   setValidValues(parser, "reference-file", 
-                  toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
    addOption(parser, ArgParseOption("p", "pairwise-file", 
                                     "Path to the file containing your sequence \
                                     data which you will perform pairwise \
                                     comparison on.", 
                                     ArgParseArgument::INPUT_FILE, "IN"));
-   setValidValues(parser, "pairwise-file", 
-                  toCString(concat(getFileExtensions(SeqFileIn()), ' ')));
    addOption(parser, ArgParseOption("m", "markov-order", "Markov Order", 
              ArgParseArgument::INTEGER, "INT"));
    addOption(parser, ArgParseOption("o", "output-file", "Output file.", 
              ArgParseArgument::OUTPUT_FILE, "OUT"));
-   
-   //setRequired(parser, "output-file");
+
    setDefaultValue(parser, "markov-order", "1");
    addOption(parser, ArgParseOption("n", "num-hits", 
              "Number of top hits to return", ArgParseArgument::INTEGER, "INT"));
@@ -44,7 +37,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     distance please refer to the wiki. ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type", 
-               "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all");
+               "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("s", "sequence-type", 
              "Define the type of sequence data to work with.", 
@@ -58,22 +51,22 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    setDefaultValue(parser, "output-format", "default");
    addOption(parser, ArgParseOption("nr", "no-reverse", 
              "Do not use reverse compliment."));
-   addOption(parser, ArgParseOption("mask", "skip-mer", 
+/*   addOption(parser, ArgParseOption("mask", "skip-mer", 
              "Specify binary masks where a zero indicates \
              skipping that base and one keeps it. e.g. 01110.", 
-             ArgParseArgument::STRING, "TEXT", true));
+             ArgParseArgument::STRING, "TEXT", true));*/
    addOption(parser, ArgParseOption("c", "num-cores", "Number of Cores.", 
              ArgParseArgument::INTEGER, "INT"));
-   addOption(parser, ArgParseOption("l", "low-ram", 
+/*   addOption(parser, ArgParseOption("l", "low-ram", 
              "Does not store the reference in RAM. \
               As long as you're not using a very \
               large kmer size, this option will \
               allow you to run kast with a large \
               reference, however it will take much \
-              longer."));
+              longer."));*/
    setDefaultValue(parser, "num-cores", "1");
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "0.0.20");
+   setVersion(parser, "0.0.21");
    setDate(parser, "October 2018");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -96,7 +89,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.sequenceType, parser, "sequence-type");
    options.noreverse = isSet(parser, "no-reverse");
    options.debug = isSet(parser, "debug");
-   options.lowram = isSet(parser, "low-ram");
+   //options.lowram = isSet(parser, "low-ram");
    getOptionValue(options.queryFileName, parser, "query-file");
    getOptionValue(options.referenceFileName, parser, "reference-file");
    getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
@@ -104,17 +97,28 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.num_threads, parser, "num-cores");
    getOptionValue(options.output_format, parser, "output-format");
 
+/*
    for(int i = 0; i < getOptionValueCount(parser, "skip-mer"); i++)
    {
       CharString tmpVal;
       getOptionValue(tmpVal, parser, "skip-mer", i);
       options.mask.push_back(tmpVal);
    }
+*/
 
    if((options.markovOrder < 1) || (options.markovOrder > 3))
    {
       cerr << "Markov Order --markov-order should be ";
       cerr << "an integer 1, 2 or 3." << endl;
+      return ArgumentParser::PARSE_ERROR;
+   }
+
+   // this is stopping me using k=1 for d2/euclid etc
+   if(options.markovOrder > options.klen-1)
+   {
+      cerr << "Markov Order needs to be smaller than klen-1 and ";
+      cerr << "an integer 1, 2 or 3. If you're using a small klen size, ";
+      cerr << "decrease the size of --markov-order." << endl;
       return ArgumentParser::PARSE_ERROR;
    }
 
@@ -163,318 +167,41 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    return ArgumentParser::PARSE_OK;
 }
 
-
-
-
-/*
-I need to check that if we are using skip-mers, then we need to check that 
-these are sensible.
-  * skip-mer mask must all be 0/1's
-  * skip-mer mask should be the same number of characters as the kmer size
-  * all skipmers shoud have the same number of 1's across masks
-*/
-int parseMask(ModifyStringOptions options, int &effectiveKlen)
+int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, unsigned const k)
 {
-   bool first = true;
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
 
-   for(auto m : options.mask)
+   auto itSequence = begin(sequence);
+   int counterN = 0;
+
+   // Check for any N that destroys the first kmers
+   unsigned j = k - 1;
+   for (auto i = position(itSequence); i <= j; ++i)
    {
-      // all should be the same number of characters as the klen
-      if(length(m) != options.klen)
-      {
-         cerr << "ERROR: Mask sizes should be the same size ";
-         cerr << "as the K-Mer length." << endl;
-         return 1;
-      }
-
-      int counter = 0;
-
-      // checks to see that the mask is only made of 0/1's
-      for(int i = 0; i < length(m); i++)
-      {
-         if(m[i] != '0' && m[i] != '1')
-         {
-            cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
-            return 1;
-         }
-
-         if(m[i] == '1')
-            counter++;
-      }
-
-      if(first == true)
-      {
-         effectiveKlen = counter;
-         first = false;
-      }	
-      else 
-      {
-         if(counter != effectiveKlen)
-         {
-            cerr << "ERROR: The number of 0's and 1's in each mask ";
-            cerr << "should be the same e.g. 10001, 11000, 00011" << endl;
-            return 1;
-         }
-      }
+       if (_repeatMaskValue(sequence[i]))
+       {
+           counterN = i + 1;
+       }
    }
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+       // Check if there is a "N" at the end of the new kmer
+       if (_repeatMaskValue(value(itSequence + (k - 1))))
+           counterN = k;  // Do not consider any kmer covering this "N"
+        // If there is no "N" overlapping with the current kmer, count it
+       if (counterN <= 0)
+       {
+           unsigned hashValue = seqan::hash(myShape, itSequence);
+           //++kmerCounts[hashValue];
+           safe_increment(kmerCounts[hashValue]);
+       }
+       counterN--;
+   }
+
    return 0;
-}
-
-AminoAcid getRevCompl(AminoAcid const & nucleotide)
-{
-   if(nucleotide == 'A')
-      return 'T';
-   if(nucleotide == 'T')
-      return 'A';
-   if(nucleotide == 'C')
-      return 'G';
-   if(nucleotide == 'G')
-      return 'C';
-   return 'N';
-}
-
-String<AminoAcid> doRevCompl(String<AminoAcid> seq)
-{
-   String<AminoAcid> allSeq;
-   append(allSeq,seq);
-   allSeq += "NNN";
-   String<AminoAcid> revComplGenome;
-   resize(revComplGenome, length(seq));
-   
-   for (unsigned i = 0; i < length(seq); ++i)
-      revComplGenome[length(seq) - 1 - i] = getRevCompl(seq[i]);
-
-   allSeq += revComplGenome;
-   return allSeq;
-}
-
-double gc_ratio(String<AminoAcid> sequence)
-{
-   int gc = 0;
-   int agct = 0;
-
-   for(int i = 0; i < length(sequence); i++)
-   {
-      if(sequence[i] == 'G' || sequence[i] == 'C')
-         gc++;
-      if(sequence[i] != 'N')
-         agct++;
-   }
-   return (double)gc/(double)agct;
-}
-
-map<string, double> markov(int klen, String<AminoAcid> sequence, 
-                           int markovOrder, map<string, bool> kmer_count_map)
-{
-   map<string, double> markovmap;
-   double sum_prob = 0.0;
-
-   map<string, unsigned int> markovcounts = count(sequence, markovOrder);
-
-   double tot = 0;
-
-   for(pair<string, unsigned int> p: markovcounts)
-   {
-      tot = tot + p.second;
-   }
-
-   for(pair<string, bool> p: kmer_count_map)
-   {
-      double prob = 1.0;
-      Dna5String kmer = p.first;
-
-      for(int l = 0; l <= (length(kmer))-markovOrder; l++)
-      {
-         int j = l + markovOrder;
-         string inf;
-         assign(inf,infix(kmer, l, j));
-         prob = prob * ((double)markovcounts[inf] / (double)tot);
-      }
-      markovmap[p.first] = prob;
-   }
-   return markovmap;
-}
-
-map<string, bool> makequick(ModifyStringOptions options, 
-                            StringSet<String<AminoAcid>> referenceseqs)
-{
-   map<string, bool> quickmers;
-
-   for(int i = 0; i < length(referenceseqs); i++)
-   {
-      for(int j = 0; j <= length(referenceseqs[i])-options.effectiveLength; j++)
-      {
-         // end quickly if done	
-         //int max = ipow(4, options.klen);
-         int max = ipow(4, options.effectiveLength);
-         if( quickmers.size() == max )
-            return quickmers;
-
-         string kmer;
-         assign(kmer, infix(referenceseqs[i], j, j + options.effectiveLength));
-         size_t found = kmer.find("N");
-
-         if(found > kmer.size())
-            quickmers[kmer] = true;
-      }
-   }
-   return quickmers;
-}
-
-map<string, bool> makecomplete(ModifyStringOptions options)
-{
-   map<string, bool> finkmers;
-
-   String<Dna5String> bases;
-   appendValue(bases, "A");
-   appendValue(bases, "G");
-   appendValue(bases, "C");
-   appendValue(bases, "T");
-
-   String<Dna5String> kmers;
-   kmers = bases;
-
-   for(int j = 0; j < options.effectiveLength-1; j++)
-   {
-      String<Dna5String> temp;
-
-      for(int k = 0; k < length(kmers); k++)
-      {
-         for(int m = 0; m < length(bases); m++)
-         {
-            String<Dna> kmer = bases[m];
-            kmer += kmers[k];
-            appendValue(temp,kmer);
-         }
-      }
-      kmers = temp;
-      clear(temp);
-   }
-
-   for(int i = 0; i < length(kmers); i++)
-   {
-      string kmer2;
-      assign(kmer2,infix(kmers[i], 0, length(kmers[i])));
-      finkmers[kmer2] = true;
-   }
-   return finkmers;
-}
-
-int ipow(int base, int exp)
-{
-   int result = 1;
-   while(exp)
-   {
-      if(exp & 1)
-      {
-         result *= base;
-      }
-      exp >>= 1;
-      base *= base;
-   }
-   return result;
-}
-
-CharString namecut(CharString seq, int val)
-{
-   if(length(seq) == val)
-      return seq;
-
-   if(length(seq) < val)
-   {
-      CharString charSeq;
-      resize(charSeq, val, Exact());
-      assign(charSeq, seq);
-
-      for(int i = 0; i < val-length(seq); i++)
-         insert(charSeq,length(seq)+i," ");
-
-      return charSeq;
-   }
-
-   if(length(seq) > val)
-   {
-      CharString charSeq;
-      resize(charSeq, val, Exact());
-      assign(charSeq, seq, Limit());
-
-      return charSeq;
-   }
-}
-
-// Count is overloaded rather than a template because we only work with two Alphabets
-map<String<AminoAcid>, unsigned int> count_test(String<AminoAcid> seq, int klen, bool noreverse)
-{
-   map<String<AminoAcid>, unsigned int> counts;
-   if(length(seq) >= klen)
-   {
-      for(unsigned i = 0; i <= length(seq) - klen; i++)
-      {
-         String<AminoAcid> kmer;
-         assign(kmer,infix(seq, i, i+klen));
-
-         // if kmer contains an 'X', probably should not count that kmer
-         counts[kmer]++;
-      }
-   }
-
-   return counts;
-}
-
-//typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
-
-map<String<ReducedAminoAcidMurphy10>, unsigned int> count_test(String<ReducedAminoAcidMurphy10> seq, int klen, bool noreverse)
-{
-   map<String<ReducedAminoAcidMurphy10>, unsigned int> counts;
-   if(length(seq) >= klen)
-   {
-      for(unsigned i = 0; i <= length(seq) - klen; i++)
-      {
-         String<ReducedAminoAcidMurphy10> kmer;
-         assign(kmer,infix(seq, i, i+klen));
-
-         // if kmer contains an 'X', probably should not count that kmer
-         counts[kmer]++;
-      }
-   }
-
-   return counts;
-}
-
-map<String<Dna5>, unsigned int> count_test(String<Dna5> seq, int klen, bool noreverse)
-{
-   map<String<Dna5>, unsigned int> counts;
-   if(length(seq) >= klen)
-   {
-      for(unsigned i = 0; i <= length(seq) - klen; i++)
-      {
-         String<Dna5> kmer;
-         assign(kmer,infix(seq, i, i+klen));
-
-         // checks for existance of 'N'
-         bool N_exists = false;
-         for(unsigned k = 0; k < length(kmer); k++)
-         {
-            if(kmer[k] == 'N')
-            {
-               N_exists = true;
-            }
-         }
-
-         // +1 kmer if no 'N'
-         if(N_exists == false)
-         {
-            counts[kmer]++;
-
-            // now reverse complement it
-            if(noreverse == false)
-            {
-               reverseComplement(kmer);
-               counts[kmer]++;
-            }
-         }
-      }
-   }
-
-   return counts;
 }

@@ -33,14 +33,15 @@ SOFTWARE.
 #include <seqan/arg_parse.h>
 #include <seqan/seq_io.h>
 #include <math.h>
-#include <seqan/store.h>
+//#include <seqan/store.h>
 #include <string>
 #include <thread>
-#include <map>
-#include <unordered_map>
-#include <vector>
+//#include <map>
+//#include <unordered_map>
+//#include <vector>
+//#include <seqan/alignment_free.h>
+#include <seqan/reduced_aminoacid.h>
 #include "common.h"
-#include "distance.h"
 #include "utils.h"
 #include "pairwise.h"
 #include "search.h"
@@ -53,14 +54,16 @@ int main(int argc, char const ** argv)
    // parse our options
    ModifyStringOptions options;
    ArgumentParser::ParseResult res = parseCommandLine(options, argc, argv);
+   if (res != ArgumentParser::PARSE_OK)
+      return res == ArgumentParser::PARSE_ERROR;
 
    // parse the mask so we know the kmer size
    options.effectiveLength = options.klen;
-   if(parseMask(options, options.effectiveLength) == 1)
-      return 1;
+   //if(parseMask(options, options.effectiveLength) == 1)
+   //   return 1;
 
    // Running in pairwise mode
-   if(options.pairwiseFileName != NULL && options.type != "all")
+   if(options.pairwiseFileName != NULL && options.type != "all" && options.type != "new")
    {
       if(options.sequenceType == "aa")
       {
