@@ -11,8 +11,24 @@
 ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, 
                                              int argc, char const ** argv);
 
-void countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, 
+int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, 
                    unsigned const k);
+
+template <class T>
+int safe_increment(T& value)
+{
+   if(value < numeric_limits<T>::max())
+   {
+      value++;
+      return 0;
+   }
+   else
+   {
+      cerr << "Error: Integer overflow detected. Exiting" << endl;
+      return 1;
+   }
+};
+
 
 //void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
 //            String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder);

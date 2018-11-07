@@ -167,7 +167,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    return ArgumentParser::PARSE_OK;
 }
 
-void countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, unsigned const k)
+int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, unsigned const k)
 {
    Shape<Dna> myShape;
    resize(myShape, k);
@@ -197,85 +197,11 @@ void countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, u
        if (counterN <= 0)
        {
            unsigned hashValue = seqan::hash(myShape, itSequence);
-           ++kmerCounts[hashValue];
+           //++kmerCounts[hashValue];
+           safe_increment(kmerCounts[hashValue]);
        }
        counterN--;
    }
+
+   return 0;
 }
-
-/*
-// this is the markov method used within ALFSC-python
-void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-            String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-   // setup markovCounts
-   Shape<Dna> myShape;
-   resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-
-   cout << "DNA " << kmerNumber << endl;
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
-
-   // Now create the background model
-   String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
-   unsigned tot = 0;
-
-   // sum the occurances
-   for(unsigned i = 0; i < length(markovbg); i++)
-      tot = tot + markovbg[i];
-
-   for(unsigned i = 0; i < length(markovCounts); i++)
-   {
-      String<Dna> inf;
-      unhash(inf, i, k);
-      String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
-      double prob = 1.0;
-      for(unsigned i = 0; i < length(occurances); i++)
-      {
-         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
-      }
-      markovCounts[i] = prob;
-   }
-}
-
-// this is the markov method used within ALFSC-python
-void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-            String<AminoAcid> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-   // setup markovCounts
-   Shape<AminoAcid> myShape;
-   resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<AminoAcid>::VALUE, weight(myShape));
-   cout << "AminoAcid " << kmerNumber << endl;
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
-
-   // Now create the background model
-   String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
-   unsigned tot = 0;
-
-   // sum the occurances
-   for(unsigned i = 0; i < length(markovbg); i++)
-      tot = tot + markovbg[i];
-
-   for(unsigned i = 0; i < length(markovCounts); i++)
-   {
-      String<AminoAcid> inf;
-      unhash(inf, i, k);
-      String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
-      double prob = 1.0;
-      for(unsigned i = 0; i < length(occurances); i++)
-      {
-         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
-      }
-      markovCounts[i] = prob;
-   }
-}
-
-
-*/
