@@ -236,6 +236,10 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       appendValue(refseqs, convseq);
    }
 
+   // check how much RAM is required to store the reference
+   if(mem_check(options, length(refseqs), alphabetType) == 1)
+      return 1;
+
    StringSet<String<unsigned> > counts;
    resize(counts, length(refseqs));
 
