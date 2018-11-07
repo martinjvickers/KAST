@@ -370,24 +370,22 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(seqf, seqrc);
          }
-         //countKmers(counts[i], seqf, options.klen);
          countKmersNew(counts[i], seqf, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
-            options.type == "hao")
+            options.type == "hao" || options.type == "dai")
          {
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
          }
-         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
-         {
-            resize(markovCounts, length(pwseqs));
-            markov_again(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
-         }
+//         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
+//         {
+//            resize(markovCounts, length(pwseqs));
+//            markov_again(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
+//         }
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
-         //countKmers(counts[i], seq, options.klen);
          countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
@@ -403,9 +401,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
          }
       }
    }
-
-   // just testing
-   cout << "Having a look " << counts[0][0] << endl;
 
    // do the distance calculations
    for(unsigned i = 0; i < cores; i++)
