@@ -103,8 +103,6 @@ int printResult(ModifyStringOptions options, CharString &queryid,
       }
 }
 
-
-
 template <typename TAlphabet>
 int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
                   StringSet<CharString> const & refids, 
@@ -147,7 +145,7 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             append(qseq, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(qseq, qseqrc);
          }
-         countKmers(querycounts, qseq, options.klen);
+         countKmersNew(querycounts, qseq, options.klen);
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
@@ -158,7 +156,7 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
       }
       else
       {
-         countKmers(querycounts, queryseq, options.klen);
+         countKmersNew(querycounts, queryseq, options.klen);
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
@@ -240,6 +238,10 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    if(mem_check(options, length(refseqs), alphabetType) == 1)
       return 1;
 
+   //unsigned meh = 4294967295;
+   //if(safe_increment(meh) == 1)
+   //   return 1;
+
    StringSet<String<unsigned> > counts;
    resize(counts, length(refseqs));
 
@@ -267,7 +269,7 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             append(seq, seqrc);
          }
  
-         countKmers(counts[i], seq, options.klen);
+         countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
@@ -279,7 +281,7 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       else
       {
          String<TAlphabet> seq = refseqs[i];
-         countKmers(counts[i], seq, options.klen);
+         countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||

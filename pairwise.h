@@ -370,7 +370,8 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(seqf, seqrc);
          }
-         countKmers(counts[i], seqf, options.klen);
+         //countKmers(counts[i], seqf, options.klen);
+         countKmersNew(counts[i], seqf, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
             options.type == "hao")
@@ -386,7 +387,8 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
-         countKmers(counts[i], seq, options.klen);
+         //countKmers(counts[i], seq, options.klen);
+         countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
             options.type == "hao")
@@ -401,6 +403,9 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
          }
       }
    }
+
+   // just testing
+   cout << "Having a look " << counts[0][0] << endl;
 
    // do the distance calculations
    for(unsigned i = 0; i < cores; i++)
@@ -455,8 +460,8 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
       for(unsigned int j = 0; j < length(pwids); j++)
       {
          String<unsigned> counts_i, counts_j;
-         countKmers(counts_i, pwseqs[i], options.klen);
-         countKmers(counts_j, pwseqs[j], options.klen);
+         countKmersNew(counts_i, pwseqs[i], options.klen);
+         countKmersNew(counts_j, pwseqs[j], options.klen);
          String<double> markov_i, markov_j;
          markov(markov_i, counts_i, pwseqs[i], options.klen, options.markovOrder);
          markov(markov_j, counts_j, pwseqs[j], options.klen, options.markovOrder);
