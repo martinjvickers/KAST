@@ -59,7 +59,7 @@ rm test_ngd_k3
 echo "[TEST] d2"
 ./kast -p example_data/yeast.fasta -k 3 -c 1 -t d2 -o test_d2_k3
 diff test_d2_k3 results/pairwise/d2_k3
-#rm test_d2_k3
+rm test_d2_k3
 
 echo "[TEST] d2s"
 ./kast -p example_data/yeast.fasta -k 3 -c 1 -t d2s -o test_d2s_k3
@@ -95,12 +95,16 @@ echo "[INFO] Running Pairwise App Tests AminoAcid"
 
 echo "[TEST] ngd"
 ./kast -p example_data/protein.fasta -k 3 -c 1 -t ngd -o test_ngd_k3_aa -s aa
+rm test_ngd_k3_aa
 
 echo "[TEST] d2"
 ./kast -p example_data/protein.fasta -k 3 -c 1 -t d2 -o test_d2_k3_aa -s aa
+rm test_d2_k3_aa
 
 echo "[TEST] euclid"
 ./kast -p example_data/protein.fasta -k 3 -c 1 -t euclid -o test_euclid_k3_aa -s aa
+rm test_euclid_k3_aa
 
 echo "[TEST] manhattan"
 ./kast -p example_data/protein.fasta -k 3 -c 1 -t manhattan -o test_manhattan_k3_aa -s aa
+rm test_manhattan_k3_aa
