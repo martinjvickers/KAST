@@ -145,7 +145,12 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             append(qseq, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(qseq, qseqrc);
          }
-         countKmersNew(querycounts, qseq, options.klen);
+
+         //countKmersNew(querycounts, qseq, options.klen);
+         if(options.mask.size() > 0)
+            countKmersNew(querycounts, qseq, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(querycounts, qseq, options.klen);
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
@@ -238,10 +243,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    if(mem_check(options, length(refseqs), alphabetType) == 1)
       return 1;
 
-   //unsigned meh = 4294967295;
-   //if(safe_increment(meh) == 1)
-   //   return 1;
-
    StringSet<String<unsigned> > counts;
    resize(counts, length(refseqs));
 
@@ -269,7 +270,13 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             append(seq, seqrc);
          }
  
-         countKmersNew(counts[i], seq, options.klen);
+         //countKmersNew(counts[i], seq, options.klen);
+         // check if we are doing a mask
+         if(options.mask.size() > 0)
+            countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(counts[i], seq, options.klen);
+
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
