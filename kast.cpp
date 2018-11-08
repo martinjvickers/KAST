@@ -33,13 +33,8 @@ SOFTWARE.
 #include <seqan/arg_parse.h>
 #include <seqan/seq_io.h>
 #include <math.h>
-//#include <seqan/store.h>
 #include <string>
 #include <thread>
-//#include <map>
-//#include <unordered_map>
-//#include <vector>
-//#include <seqan/alignment_free.h>
 #include <seqan/reduced_aminoacid.h>
 #include "common.h"
 #include "utils.h"
@@ -59,8 +54,10 @@ int main(int argc, char const ** argv)
 
    // parse the mask so we know the kmer size
    options.effectiveLength = options.klen;
-   //if(parseMask(options, options.effectiveLength) == 1)
-   //   return 1;
+   if(parseMask(options, options.effectiveLength) == 1)
+      return 1;
+
+   cout << "klen = " << options.klen << "\teffectiveLength = \t" << options.effectiveLength << endl;
 
    // Running in pairwise mode
    if(options.pairwiseFileName != NULL && options.type != "all" && options.type != "new")
