@@ -1,6 +1,7 @@
-#include "utils.h"
+//#include "utils.h"
 
 // Parse our commandline options
+/*
 ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, 
                                              int argc, char const ** argv)
 {
@@ -51,12 +52,13 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    setDefaultValue(parser, "output-format", "default");
    addOption(parser, ArgParseOption("nr", "no-reverse", 
              "Do not use reverse compliment."));
-/*   addOption(parser, ArgParseOption("mask", "skip-mer", 
+   addOption(parser, ArgParseOption("mask", "skip-mer", 
              "Specify binary masks where a zero indicates \
              skipping that base and one keeps it. e.g. 01110.", 
-             ArgParseArgument::STRING, "TEXT", true));*/
+             ArgParseArgument::STRING, "TEXT", true));
    addOption(parser, ArgParseOption("c", "num-cores", "Number of Cores.", 
              ArgParseArgument::INTEGER, "INT"));
+*/
 /*   addOption(parser, ArgParseOption("l", "low-ram", 
              "Does not store the reference in RAM. \
               As long as you're not using a very \
@@ -64,6 +66,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
               allow you to run kast with a large \
               reference, however it will take much \
               longer."));*/
+/*
    setDefaultValue(parser, "num-cores", "1");
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
    setVersion(parser, "0.0.21");
@@ -97,14 +100,12 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.num_threads, parser, "num-cores");
    getOptionValue(options.output_format, parser, "output-format");
 
-/*
    for(int i = 0; i < getOptionValueCount(parser, "skip-mer"); i++)
    {
       CharString tmpVal;
       getOptionValue(tmpVal, parser, "skip-mer", i);
       options.mask.push_back(tmpVal);
    }
-*/
 
    if((options.markovOrder < 1) || (options.markovOrder > 3))
    {
@@ -166,9 +167,12 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    }
    return ArgumentParser::PARSE_OK;
 }
+*/
 
+/*
 int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, unsigned const k)
 {
+   cout << "Meh " << endl;
    Shape<Dna> myShape;
    resize(myShape, k);
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
@@ -199,9 +203,78 @@ int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, un
            unsigned hashValue = seqan::hash(myShape, itSequence);
            //++kmerCounts[hashValue];
            safe_increment(kmerCounts[hashValue]);
+
+           DnaString orig;
+           unhash(orig, hashValue, k);
+           cout << "Orig: " << orig << endl;
        }
        counterN--;
    }
 
    return 0;
 }
+
+int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, 
+                  unsigned const k, unsigned const effectiveK, 
+                  vector<CharString> const & mask)
+{
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   auto itSequence = begin(sequence);
+   int counterN = 0;
+
+   Shape<Dna> maskShape;
+   resize(maskShape, effectiveK);
+
+   // Check for any N that destroys the first kmers
+   unsigned j = k - 1;
+   for (auto i = position(itSequence); i <= j; ++i)
+   {
+       if (_repeatMaskValue(sequence[i]))
+       {
+           counterN = i + 1;
+       }
+   }
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+       // Check if there is a "N" at the end of the new kmer
+       if (_repeatMaskValue(value(itSequence + (k - 1))))
+           counterN = k;  // Do not consider any kmer covering this "N"
+
+       // If there is no "N" overlapping with the current kmer, count it
+       if (counterN <= 0)
+       {
+           unsigned hashValue = seqan::hash(myShape, itSequence);
+           DnaString orig;
+           unhash(orig, hashValue, k);
+
+           // here, I need to loop
+           for(int i = 0; i < mask.size(); i++)
+           {
+              String<Dna> dnaSeq;
+              for(int m = 0; m < length(mask[i]); m++)
+              {
+                 //cout << mask[i] << "\t" << length(mask[i]) << endl;
+                 if(mask[i][m] == '1')
+                 {
+                    dnaSeq += orig[m];
+                    //cout << "Adding " << orig[m] << endl;
+                 }
+              }
+
+              auto it = begin(dnaSeq);
+              unsigned hashMask = seqan::hash(maskShape, it);
+              //cout << "Orig: " << orig << "\tKmer: " << dnaSeq << "\tMask: " << mask[i] << endl;
+              safe_increment(kmerCounts[hashMask]);
+           }
+       }
+       counterN--;
+   }
+   return 0;
+}
+*/
