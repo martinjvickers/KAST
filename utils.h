@@ -171,21 +171,60 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    return ArgumentParser::PARSE_OK;
 }
 
-
-
-
-
-ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options, 
-                                             int argc, char const ** argv);
-
 /*
-int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, 
-                   unsigned const k);
-
-int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence,
-                  unsigned const k, unsigned const effectiveK,
-                  vector<CharString> const & mask);
+I need to check that if we are using skip-mers, then we need to check that 
+these are sensible.
+  * skip-mer mask must all be 0/1's
+  * skip-mer mask should be the same number of characters as the kmer size
+  * all skipmers shoud have the same number of 1's across masks
 */
+int parseMask(ModifyStringOptions options, int &effectiveKlen)
+{
+   bool first = true;
+
+   //vector<CharString> mask;
+   for(auto m : options.mask)
+   {
+      // all should be the same number of characters as the klen
+      if(length(m) != options.klen)
+      {
+         cerr << "ERROR: Mask sizes should be the same size ";
+         cerr << "as the K-Mer length." << endl;
+         return 1;
+      }
+
+      int counter = 0;
+
+      // checks to see that the mask is only made of 0/1's
+      for(int i = 0; i < length(m); i++)
+      {
+         if(m[i] != '0' && m[i] != '1')
+         {
+            cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
+            return 1;
+         }
+
+         if(m[i] == '1')
+            counter++;
+      }
+
+      if(first == true)
+      {
+         effectiveKlen = counter;
+         first = false;
+      }
+      else
+      {
+         if(counter != effectiveKlen)
+         {
+            cerr << "ERROR: The number of 0's and 1's in each mask ";
+            cerr << "should be the same e.g. 10001, 11000, 00011" << endl;
+            return 1;
+         }
+      }
+   }
+   return 0;
+};
 
 template <class T>
 int safe_increment(T& value)
@@ -202,9 +241,15 @@ int safe_increment(T& value)
    }
 };
 
-int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, unsigned const k)
+template <typename TAlphabet>
+int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, unsigned const k)
 {
-   cout << "Meh " << endl;
+   return 0;
+};
+
+template <>
+int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, unsigned const k)
+{
    Shape<Dna> myShape;
    resize(myShape, k);
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
@@ -238,7 +283,7 @@ int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, un
 
            DnaString orig;
            unhash(orig, hashValue, k);
-           cout << "Orig: " << orig << endl;
+           //cout << "Orig: " << orig << endl;
        }
        counterN--;
    }
@@ -246,7 +291,16 @@ int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence, un
    return 0;
 };
 
-int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence,
+template <typename TAlphabet>
+int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, 
+                  unsigned const k, unsigned const effectiveK,
+                  vector<CharString> const & mask)
+{
+   return 0;
+};
+
+template <>
+int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
                   unsigned const k, unsigned const effectiveK,
                   vector<CharString> const & mask)
 {
@@ -310,5 +364,77 @@ int countKmersNew(String<unsigned> & kmerCounts, Dna5String const & sequence,
    return 0;
 };
 
+// for all others
+template <typename TAlphabet>
+void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+            String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
+   {
+      String<TAlphabet> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
+      {
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+      }
+      markovCounts[i] = prob;
+   }
+};
+
+// for DNA sequences
+template <>
+void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
+              String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
+{
+   // setup markovCounts
+   Shape<Dna> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
+   seqan::clear(markovCounts);
+   seqan::resize(markovCounts, kmerNumber, 0);
+
+   // Now create the background model
+   String<unsigned> markovbg;
+   countKmersNew(markovbg, sequence, markovOrder);
+   unsigned tot = 0;
+
+   // sum the occurances
+   for(unsigned i = 0; i < length(markovbg); i++)
+      tot = tot + markovbg[i];
+
+   for(unsigned i = 0; i < length(markovCounts); i++)
+   {
+      String<Dna> inf;
+      unhash(inf, i, k);
+      String<unsigned> occurances;
+      countKmersNew(occurances, inf, markovOrder);
+      double prob = 1.0;
+      for(unsigned i = 0; i < length(occurances); i++)
+      {
+         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
+      }
+      markovCounts[i] = prob;
+   }
+};
 
 #endif

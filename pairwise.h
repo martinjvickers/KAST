@@ -12,6 +12,7 @@ these are sensible.
   * skip-mer mask should be the same number of characters as the kmer size
   * all skipmers shoud have the same number of 1's across masks
 */
+/*
 int parseMask(ModifyStringOptions options, int &effectiveKlen)
 {
    bool first = true;
@@ -59,6 +60,7 @@ int parseMask(ModifyStringOptions options, int &effectiveKlen)
    }
    return 0;
 };
+*/
 
 /*markov is the alfsc implementation of the markov calculation;
   A much simplier version than the other, but I believe this
@@ -67,6 +69,7 @@ int parseMask(ModifyStringOptions options, int &effectiveKlen)
 */
 
 // for all others
+/*
 template <typename TAlphabet>
 void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
             String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
@@ -102,8 +105,10 @@ void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
       markovCounts[i] = prob;
    }
 }
+*/
 
 // for DNA sequences
+/*
 template <>
 void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
               String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
@@ -138,6 +143,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
       markovCounts[i] = prob;
    }
 }
+*/
 
 template <typename TAlphabet>
 void markov_again(String<double> & markovCounts, String<unsigned> const & kmerCounts,
