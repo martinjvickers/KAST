@@ -168,11 +168,13 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             append(seqf, seqrc);
          }
 
+         // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seqf, options.klen, options.effectiveLength, options.mask);
          else
             countKmersNew(counts[i], seqf, options.klen);
 
+         // do markov if we're doing markov distances
          if(options.type == "d2s" || options.type == "d2star" ||
             options.type == "hao" || options.type == "dai")
          {
