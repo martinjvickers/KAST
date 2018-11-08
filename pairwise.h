@@ -1,5 +1,5 @@
 #include "distance.h"
-#include "utils.h"
+//#include "utils.h"
 #include "print.h"
 #include <seqan/alignment_free.h>
 #include <sys/sysinfo.h> 
@@ -16,6 +16,7 @@ int parseMask(ModifyStringOptions options, int &effectiveKlen)
 {
    bool first = true;
 
+   //vector<CharString> mask;
    for(auto m : options.mask)
    {
       // all should be the same number of characters as the klen
@@ -58,7 +59,6 @@ int parseMask(ModifyStringOptions options, int &effectiveKlen)
    }
    return 0;
 };
-
 
 /*markov is the alfsc implementation of the markov calculation;
   A much simplier version than the other, but I believe this
@@ -370,7 +370,11 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(seqf, seqrc);
          }
-         countKmersNew(counts[i], seqf, options.klen);
+
+         if(options.mask.size() > 0)
+            countKmersNew(counts[i], seqf, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(counts[i], seqf, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
             options.type == "hao" || options.type == "dai")
@@ -378,11 +382,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
          }
-//         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
-//         {
-//            resize(markovCounts, length(pwseqs));
-//            markov_again(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
-//         }
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
