@@ -62,12 +62,12 @@ diff test_d2_k3 results/pairwise/d2_k3
 rm test_d2_k3
 
 echo "[TEST] d2s"
-./kast -p example_data/yeast.fasta -k 3 -c 1 -t d2s -o test_d2s_k3
+./kast -p example_data/yeast.fasta -k 3 -c 1 -t D2S -o test_d2s_k3
 diff test_d2s_k3 results/pairwise/d2s_k3
 rm test_d2s_k3
 
 echo "[TEST] d2star"
-./kast -p example_data/yeast.fasta -k 3 -c 1 -t d2star -o test_d2star_k3
+./kast -p example_data/yeast.fasta -k 3 -c 1 -t D2Star -o test_d2star_k3
 diff test_d2star_k3 results/pairwise/d2star_k3
 rm test_d2star_k3
 
