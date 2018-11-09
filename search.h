@@ -137,6 +137,8 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
       if(options.sequenceType == "dna")
       {
+
+
          String<Dna5> qseq = queryseq;
          if(options.noreverse == false)
          {
@@ -258,7 +260,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
    // populate the counts
    for(int i = 0; i < length(refseqs); i++)
    {
-
       if(options.sequenceType == "dna")
       {
          String<Dna5> seq = refseqs[i];
@@ -269,14 +270,13 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             append(seq, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(seq, seqrc);
          }
- 
+
          //countKmersNew(counts[i], seq, options.klen);
          // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
          else
             countKmersNew(counts[i], seq, options.klen);
-
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||

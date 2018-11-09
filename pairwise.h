@@ -176,7 +176,8 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 
          // do markov if we're doing markov distances
          if(options.type == "d2s" || options.type == "d2star" ||
-            options.type == "hao" || options.type == "dai")
+            options.type == "hao" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
@@ -187,7 +188,8 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
          countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
-            options.type == "hao")
+            options.type == "hao" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
