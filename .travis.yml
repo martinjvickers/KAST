@@ -36,5 +36,6 @@ before_script:
 script:
  - cmake ../KAST -DCMAKE_MODULE_PATH=./seqan/util/cmake -DSEQAN_INCLUDE_PATH=./seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
  - make -j2
+ - ./kast_tests
  #- ./unit_tests
  #- ./kast -q example_data/seq1.fa -r example_data/seq2.fa -o meh -k 5 --mask 10011 --mask 01101  -t d2s
