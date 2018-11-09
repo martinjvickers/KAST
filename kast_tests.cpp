@@ -11,7 +11,7 @@
 using namespace seqan;
 using namespace std;
 
-SEQAN_BEGIN_TESTSUITE(test_w50_creator)
+SEQAN_BEGIN_TESTSUITE(KAST_tests)
 {
    // Call roundUp() tests
    SEQAN_CALL_TEST(d2_dna);

@@ -369,6 +369,7 @@ template <typename TAlphabet>
 void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
             String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
 {
+   cout << "Markov all" << endl;
    // setup markovCounts
    Shape<TAlphabet> myShape;
    resize(myShape, k);
@@ -406,6 +407,9 @@ template <>
 void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
               String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
 {
+
+   cout << "markov dna" << endl;
+
    // setup markovCounts
    Shape<Dna> myShape;
    resize(myShape, k);
@@ -416,7 +420,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
    // Now create the background model
    String<unsigned> markovbg;
    countKmersNew(markovbg, sequence, markovOrder);
-   unsigned tot = 0;
+   unsigned long long int tot = 0;
 
    // sum the occurances
    for(unsigned i = 0; i < length(markovbg); i++)
@@ -424,7 +428,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
 
    for(unsigned i = 0; i < length(markovCounts); i++)
    {
-      String<Dna> inf;
+      String<Dna5> inf;
       unhash(inf, i, k);
       String<unsigned> occurances;
       countKmersNew(occurances, inf, markovOrder);
