@@ -57,8 +57,6 @@ int main(int argc, char const ** argv)
    if(parseMask(options, options.effectiveLength) == 1)
       return 1;
 
-   cout << "klen = " << options.klen << "\teffectiveLength = \t" << options.effectiveLength << endl;
-
    // Running in pairwise mode
    if(options.pairwiseFileName != NULL && options.type != "all" && options.type != "new")
    {
