@@ -323,9 +323,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       return 1;
    }
 
-
-   cout << "Ref Created" << endl;
-
    mutex read, write;
    vector<thread> vectorOfSeqs;
 
