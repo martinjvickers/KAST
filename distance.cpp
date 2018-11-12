@@ -25,10 +25,6 @@ double d2s(String<unsigned> const & kmerCounts1,
 
       double dist = sqrt(qCt*qCt + rCt*rCt);
 
-//      cout << dist << "\t" << qCt << "\t" << rCt << "\t" <<  kmerCounts2[i] << "\t" << markovCounts2[i] << "\t" <<  kmerCounts1[i] << "\t" << markovCounts1[i] <<endl;
-      cout << kmerCounts2[i] << "\t" << markovCounts2[i] << "\t" <<  kmerCounts1[i] << "\t" << markovCounts1[i] <<endl;
-      
-
       if(dist == 0)
          dist = 1;
       D2S = D2S + (qCt*rCt / dist);

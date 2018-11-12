@@ -407,9 +407,6 @@ template <>
 void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
               String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
 {
-
-   cout << "markov dna" << endl;
-
    // setup markovCounts
    Shape<Dna> myShape;
    resize(myShape, k);
@@ -428,10 +425,11 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
 
    for(unsigned i = 0; i < length(markovCounts); i++)
    {
-      String<Dna5> inf;
+      String<Dna> inf;
       unhash(inf, i, k);
+      String<Dna5> meh = inf; // this conversion is important, as countKmers requires Dna5
       String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
+      countKmersNew(occurances, meh, markovOrder);
       double prob = 1.0;
       for(unsigned i = 0; i < length(occurances); i++)
       {
