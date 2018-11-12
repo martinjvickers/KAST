@@ -159,17 +159,16 @@ SEQAN_DEFINE_TEST(chebyshev_dna)
 SEQAN_DEFINE_TEST(d2s_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.03061));
-   expected_results.push_back(make_pair(5, 0.01042));
-   expected_results.push_back(make_pair(7, 0.00532));
-   expected_results.push_back(make_pair(9, 0.00543));
+   expected_results.push_back(make_pair(3, 0.43246389442301436));
+   expected_results.push_back(make_pair(5, 0.3808187760303444));
+   expected_results.push_back(make_pair(7, 0.3111486571852624));
+   expected_results.push_back(make_pair(9, 0.3105504265761406));
 
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
       prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
-      cout << "D2S "<< d2s(refcounts, qrycounts, refmarkov, qrymarkov) << endl;
       SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
@@ -177,17 +176,16 @@ SEQAN_DEFINE_TEST(d2s_dna)
 SEQAN_DEFINE_TEST(d2star_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.03061));
-   expected_results.push_back(make_pair(5, 0.01042));
-   expected_results.push_back(make_pair(7, 0.00532));
-   expected_results.push_back(make_pair(9, 0.00543));
+   expected_results.push_back(make_pair(3, 0.4027100011247771));
+   expected_results.push_back(make_pair(5, 0.4333069320392635));
+   expected_results.push_back(make_pair(7, 0.4811460538701716));
+   expected_results.push_back(make_pair(9, 0.4938153388000316));
 
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
       prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
-      cout << "D2STAR "<< d2star(refcounts, qrycounts, refmarkov, qrymarkov) << endl;
       SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }

@@ -20,8 +20,8 @@ SEQAN_BEGIN_TESTSUITE(KAST_tests)
    SEQAN_CALL_TEST(bc_dna);
    SEQAN_CALL_TEST(ngd_dna);
    SEQAN_CALL_TEST(chebyshev_dna);
-   //SEQAN_CALL_TEST(d2s_dna);
-   //SEQAN_CALL_TEST(d2star_dna);
+   SEQAN_CALL_TEST(d2s_dna);
+   SEQAN_CALL_TEST(d2star_dna);
    //SEQAN_CALL_TEST(rounding_test_2);
    //SEQAN_CALL_TEST(rounding_test_3);
 
