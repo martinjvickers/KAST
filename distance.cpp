@@ -22,7 +22,9 @@ double d2s(String<unsigned> const & kmerCounts1,
    {
       double qCt = (long long int)kmerCounts2[i] - ((double)qN*(double)markovCounts2[i]);
       double rCt = (long long int)kmerCounts1[i] - ((double)rN*(double)markovCounts1[i]);
+
       double dist = sqrt(qCt*qCt + rCt*rCt);
+
       if(dist == 0)
          dist = 1;
       D2S = D2S + (qCt*rCt / dist);

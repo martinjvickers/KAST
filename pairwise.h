@@ -1,210 +1,7 @@
 #include "distance.h"
-#include "utils.h"
 #include "print.h"
 #include <seqan/alignment_free.h>
 #include <sys/sysinfo.h> 
-
-
-/*
-I need to check that if we are using skip-mers, then we need to check that 
-these are sensible.
-  * skip-mer mask must all be 0/1's
-  * skip-mer mask should be the same number of characters as the kmer size
-  * all skipmers shoud have the same number of 1's across masks
-*/
-int parseMask(ModifyStringOptions options, int &effectiveKlen)
-{
-   bool first = true;
-
-   for(auto m : options.mask)
-   {
-      // all should be the same number of characters as the klen
-      if(length(m) != options.klen)
-      {
-         cerr << "ERROR: Mask sizes should be the same size ";
-         cerr << "as the K-Mer length." << endl;
-         return 1;
-      }
-
-      int counter = 0;
-
-      // checks to see that the mask is only made of 0/1's
-      for(int i = 0; i < length(m); i++)
-      {
-         if(m[i] != '0' && m[i] != '1')
-         {
-            cerr << "ERROR: Masks should only contain 0's or 1's." << endl;
-            return 1;
-         }
-
-         if(m[i] == '1')
-            counter++;
-      }
-
-      if(first == true)
-      {
-         effectiveKlen = counter;
-         first = false;
-      }
-      else
-      {
-         if(counter != effectiveKlen)
-         {
-            cerr << "ERROR: The number of 0's and 1's in each mask ";
-            cerr << "should be the same e.g. 10001, 11000, 00011" << endl;
-            return 1;
-         }
-      }
-   }
-   return 0;
-};
-
-
-/*markov is the alfsc implementation of the markov calculation;
-  A much simplier version than the other, but I believe this
-  is simply called a Background Model but i could be wrong.
-
-*/
-
-// for all others
-template <typename TAlphabet>
-void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-            String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-   // setup markovCounts
-   Shape<TAlphabet> myShape;
-   resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
-
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
-
-   // Now create the background model
-   String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
-   unsigned tot = 0;
-
-   // sum the occurances
-   for(unsigned i = 0; i < length(markovbg); i++)
-      tot = tot + markovbg[i];
-
-   for(unsigned i = 0; i < length(markovCounts); i++)
-   {
-      String<TAlphabet> inf;
-      unhash(inf, i, k);
-      String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
-      double prob = 1.0;
-      for(unsigned i = 0; i < length(occurances); i++)
-      {
-         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
-      }
-      markovCounts[i] = prob;
-   }
-}
-
-// for DNA sequences
-template <>
-void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-              String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-   // setup markovCounts
-   Shape<Dna> myShape;
-   resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
-
-   // Now create the background model
-   String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
-   unsigned tot = 0;
-
-   // sum the occurances
-   for(unsigned i = 0; i < length(markovbg); i++)
-      tot = tot + markovbg[i];
-
-   for(unsigned i = 0; i < length(markovCounts); i++)
-   {
-      String<Dna> inf;
-      unhash(inf, i, k);
-      String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
-      double prob = 1.0;
-      for(unsigned i = 0; i < length(occurances); i++)
-      {
-         prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
-      }
-      markovCounts[i] = prob;
-   }
-}
-
-template <typename TAlphabet>
-void markov_again(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-                  String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-}
-
-/*
-The alternative markov implementation seen in d2tools
-
-I think there is an issue here where when the markovOrder is 0, then we 
-don't reverse complement the count.
-
-0 1 == true
-1 2 == false
-2 3 == false
-3 4 == false
-
-*/
-template <>
-void markov_again<>(String<double> & markovCounts, String<unsigned> const & kmerCounts,
-                    String<Dna5> const & sequence, unsigned const k, unsigned const markovOrder)
-{
-   // setup markovCounts
-   Shape<Dna> myShape;
-   resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
-
-   if(markovOrder == 0)
-   {
-      String<unsigned> markovbg;
-      // this should be run on the original sequence 
-      countKmersNew(markovbg, sequence, markovOrder+1);
-      unsigned tot = 0;
-
-      for(unsigned i = 0; i < length(markovbg); i++)
-         tot = tot + markovbg[i];
-
-      for(unsigned i = 0; i < length(markovCounts); i++)
-      {
-         String<Dna> inf;
-         unhash(inf, i, k);
-         String<unsigned> occurances;
-         countKmersNew(occurances, inf, markovOrder);
-         double prob = 1.0;
-         for(unsigned i = 0; i < length(occurances); i++)
-         {
-            prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
-         }
-         markovCounts[i] = prob;
-      }
-
-   }
-   else
-   {
-      String<unsigned> markovbg, markovbg_1;
-      countKmersNew(markovbg, sequence, markovOrder);
-      countKmersNew(markovbg_1, sequence, markovOrder+1);
-      unsigned tot = 0;
-      for(unsigned i = 0; i < length(markovbg); i++)
-         tot = tot + markovbg[i];
-
-      
-   }
-}
 
 template <typename TAlphabet>
 int calcDistance(unsigned & rI, unsigned & cI,
@@ -370,34 +167,32 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             append(seqf, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
             append(seqf, seqrc);
          }
-         countKmersNew(counts[i], seqf, options.klen);
 
+         // check if we are doing a mask
+         if(options.mask.size() > 0)
+            countKmersNew(counts[i], seqf, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(counts[i], seqf, options.klen);
+
+         // do markov if we're doing markov distances
          if(options.type == "d2s" || options.type == "d2star" ||
-            options.type == "hao" || options.type == "dai")
+            options.type == "hao" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
          }
-//         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
-//         {
-//            resize(markovCounts, length(pwseqs));
-//            markov_again(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
-//         }
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
          countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
-            options.type == "hao")
+            options.type == "hao" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
             markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
-         }
-         else if(options.type == "D2S" || options.type == "D2Star" || options.type == "dai")
-         {
-            resize(markovCounts, length(pwseqs));
-            markov_again(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
          }
       }
    }
