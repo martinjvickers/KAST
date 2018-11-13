@@ -283,14 +283,17 @@ SEQAN_DEFINE_TEST(d2s_dna)
 SEQAN_DEFINE_TEST(d2s_aa)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 1));
-   expected_results.push_back(make_pair(5, 1));
+   expected_results.push_back(make_pair(3, 0.377069));
+   expected_results.push_back(make_pair(4, 0.379908));
+   expected_results.push_back(make_pair(5, 0.391587));
+
+   unsigned markovOrder = 1;
 
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
-      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
+      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
       SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
@@ -304,11 +307,13 @@ SEQAN_DEFINE_TEST(d2star_dna)
    expected_results.push_back(make_pair(7, 0.4811460538701716));
    expected_results.push_back(make_pair(9, 0.4938153388000316));
 
+   unsigned markovOrder = 1;
+
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
-      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
+      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
       SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
@@ -316,14 +321,17 @@ SEQAN_DEFINE_TEST(d2star_dna)
 SEQAN_DEFINE_TEST(d2star_aa)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 1));
-   expected_results.push_back(make_pair(5, 1));
+   expected_results.push_back(make_pair(3, 0.497807));
+   expected_results.push_back(make_pair(4, 0.500178));
+   expected_results.push_back(make_pair(5, 0.500023));
+
+   unsigned markovOrder = 1;
 
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
-      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
+      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
       SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
