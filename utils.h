@@ -307,15 +307,51 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
 
 /*
 Perform counting with a mask array
+For AminoAcid and ReducedAminoAcid
 */
 template <typename TAlphabet>
 int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, 
                   unsigned const k, unsigned const effectiveK,
                   vector<CharString> const & mask)
 {
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   auto itSequence = begin(sequence);
+   int counterN = 0;
+
+   Shape<Dna> maskShape;
+   resize(maskShape, effectiveK);
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+      unsigned hashValue = seqan::hash(myShape, itSequence);
+      String<TAlphabet> orig;
+      unhash(orig, hashValue, k);
+
+      // here, I need to loop
+      for(int i = 0; i < mask.size(); i++)
+      {
+         String<TAlphabet> dnaSeq;
+         for(int m = 0; m < length(mask[i]); m++)
+         {
+            if(mask[i][m] == '1')
+            {
+               dnaSeq += orig[m];
+            }
+         }
+         auto it = begin(dnaSeq);
+         unsigned hashMask = seqan::hash(maskShape, it);
+         safe_increment(kmerCounts[hashMask]);
+      }
+   }
    return 0;
 };
 
+// For Dna
 template <>
 int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
                   unsigned const k, unsigned const effectiveK,
