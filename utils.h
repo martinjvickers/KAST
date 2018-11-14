@@ -362,17 +362,14 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
               String<Dna> dnaSeq;
               for(int m = 0; m < length(mask[i]); m++)
               {
-                 //cout << mask[i] << "\t" << length(mask[i]) << endl;
                  if(mask[i][m] == '1')
                  {
                     dnaSeq += orig[m];
-                    //cout << "Adding " << orig[m] << endl;
                  }
               }
 
               auto it = begin(dnaSeq);
               unsigned hashMask = seqan::hash(maskShape, it);
-              //cout << "Orig: " << orig << "\tKmer: " << dnaSeq << "\tMask: " << mask[i] << endl;
               safe_increment(kmerCounts[hashMask]);
            }
        }
