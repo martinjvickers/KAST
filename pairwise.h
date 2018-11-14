@@ -113,6 +113,29 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       return 1;
    }
 
+   while(!atEnd(pairwiseFileIn))
+   {
+      CharString id;
+      CharString seq;
+
+      try
+      {
+         readRecord(id, seq, pairwiseFileIn);
+      }
+      catch(Exception const & e)
+      {
+         std::cout << "ERROR: The --sequence-type which was selected was \"";
+         std::cout << options.sequenceType << "\" however when reading the \"";
+         std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+         std::cout << e.what() << std::endl;
+         return 1;
+      }
+      appendValue(pwids, id);
+      String<TAlphabet> convseq = seq;
+      appendValue(pwseqs, convseq);
+   }
+
+/*
    try
    {
       readRecords(pwids, pwseqs, pairwiseFileIn);
@@ -125,6 +148,7 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       std::cout << e.what() << std::endl;
       return 1;
    }
+*/
 
    // mem checker
    if(mem_check(options, length(pwseqs), alphabetType) == 1)
@@ -231,17 +255,26 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
       return 1;
    }
 
-   try
+   while(!atEnd(pairwiseFileIn))
    {
-      readRecords(pwids, pwseqs, pairwiseFileIn);
-   }
-   catch(Exception const & e)
-   {
-      std::cout << "ERROR: The --sequence-type which was selected was \"";
-      std::cout << options.sequenceType << "\" however when reading the \"";
-      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
-      std::cout << e.what() << std::endl;
-      return 1;
+      CharString id;
+      CharString seq;
+
+      try
+      {
+         readRecord(id, seq, pairwiseFileIn);
+      }
+      catch(Exception const & e)
+      {
+         std::cout << "ERROR: The --sequence-type which was selected was \"";
+         std::cout << options.sequenceType << "\" however when reading the \"";
+         std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
+         std::cout << e.what() << std::endl;
+         return 1;
+      }
+      appendValue(pwids, id);
+      String<TAlphabet> convseq = seq;
+      appendValue(pwseqs, convseq);
    }
 
    cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\tHao\tdai\tD2S\tD2Star\n";
