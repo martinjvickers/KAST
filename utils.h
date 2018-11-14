@@ -241,9 +241,27 @@ int safe_increment(T& value)
    }
 };
 
+
+/*
+Perform regular counting
+*/
 template <typename TAlphabet>
 int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, unsigned const k)
 {
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   unsigned long long int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   auto itSequence = begin(sequence);
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+      long long unsigned int hashValue = seqan::hash(myShape, itSequence);
+      safe_increment(kmerCounts[hashValue]);
+   }
    return 0;
 };
 
@@ -278,12 +296,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
        if (counterN <= 0)
        {
            unsigned hashValue = seqan::hash(myShape, itSequence);
-           //++kmerCounts[hashValue];
            safe_increment(kmerCounts[hashValue]);
-
-           DnaString orig;
-           unhash(orig, hashValue, k);
-           //cout << "Orig: " << orig << endl;
        }
        counterN--;
    }
@@ -291,14 +304,54 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
    return 0;
 };
 
+
+/*
+Perform counting with a mask array
+For AminoAcid and ReducedAminoAcid
+*/
 template <typename TAlphabet>
 int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, 
                   unsigned const k, unsigned const effectiveK,
                   vector<CharString> const & mask)
 {
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   auto itSequence = begin(sequence);
+   int counterN = 0;
+
+   Shape<Dna> maskShape;
+   resize(maskShape, effectiveK);
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+      unsigned hashValue = seqan::hash(myShape, itSequence);
+      String<TAlphabet> orig;
+      unhash(orig, hashValue, k);
+
+      // here, I need to loop
+      for(int i = 0; i < mask.size(); i++)
+      {
+         String<TAlphabet> dnaSeq;
+         for(int m = 0; m < length(mask[i]); m++)
+         {
+            if(mask[i][m] == '1')
+            {
+               dnaSeq += orig[m];
+            }
+         }
+         auto it = begin(dnaSeq);
+         unsigned hashMask = seqan::hash(maskShape, it);
+         safe_increment(kmerCounts[hashMask]);
+      }
+   }
    return 0;
 };
 
+// For Dna
 template <>
 int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
                   unsigned const k, unsigned const effectiveK,
@@ -345,17 +398,14 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
               String<Dna> dnaSeq;
               for(int m = 0; m < length(mask[i]); m++)
               {
-                 //cout << mask[i] << "\t" << length(mask[i]) << endl;
                  if(mask[i][m] == '1')
                  {
                     dnaSeq += orig[m];
-                    //cout << "Adding " << orig[m] << endl;
                  }
               }
 
               auto it = begin(dnaSeq);
               unsigned hashMask = seqan::hash(maskShape, it);
-              //cout << "Orig: " << orig << "\tKmer: " << dnaSeq << "\tMask: " << mask[i] << endl;
               safe_increment(kmerCounts[hashMask]);
            }
        }
@@ -369,7 +419,6 @@ template <typename TAlphabet>
 void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
             String<TAlphabet> const & sequence, unsigned const k, unsigned const markovOrder)
 {
-   cout << "Markov all" << endl;
    // setup markovCounts
    Shape<TAlphabet> myShape;
    resize(myShape, k);

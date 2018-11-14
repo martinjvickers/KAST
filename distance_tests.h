@@ -55,11 +55,57 @@ void prep(String<unsigned> & qrycounts, String<unsigned> & refcounts,
    markov(refmarkov, refcounts, refseq, k, m);
 }
 
+void prep_aa(String<unsigned> & qrycounts, String<unsigned> & refcounts,
+             unsigned int k)
+{
+   String<AminoAcid> qryseq = "MTEITAAMVKELRESTGAGMMDCKNALSETNGDFDKAVQLLREKGLGKAAKKADRLAAEGLVSVKVSDDFTIAAMRPSYLSYEDLDMTFVENEYKALVAELEKENEERRRLKDPNKPEHKIPQFASRKQLSDAILKEAEEKIKEELKAQGKPEKIWDNIIPGKMNSFIADNSQLDSKLTLMGQFYVMDDKKTVEQVIAEKEKEFGGKIKIVEFICFEVGEGLEKKTEDFAAEVAAQL";
+   String<AminoAcid> refseq = "SATVSEINSETDFVAKNDQFIALTKDTTAHIQSNSLQSVEELHSSTINGVKFEEYLKSQIATIGENLVVRRFATLKAGANGVVNGYIHTNGRVGVVIAAACDSAEVASKSRDLLRQICMH";
+
+   countKmersNew(qrycounts, qryseq, k);
+   countKmersNew(refcounts, refseq, k);
+}
+
+void prep_aa(String<unsigned> & qrycounts, String<unsigned> & refcounts,
+             String<double> & qrymarkov, String<double> & refmarkov,
+             unsigned int k, unsigned int m)
+{
+   String<AminoAcid> qryseq = "MTEITAAMVKELRESTGAGMMDCKNALSETNGDFDKAVQLLREKGLGKAAKKADRLAAEGLVSVKVSDDFTIAAMRPSYLSYEDLDMTFVENEYKALVAELEKENEERRRLKDPNKPEHKIPQFASRKQLSDAILKEAEEKIKEELKAQGKPEKIWDNIIPGKMNSFIADNSQLDSKLTLMGQFYVMDDKKTVEQVIAEKEKEFGGKIKIVEFICFEVGEGLEKKTEDFAAEVAAQL";
+   String<AminoAcid> refseq = "SATVSEINSETDFVAKNDQFIALTKDTTAHIQSNSLQSVEELHSSTINGVKFEEYLKSQIATIGENLVVRRFATLKAGANGVVNGYIHTNGRVGVVIAAACDSAEVASKSRDLLRQICMH";
+
+   countKmersNew(qrycounts, qryseq, k);
+   countKmersNew(refcounts, refseq, k);
+
+   markov(qrymarkov, qrycounts, qryseq, k, m);
+   markov(refmarkov, refcounts, refseq, k, m);
+}
+
+void prep_raa(String<unsigned> & qrycounts, String<unsigned> & refcounts,
+              unsigned int k)
+{
+   String<ReducedAminoAcidMurphy10> qryseq = "MTEITAAMVKELRESTGAGMMDCKNALSETNGDFDKAVQLLREKGLGKAAKKADRLAAEGLVSVKVSDDFTIAAMRPSYLSYEDLDMTFVENEYKALVAELEKENEERRRLKDPNKPEHKIPQFASRKQLSDAILKEAEEKIKEELKAQGKPEKIWDNIIPGKMNSFIADNSQLDSKLTLMGQFYVMDDKKTVEQVIAEKEKEFGGKIKIVEFICFEVGEGLEKKTEDFAAEVAAQL";
+   String<ReducedAminoAcidMurphy10> refseq = "SATVSEINSETDFVAKNDQFIALTKDTTAHIQSNSLQSVEELHSSTINGVKFEEYLKSQIATIGENLVVRRFATLKAGANGVVNGYIHTNGRVGVVIAAACDSAEVASKSRDLLRQICMH";
+
+   countKmersNew(qrycounts, qryseq, k);
+   countKmersNew(refcounts, refseq, k);
+}
+
+void prep_raa(String<unsigned> & qrycounts, String<unsigned> & refcounts,
+              String<double> & qrymarkov, String<double> & refmarkov,
+              unsigned int k, unsigned int m)
+{
+   String<ReducedAminoAcidMurphy10> qryseq = "MTEITAAMVKELRESTGAGMMDCKNALSETNGDFDKAVQLLREKGLGKAAKKADRLAAEGLVSVKVSDDFTIAAMRPSYLSYEDLDMTFVENEYKALVAELEKENEERRRLKDPNKPEHKIPQFASRKQLSDAILKEAEEKIKEELKAQGKPEKIWDNIIPGKMNSFIADNSQLDSKLTLMGQFYVMDDKKTVEQVIAEKEKEFGGKIKIVEFICFEVGEGLEKKTEDFAAEVAAQL";
+   String<ReducedAminoAcidMurphy10> refseq = "SATVSEINSETDFVAKNDQFIALTKDTTAHIQSNSLQSVEELHSSTINGVKFEEYLKSQIATIGENLVVRRFATLKAGANGVVNGYIHTNGRVGVVIAAACDSAEVASKSRDLLRQICMH";
+
+   countKmersNew(qrycounts, qryseq, k);
+   countKmersNew(refcounts, refseq, k);
+
+   markov(qrymarkov, qrycounts, qryseq, k, m);
+   markov(refmarkov, refcounts, refseq, k, m);
+}
+
 /*
    Begin running tests
 */
-
-
 SEQAN_DEFINE_TEST(d2_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
@@ -72,6 +118,37 @@ SEQAN_DEFINE_TEST(d2_dna)
    {
       String<unsigned> qrycounts, refcounts;
       prep(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(d2(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.47198));
+   expected_results.push_back(make_pair(5, 0.5));
+   expected_results.push_back(make_pair(6, 0.5));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(d2(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.301479));
+   expected_results.push_back(make_pair(4, 0.445397));
+   expected_results.push_back(make_pair(5, 0.484987));
+   expected_results.push_back(make_pair(6, 0.5));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
       SEQAN_ASSERT_IN_DELTA(d2(refcounts, qrycounts), result.second, 0.0001);
    }
 }
@@ -92,18 +169,76 @@ SEQAN_DEFINE_TEST(euler_dna)
    }
 }
 
+SEQAN_DEFINE_TEST(euler_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.11299));
+   expected_results.push_back(make_pair(5, 0.113633));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(euler(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(euler_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.114879));
+   expected_results.push_back(make_pair(4, 0.112743));
+   expected_results.push_back(make_pair(5, 0.112819));
+   expected_results.push_back(make_pair(6, 0.114044));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(euler(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
 SEQAN_DEFINE_TEST(manhattan_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
    expected_results.push_back(make_pair(3, 0.63265));
    expected_results.push_back(make_pair(5, 1.45833));
-   expected_results.push_back(make_pair(7, 1.91489));
-   expected_results.push_back(make_pair(9, 1.97826));
 
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       prep(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(manhattan(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(manhattan_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 1.91489));
+   expected_results.push_back(make_pair(5, 2));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(manhattan(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(manhattan_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 1.42243));
+   expected_results.push_back(make_pair(4, 1.83761));
+   expected_results.push_back(make_pair(5, 1.95708));
+   expected_results.push_back(make_pair(6, 2));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
       SEQAN_ASSERT_IN_DELTA(manhattan(refcounts, qrycounts), result.second, 0.0001);
    }
 }
@@ -124,6 +259,36 @@ SEQAN_DEFINE_TEST(bc_dna)
    }
 }
 
+SEQAN_DEFINE_TEST(bc_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.943343));
+   expected_results.push_back(make_pair(5, 1));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(bray_curtis_distance(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(bc_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.72238));
+   expected_results.push_back(make_pair(4, 0.903134));
+   expected_results.push_back(make_pair(5, 0.971347));
+   expected_results.push_back(make_pair(6, 1));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(bray_curtis_distance(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
 SEQAN_DEFINE_TEST(ngd_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
@@ -140,6 +305,36 @@ SEQAN_DEFINE_TEST(ngd_dna)
    }
 }
 
+SEQAN_DEFINE_TEST(ngd_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.957447));
+   expected_results.push_back(make_pair(5, 1));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(normalised_google_distance(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(ngd_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.791489));
+   expected_results.push_back(make_pair(4, 0.92735));
+   expected_results.push_back(make_pair(5, 0.978541));
+   expected_results.push_back(make_pair(6, 1));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(normalised_google_distance(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
 SEQAN_DEFINE_TEST(chebyshev_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
@@ -152,6 +347,36 @@ SEQAN_DEFINE_TEST(chebyshev_dna)
    {
       String<unsigned> qrycounts, refcounts;
       prep(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(chebyshev(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(chebyshev_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.0169492));
+   expected_results.push_back(make_pair(5, 0.00862069));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_aa(qrycounts, refcounts, result.first);
+      SEQAN_ASSERT_IN_DELTA(chebyshev(refcounts, qrycounts), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(chebyshev_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.0254237));
+   expected_results.push_back(make_pair(4, 0.017094));
+   expected_results.push_back(make_pair(5, 0.0172414));
+   expected_results.push_back(make_pair(6, 0.00869565));
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      prep_raa(qrycounts, refcounts, result.first);
       SEQAN_ASSERT_IN_DELTA(chebyshev(refcounts, qrycounts), result.second, 0.0001);
    }
 }
@@ -173,6 +398,42 @@ SEQAN_DEFINE_TEST(d2s_dna)
    }
 }
 
+SEQAN_DEFINE_TEST(d2s_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.377069));
+   expected_results.push_back(make_pair(4, 0.379908));
+   expected_results.push_back(make_pair(5, 0.391587));
+
+   unsigned markovOrder = 1;
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      String<double> qrymarkov, refmarkov;
+      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
+      SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2s_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.449371));
+   expected_results.push_back(make_pair(4, 0.391654));
+   expected_results.push_back(make_pair(5, 0.367139));
+
+   unsigned markovOrder = 1;
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      String<double> qrymarkov, refmarkov;
+      prep_raa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
+      SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
+   }
+}
+
 SEQAN_DEFINE_TEST(d2star_dna)
 {
    vector<pair<unsigned int, double>> expected_results;
@@ -181,11 +442,49 @@ SEQAN_DEFINE_TEST(d2star_dna)
    expected_results.push_back(make_pair(7, 0.4811460538701716));
    expected_results.push_back(make_pair(9, 0.4938153388000316));
 
+   unsigned markovOrder = 1;
+
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
-      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
+      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
+      SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2star_aa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.497807));
+   expected_results.push_back(make_pair(4, 0.500178));
+   expected_results.push_back(make_pair(5, 0.500023));
+
+   unsigned markovOrder = 1;
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      String<double> qrymarkov, refmarkov;
+      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
+      SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2star_raa)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.49648));
+   expected_results.push_back(make_pair(4, 0.502855));
+   expected_results.push_back(make_pair(5, 0.499936));
+
+   unsigned markovOrder = 1;
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      String<double> qrymarkov, refmarkov;
+      prep_raa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
       SEQAN_ASSERT_IN_DELTA(d2star(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
