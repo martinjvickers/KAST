@@ -185,6 +185,11 @@ echo "[TEST] chebyshev"
 diff test_chebyshev_k3 results/pairwise/chebyshev_k3
 rm test_chebyshev_k3
 
+echo "[TEST] bc"
+./kast -p example_data/yeast.fasta -k 3 -c 1 -t bc -o test_bc_k3
+diff test_bc_k3 results/pairwise/bc_k3
+rm test_bc_k3
+
 echo "[INFO] Running Pairwise App Tests AminoAcid"
 
 echo "[TEST] ngd"
@@ -227,6 +232,11 @@ echo "[TEST] chebyshev"
 diff test_chebyshev_k3_aa results/pairwise/test_chebyshev_k3_aa
 rm test_chebyshev_k3_aa
 
+echo "[TEST] bc"
+./kast -p example_data/protein.fasta -k 3 -c 1 -t bc -o test_bc_k3_aa -s aa
+diff test_bc_k3_aa results/pairwise/bc_k3_aa
+rm test_bc_k3_aa
+
 echo "[INFO] Running Pairwise App Tests ReducedAminoAcid"
 
 echo "[TEST] ngd"
@@ -268,3 +278,8 @@ echo "[TEST] chebyshev"
 ./kast -p example_data/protein.fasta -k 3 -c 1 -t chebyshev -o test_chebyshev_k3_raa -s raa
 diff test_chebyshev_k3_raa results/pairwise/test_chebyshev_k3_raa
 rm test_chebyshev_k3_raa
+
+echo "[TEST] bc"
+./kast -p example_data/protein.fasta -k 3 -c 1 -t bc -o test_bc_k3_raa -s raa
+diff test_bc_k3_raa results/pairwise/bc_k3_raa
+rm test_bc_k3_raa
