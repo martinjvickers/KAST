@@ -419,9 +419,9 @@ SEQAN_DEFINE_TEST(d2s_aa)
 SEQAN_DEFINE_TEST(d2s_raa)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.441967));
-   expected_results.push_back(make_pair(4, 0.397897));
-   expected_results.push_back(make_pair(5, 0.375805));
+   expected_results.push_back(make_pair(3, 0.449371));
+   expected_results.push_back(make_pair(4, 0.391654));
+   expected_results.push_back(make_pair(5, 0.367139));
 
    unsigned markovOrder = 1;
 
@@ -474,9 +474,9 @@ SEQAN_DEFINE_TEST(d2star_aa)
 SEQAN_DEFINE_TEST(d2star_raa)
 {
    vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.494641));
-   expected_results.push_back(make_pair(4, 0.501421));
-   expected_results.push_back(make_pair(5, 0.499583));
+   expected_results.push_back(make_pair(3, 0.49648));
+   expected_results.push_back(make_pair(4, 0.502855));
+   expected_results.push_back(make_pair(5, 0.499936));
 
    unsigned markovOrder = 1;
 
