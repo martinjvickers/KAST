@@ -418,24 +418,6 @@ SEQAN_DEFINE_TEST(d2s_aa)
    }
 }
 
-SEQAN_DEFINE_TEST(d2s_aa_m0)
-{
-   vector<pair<unsigned int, double>> expected_results;
-   expected_results.push_back(make_pair(3, 0.377));
-   expected_results.push_back(make_pair(4, 0.379908));
-   expected_results.push_back(make_pair(5, 0.391587));
-
-   unsigned markovOrder = 0;
-
-   for(pair<unsigned int, double> result : expected_results)
-   {
-      String<unsigned> qrycounts, refcounts;
-      String<double> qrymarkov, refmarkov;
-      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
-      SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
-   }
-}
-
 SEQAN_DEFINE_TEST(d2s_raa)
 {
    vector<pair<unsigned int, double>> expected_results;
