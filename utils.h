@@ -37,7 +37,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
 
    setDefaultValue(parser, "markov-order", "0");
    addOption(parser, ArgParseOption("n", "num-hits",
-             "Number of top hits to return", ArgParseArgument::INTEGER, "INT"));
+             "Number of top hits to return when running a Ref/Query search.\
+              If you want all the result, enter 0.", ArgParseArgument::INTEGER, "INT"));
    setDefaultValue(parser, "num-hits", "10");
    addOption(parser, ArgParseOption("t", "distance-type",
                                     "The method of calculating the distance \

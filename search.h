@@ -212,7 +212,7 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
          // stores the smallest distance results and corresponding location in refSeq
          results.insert(pair<double, int> (dist, i));
-         if(results.size() > options.nohits)
+         if(results.size() > options.nohits && options.nohits != 0)
          {
             map<double, int>::iterator it = results.end();
             results.erase(--it);
