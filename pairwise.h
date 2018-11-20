@@ -135,21 +135,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       appendValue(pwseqs, convseq);
    }
 
-/*
-   try
-   {
-      readRecords(pwids, pwseqs, pairwiseFileIn);
-   }
-   catch(Exception const & e)
-   {
-      std::cout << "ERROR: The --sequence-type which was selected was \"";
-      std::cout << options.sequenceType << "\" however when reading the \"";
-      std::cout << options.pairwiseFileName << "\" file we get the following error;" << endl;
-      std::cout << e.what() << std::endl;
-      return 1;
-   }
-*/
-
    // mem checker
    if(mem_check(options, length(pwseqs), alphabetType) == 1)
       return 1;
