@@ -389,11 +389,13 @@ SEQAN_DEFINE_TEST(d2s_dna)
    expected_results.push_back(make_pair(7, 0.3111486571852624));
    expected_results.push_back(make_pair(9, 0.3105504265761406));
 
+   unsigned markovOrder = 0;
+
    for(pair<unsigned int, double> result : expected_results)
    {
       String<unsigned> qrycounts, refcounts;
       String<double> qrymarkov, refmarkov;
-      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, 1);
+      prep(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
       SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
    }
 }
@@ -405,7 +407,25 @@ SEQAN_DEFINE_TEST(d2s_aa)
    expected_results.push_back(make_pair(4, 0.379908));
    expected_results.push_back(make_pair(5, 0.391587));
 
-   unsigned markovOrder = 1;
+   unsigned markovOrder = 0;
+
+   for(pair<unsigned int, double> result : expected_results)
+   {
+      String<unsigned> qrycounts, refcounts;
+      String<double> qrymarkov, refmarkov;
+      prep_aa(qrycounts, refcounts, qrymarkov, refmarkov, result.first, markovOrder);
+      SEQAN_ASSERT_IN_DELTA(d2s(refcounts, qrycounts, refmarkov, qrymarkov), result.second, 0.0001);
+   }
+}
+
+SEQAN_DEFINE_TEST(d2s_aa_m0)
+{
+   vector<pair<unsigned int, double>> expected_results;
+   expected_results.push_back(make_pair(3, 0.377));
+   expected_results.push_back(make_pair(4, 0.379908));
+   expected_results.push_back(make_pair(5, 0.391587));
+
+   unsigned markovOrder = 0;
 
    for(pair<unsigned int, double> result : expected_results)
    {
@@ -423,7 +443,7 @@ SEQAN_DEFINE_TEST(d2s_raa)
    expected_results.push_back(make_pair(4, 0.391654));
    expected_results.push_back(make_pair(5, 0.367139));
 
-   unsigned markovOrder = 1;
+   unsigned markovOrder = 0;
 
    for(pair<unsigned int, double> result : expected_results)
    {
@@ -442,7 +462,7 @@ SEQAN_DEFINE_TEST(d2star_dna)
    expected_results.push_back(make_pair(7, 0.4811460538701716));
    expected_results.push_back(make_pair(9, 0.4938153388000316));
 
-   unsigned markovOrder = 1;
+   unsigned markovOrder = 0;
 
    for(pair<unsigned int, double> result : expected_results)
    {
@@ -460,7 +480,7 @@ SEQAN_DEFINE_TEST(d2star_aa)
    expected_results.push_back(make_pair(4, 0.500178));
    expected_results.push_back(make_pair(5, 0.500023));
 
-   unsigned markovOrder = 1;
+   unsigned markovOrder = 0;
 
    for(pair<unsigned int, double> result : expected_results)
    {
@@ -478,7 +498,8 @@ SEQAN_DEFINE_TEST(d2star_raa)
    expected_results.push_back(make_pair(4, 0.502855));
    expected_results.push_back(make_pair(5, 0.499936));
 
-   unsigned markovOrder = 1;
+   //unsigned markovOrder = 1;
+   unsigned markovOrder = 0;
 
    for(pair<unsigned int, double> result : expected_results)
    {
