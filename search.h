@@ -111,6 +111,20 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
                   StringSet<String<double>> const & markovcounts,
                   mutex & read, mutex & write, ofstream & outfile)
 {
+/*
+   //define a random number for thread
+   std::random_device rd; // obtain a random number from hardware
+   std::mt19937 eng(rd()); // seed the generator
+   std::uniform_int_distribution<> distr(25, 300); // define the range
+   int number_results = distr(eng);
+
+   cout << "Thread " << std::this_thread::get_id() << "\t" << number_results << endl;
+
+   vector<multimap<double, int>> results2;
+   vector<pair<CharString, String<TAlphabet>>> orig_query;
+   bool completed = false;
+*/
+
    while(1)
    {
       CharString queryid;
@@ -137,8 +151,6 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
       if(options.sequenceType == "dna")
       {
-
-
          String<Dna5> qseq = queryseq;
          if(options.noreverse == false)
          {
@@ -148,7 +160,6 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             append(qseq, qseqrc);
          }
 
-         //countKmersNew(querycounts, qseq, options.klen);
          if(options.mask.size() > 0)
             countKmersNew(querycounts, qseq, options.klen, options.effectiveLength, options.mask);
          else
@@ -201,7 +212,7 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
          // stores the smallest distance results and corresponding location in refSeq
          results.insert(pair<double, int> (dist, i));
-         if(results.size() > options.nohits)
+         if(results.size() > options.nohits && options.nohits != 0)
          {
             map<double, int>::iterator it = results.end();
             results.erase(--it);
@@ -271,7 +282,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             append(seq, seqrc);
          }
 
-         //countKmersNew(counts[i], seq, options.klen);
          // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);

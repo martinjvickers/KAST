@@ -35,9 +35,10 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    addOption(parser, ArgParseOption("o", "output-file", "Output file.",
              ArgParseArgument::OUTPUT_FILE, "OUT"));
 
-   setDefaultValue(parser, "markov-order", "1");
+   setDefaultValue(parser, "markov-order", "0");
    addOption(parser, ArgParseOption("n", "num-hits",
-             "Number of top hits to return", ArgParseArgument::INTEGER, "INT"));
+             "Number of top hits to return when running a Ref/Query search.\
+              If you want all the result, enter 0.", ArgParseArgument::INTEGER, "INT"));
    setDefaultValue(parser, "num-hits", "10");
    addOption(parser, ArgParseOption("t", "distance-type",
                                     "The method of calculating the distance \
@@ -45,7 +46,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     distance please refer to the wiki. ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type",
-               "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
+                  "d2 euclid d2s d2star manhattan chebyshev dai bc ngd all");
+   //            "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("s", "sequence-type",
              "Define the type of sequence data to work with.",
@@ -74,7 +76,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
               longer."));*/
    setDefaultValue(parser, "num-cores", "1");
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "0.0.21");
+   setVersion(parser, "0.0.22");
    setDate(parser, "November 2018");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -112,17 +114,17 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
       options.mask.push_back(tmpVal);
    }
 
-   if((options.markovOrder < 1) || (options.markovOrder > 3))
+   if((options.markovOrder < 0) || (options.markovOrder > 3))
    {
       cerr << "Markov Order --markov-order should be ";
-      cerr << "an integer 1, 2 or 3." << endl;
+      cerr << "an integer 0, 1, 2 or 3." << endl;
       return ArgumentParser::PARSE_ERROR;
    }
    // this is stopping me using k=1 for d2/euclid etc
    if(options.markovOrder > options.klen-1)
    {
       cerr << "Markov Order needs to be smaller than klen-1 and ";
-      cerr << "an integer 1, 2 or 3. If you're using a small klen size, ";
+      cerr << "an integer 0, 1, 2 or 3. If you're using a small klen size, ";
       cerr << "decrease the size of --markov-order." << endl;
       return ArgumentParser::PARSE_ERROR;
    }
@@ -429,7 +431,7 @@ void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
 
    // Now create the background model
    String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
+   countKmersNew(markovbg, sequence, markovOrder+1);
    unsigned tot = 0;
 
    // sum the occurances
@@ -441,7 +443,7 @@ void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
       String<TAlphabet> inf;
       unhash(inf, i, k);
       String<unsigned> occurances;
-      countKmersNew(occurances, inf, markovOrder);
+      countKmersNew(occurances, inf, markovOrder+1);
       double prob = 1.0;
       for(unsigned i = 0; i < length(occurances); i++)
       {
@@ -465,7 +467,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
 
    // Now create the background model
    String<unsigned> markovbg;
-   countKmersNew(markovbg, sequence, markovOrder);
+   countKmersNew(markovbg, sequence, markovOrder+1);
    unsigned long long int tot = 0;
 
    // sum the occurances
@@ -478,7 +480,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
       unhash(inf, i, k);
       String<Dna5> meh = inf; // this conversion is important, as countKmers requires Dna5
       String<unsigned> occurances;
-      countKmersNew(occurances, meh, markovOrder);
+      countKmersNew(occurances, meh, markovOrder+1);
       double prob = 1.0;
       for(unsigned i = 0; i < length(occurances); i++)
       {
