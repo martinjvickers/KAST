@@ -269,6 +269,7 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       }
 
    // populate the counts
+   // I think I should be able to increase the number of threads here
    for(int i = 0; i < length(refseqs); i++)
    {
       if(options.sequenceType == "dna")
