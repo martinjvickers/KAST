@@ -106,6 +106,9 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
    StringSet<CharString> pwids;
    StringSet<String<TAlphabet>> pwseqs;
 
+   unsigned recordNum = 0;
+   bool parseError = false;
+
    if(!open(pairwiseFileIn, (toCString(options.pairwiseFileName))))
    {
       cerr << "Error: could not open file ";
@@ -132,7 +135,21 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       }
       appendValue(pwids, id);
       String<TAlphabet> convseq = seq;
+      if(length(convseq) == 0)
+      {
+         cerr << "ERROR: Cannot read record number " << recordNum << "\n" << id << "\t" << seq << "." << endl;
+         parseError = true;
+      }
+
       appendValue(pwseqs, convseq);
+      recordNum++;
+   } 
+
+   if(parseError == true)
+   {
+      cerr << "ERROR: Unable to parse certain record(s) listed above. \n";
+      cerr << "Please correct or remove before rerunning KAST. Exiting." << endl;
+      return 1;
    }
 
    // mem checker
