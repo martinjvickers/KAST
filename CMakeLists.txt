@@ -8,8 +8,6 @@ project (kast CXX)
 # Dependencies
 # ----------------------------------------------------------------------------
 
-add_compile_options( -static )
-
 # Search for zlib as a dependency for SeqAn.
 find_package (ZLIB REQUIRED)
 
@@ -33,8 +31,8 @@ add_definitions (${SEQAN_DEFINITIONS})
 add_definitions ( -DSEQAN_DISABLE_VERSION_CHECK )
 
 # Add CXX flags found by find_package (SeqAn).
-#set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
-set (CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS  "-static ${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS} -Wl,--whole-archive -lpthread -Wl,-no-whole-archive")
+#set (CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 
 # Add executable and link against SeqAn dependencies.
 add_executable (kast distance.cpp kast.cpp)
