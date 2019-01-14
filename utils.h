@@ -316,23 +316,30 @@ int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & seque
                   unsigned const k, unsigned const effectiveK,
                   vector<CharString> const & mask)
 {
+   /*Build the shape to traverse the sequence (this is the full kmer size)*/
    Shape<TAlphabet> myShape;
    resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
 
    auto itSequence = begin(sequence);
    int counterN = 0;
 
-   Shape<Dna> maskShape;
+   // Now create the effective size shape
+   Shape<TAlphabet> maskShape;
    resize(maskShape, effectiveK);
 
+   // resize the kmerCounts vector for this entry which 
+   int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(maskShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   // go through the sequence using k=X at a time
    for (; itSequence <= (end(sequence) - k); ++itSequence)
    {
       unsigned hashValue = seqan::hash(myShape, itSequence);
       String<TAlphabet> orig;
       unhash(orig, hashValue, k);
+
+      //cout << orig << endl;
 
       // here, I need to loop
       for(int i = 0; i < mask.size(); i++)
@@ -345,6 +352,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & seque
                dnaSeq += orig[m];
             }
          }
+         //cout << dnaSeq << endl;
          auto it = begin(dnaSeq);
          unsigned hashMask = seqan::hash(maskShape, it);
          safe_increment(kmerCounts[hashMask]);

@@ -88,7 +88,16 @@ int mem_check(ModifyStringOptions options, int numRecord, TAlphabet const & alph
       alphSize = 4; // remember we initially work with Dna5 but only storage Dna
    
    // to store the counts of a single fasta entry
-   unsigned long long int counts_mem = pow(alphSize, options.klen) * sizeof(unsigned);
+   unsigned long long int counts_mem;
+   if(options.mask.size() > 0)
+   {  
+      cout << "Kmer Size = " << options.klen << " Effective Length = " << options.effectiveLength << endl;
+      counts_mem = pow(alphSize, options.effectiveLength) * sizeof(unsigned);
+   }
+   else
+   {
+      counts_mem = pow(alphSize, options.klen) * sizeof(unsigned);
+   }
 
    if((counts_mem * numRecord) > total_bytes)
    {
@@ -194,6 +203,7 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
+         cout << "Counting " << i << "\t" << length(pwseqs) << endl;
          countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||

@@ -174,7 +174,12 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
       }
       else
       {
-         countKmersNew(querycounts, queryseq, options.klen);
+         String<TAlphabet> qseq = queryseq;
+         if(options.mask.size() > 0)
+            countKmersNew(querycounts, qseq, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(querycounts, qseq, options.klen);
+
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
@@ -298,7 +303,11 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
       else
       {
          String<TAlphabet> seq = refseqs[i];
-         countKmersNew(counts[i], seq, options.klen);
+
+         if(options.mask.size() > 0)
+            countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
+         else
+            countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||
