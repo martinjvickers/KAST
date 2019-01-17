@@ -206,7 +206,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
-         //countKmersNew(counts[i], seq, options.klen);
          // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
