@@ -294,7 +294,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
        // Check if there is a "N" at the end of the new kmer
        if (_repeatMaskValue(value(itSequence + (k - 1))))
            counterN = k;  // Do not consider any kmer covering this "N"
-        // If there is no "N" overlapping with the current kmer, count it
+       // If there is no "N" overlapping with the current kmer, count it
        if (counterN <= 0)
        {
            unsigned hashValue = seqan::hash(myShape, itSequence);
@@ -367,17 +367,20 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
                   unsigned const k, unsigned const effectiveK,
                   vector<CharString> const & mask)
 {
+   /*Build the shape to traverse the sequence (this is the full kmer size)*/
    Shape<Dna> myShape;
    resize(myShape, k);
-   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
 
    auto itSequence = begin(sequence);
    int counterN = 0;
 
+   // Now create the effective size shape
    Shape<Dna> maskShape;
    resize(maskShape, effectiveK);
+
+   int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(maskShape));
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
 
    // Check for any N that destroys the first kmers
    unsigned j = k - 1;
