@@ -198,7 +198,10 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
-            markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(markovCounts[i], counts[i], seqf, options.effectiveLength, options.markovOrder);
+            else
+               markov(markovCounts[i], counts[i], seqf, options.klen, options.markovOrder);
          }
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
@@ -215,7 +218,10 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
             options.type == "D2S" || options.type == "D2Star")
          {
             resize(markovCounts, length(pwseqs));
-            markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(markovCounts[i], counts[i], seq, options.effectiveLength, options.markovOrder);
+            else
+               markov(markovCounts[i], counts[i], seq, options.effectiveLength, options.markovOrder);
          }
       }
    }
