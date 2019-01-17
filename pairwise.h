@@ -203,7 +203,6 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
       }
       else // when doing aa/raa we don't (and can't) do reverse complement
       {
-         cout << "Counting " << i << "\t" << length(pwseqs) << endl;
          countKmersNew(counts[i], seq, options.klen);
 
          if(options.type == "d2s" || options.type == "d2star" ||
