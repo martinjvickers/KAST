@@ -42,7 +42,11 @@ SEQAN_BEGIN_TESTSUITE(KAST_tests)
    SEQAN_CALL_TEST(d2s_raa);
    SEQAN_CALL_TEST(d2star_raa);
 
-   SEQAN_CALL_TEST(count_dna);
+   //SEQAN_CALL_TEST(count_dna);
+
+   SEQAN_CALL_TEST(mask_count_dna);
+   SEQAN_CALL_TEST(mask_count_raa);
+   SEQAN_CALL_TEST(mask_count_aa);
 
    //SEQAN_CALL_TEST(rounding_test_2);
    //SEQAN_CALL_TEST(rounding_test_3);
