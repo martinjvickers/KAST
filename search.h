@@ -169,7 +169,10 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
          {
-            markov(querymarkov, querycounts, qseq, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(querymarkov, querycounts, qseq, options.effectiveLength, options.markovOrder);
+            else
+               markov(querymarkov, querycounts, qseq, options.klen, options.markovOrder);
          }
       }
       else
@@ -184,7 +187,10 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
          {
-            markov(querymarkov, querycounts, queryseq, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(querymarkov, querycounts, queryseq, options.effectiveLength, options.markovOrder);
+            else
+               markov(querymarkov, querycounts, queryseq, options.klen, options.markovOrder);
          }
       }
 
@@ -297,7 +303,10 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
          {
-            markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(markovCounts[i], counts[i], seq, options.effectiveLength, options.markovOrder);
+            else
+               markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
          }
       }
       else
@@ -313,7 +322,10 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
             options.type == "d2star" || options.type == "D2Star" ||
             options.type == "hao" || options.type == "dai")
          {
-            markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
+            if(options.mask.size() > 0)
+               markov(markovCounts[i], counts[i], seq, options.effectiveLength, options.markovOrder);
+            else
+               markov(markovCounts[i], counts[i], seq, options.klen, options.markovOrder);
          }
       }
    }
