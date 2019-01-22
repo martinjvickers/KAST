@@ -46,6 +46,7 @@ struct ModifyStringOptions
 	CharString sequenceType;
 	CharString output_format;
         bool noreverse;
+        bool calcgc;
         CharString queryFileName = NULL;
         CharString referenceFileName = NULL;
 	CharString pairwiseFileName = NULL;
