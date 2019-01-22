@@ -243,6 +243,21 @@ int safe_increment(T& value)
    }
 };
 
+template <typename TAlphabet>
+double gc_ratio(String<TAlphabet> sequence)
+{
+   int gc = 0;
+   int agct = 0;
+
+   for(int i = 0; i < length(sequence); i++)
+   {
+      if(sequence[i] == 'G' || sequence[i] == 'C')
+         gc++;
+      if(sequence[i] != 'N')
+         agct++;
+   }
+   return (double)gc/(double)agct;
+}
 
 /*
 Perform regular counting
