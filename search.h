@@ -45,12 +45,16 @@ int printResult(ModifyStringOptions options, CharString &queryid,
          if(options.outputFileName == NULL)
          {
             cout << "RefID\tQryID\tRefLen\tQryLen\t";
-            cout << "RefGC\tQryGC\tHitRank\tScore" << endl;
+            if(options.calcgc == true)
+               cout << "RefGC\tQryGC\t";
+            cout << "HitRank\tScore" << endl;
          }
          else
          {
             outfile << "RefID\tQryID\tRefLen\tQryLen\t";
-            outfile << "RefGC\tQryGC\tHitRank\tScore" << endl;
+            if(options.calcgc == true)
+               outfile << "RefGC\tQryGC\t";
+            outfile << "HitRank\tScore" << endl;
          }
 
          int count = 1;
@@ -61,8 +65,12 @@ int printResult(ModifyStringOptions options, CharString &queryid,
                cout << referenceids[p.second] << "\t" << queryid << "\t";
                cout << length(referenceseqs[p.second]) << "\t";
                cout << length(queryseq) << "\t";
-               //cout << gc_ratio(referenceseqs[p.second]) << "\t";
-               //cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               if(options.calcgc == true)
+               {
+                  cout << gc_ratio(referenceseqs[p.second]) << "\t";
+                  cout << gc_ratio(queryseq) << "\t" << count << "\t";
+               }
+               outfile << count << "\t";
                cout << p.first << endl;
             }
             else
@@ -70,8 +78,12 @@ int printResult(ModifyStringOptions options, CharString &queryid,
                outfile << referenceids[p.second] << "\t" << queryid << "\t";
                outfile << length(referenceseqs[p.second]) << "\t";
                outfile << length(queryseq) << "\t";
-               //outfile << gc_ratio(referenceseqs[p.second]) << "\t";
-               //outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               if(options.calcgc == true)
+               {
+                  outfile << gc_ratio(referenceseqs[p.second]) << "\t";
+                  outfile << gc_ratio(queryseq) << "\t" << count << "\t";
+               }
+               outfile << count << "\t";
                outfile << p.first << endl;
             }
             count++;
