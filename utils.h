@@ -63,6 +63,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
              "Do not use reverse compliment."));
    addOption(parser, ArgParseOption("gc", "calc-gc",
              "Calculate GC content of query/ref in search mode."));
+   addOption(parser, ArgParseOption("nh", "no-header",
+             "Do not print header when performing search mode."));
    addOption(parser, ArgParseOption("mask", "skip-mer",
              "Specify binary masks where a zero indicates \
              skipping that base and one keeps it. e.g. 01110.",
@@ -101,6 +103,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.sequenceType, parser, "sequence-type");
    options.noreverse = isSet(parser, "no-reverse");
    options.calcgc = isSet(parser, "calc-gc");
+   options.noheader = isSet(parser, "no-header");
    options.debug = isSet(parser, "debug");
    //options.lowram = isSet(parser, "low-ram");
    getOptionValue(options.queryFileName, parser, "query-file");

@@ -47,6 +47,7 @@ struct ModifyStringOptions
 	CharString output_format;
         bool noreverse;
         bool calcgc;
+        bool noheader;
         CharString queryFileName = NULL;
         CharString referenceFileName = NULL;
 	CharString pairwiseFileName = NULL;
