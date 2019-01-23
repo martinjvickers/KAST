@@ -42,19 +42,23 @@ int printResult(ModifyStringOptions options, CharString &queryid,
       }
       else if(options.output_format == "blastlike")
       {
-         if(options.outputFileName == NULL)
+         // print header unless specified not to
+         if(options.noheader == false)
          {
-            cout << "RefID\tQryID\tRefLen\tQryLen\t";
-            if(options.calcgc == true)
-               cout << "RefGC\tQryGC\t";
-            cout << "HitRank\tScore" << endl;
-         }
-         else
-         {
-            outfile << "RefID\tQryID\tRefLen\tQryLen\t";
-            if(options.calcgc == true)
-               outfile << "RefGC\tQryGC\t";
-            outfile << "HitRank\tScore" << endl;
+            if(options.outputFileName == NULL)
+            {
+               cout << "RefID\tQryID\tRefLen\tQryLen\t";
+               if(options.calcgc == true)
+                  cout << "RefGC\tQryGC\t";
+               cout << "HitRank\tScore" << endl;
+            }
+            else
+            {
+               outfile << "RefID\tQryID\tRefLen\tQryLen\t";
+               if(options.calcgc == true)
+                  outfile << "RefGC\tQryGC\t";
+               outfile << "HitRank\tScore" << endl;
+            }
          }
 
          int count = 1;
