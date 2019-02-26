@@ -49,7 +49,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                   "d2 euclid d2s d2star manhattan chebyshev dai bc ngd all");
    //            "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
    setDefaultValue(parser, "distance-type", "d2");
-   addOption(parser, ArgParseOption("sc", "score-cutoff", "Score Cutoff",
+   addOption(parser, ArgParseOption("sc", "score-cutoff", "Score Cutoff for search mode.",
              ArgParseArgument::INTEGER, "INT"));
    addOption(parser, ArgParseOption("s", "sequence-type",
              "Define the type of sequence data to work with.",
