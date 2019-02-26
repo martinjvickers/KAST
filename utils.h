@@ -51,6 +51,10 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("sc", "score-cutoff", "Score Cutoff for search mode.",
              ArgParseArgument::DOUBLE, "DOUBLE"));
+   if(isSet(parser, "score-cutoff") == false)
+   {
+      options.score_cutoff = std::numeric_limits<double>::quiet_NaN();
+   }
    addOption(parser, ArgParseOption("s", "sequence-type",
              "Define the type of sequence data to work with.",
              ArgParseArgument::STRING, "STR"));

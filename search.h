@@ -238,11 +238,26 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             dist = dai(querycounts, refcounts[i], querymarkov, markovcounts[i]);
 
          // stores the smallest distance results and corresponding location in refSeq
-         results.insert(pair<double, int> (dist, i));
-         if(results.size() > options.nohits && options.nohits != 0)
+         /*
+            Important:! It's at this point that any decision is made regarding how many
+            results are stored. 
+
+            The new logic, now that we have a cutoff, is that if we have a cutoff set, it
+            overides the num-hits flag.
+         */
+
+         if(std::isnan(options.score_cutoff) == true)
+            results.insert(pair<double, int> (dist, i));
+         else if(std::isnan(options.score_cutoff) == false && dist <= options.score_cutoff)
+            results.insert(pair<double, int> (dist, i));
+
+         if(std::isnan(options.score_cutoff) == true)
          {
-            map<double, int>::iterator it = results.end();
-            results.erase(--it);
+            if(results.size() > options.nohits && options.nohits != 0)
+            {
+               map<double, int>::iterator it = results.end();
+               results.erase(--it);
+            }
          }
       }
 
