@@ -82,7 +82,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
               longer."));*/
    setDefaultValue(parser, "num-cores", "1");
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "0.0.27");
+   setVersion(parser, "0.0.28");
    setDate(parser, "February 2019");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -123,19 +123,30 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
       options.mask.push_back(tmpVal);
    }
 
-   if((options.markovOrder < 0) || (options.markovOrder > 3))
+/*
+   Check to see if markov order is correct. 
+*/
+   if(options.markovOrder < 0)
    {
-      cerr << "Markov Order --markov-order should be ";
-      cerr << "an integer 0, 1, 2 or 3." << endl;
+      cerr << "Markov order must be >= 0 " << endl;
       return ArgumentParser::PARSE_ERROR;
    }
-   // this is stopping me using k=1 for d2/euclid etc
-   if(options.markovOrder > options.klen-1)
+
+   if(options.mask.size() > 0)
    {
-      cerr << "Markov Order needs to be smaller than klen-1 and ";
-      cerr << "an integer 0, 1, 2 or 3. If you're using a small klen size, ";
-      cerr << "decrease the size of --markov-order." << endl;
-      return ArgumentParser::PARSE_ERROR;
+      if(options.markovOrder >= options.effectiveLength-1)
+      {
+         cerr << "Markov order must be < effectiveLength-1 " << endl;
+         return ArgumentParser::PARSE_ERROR;
+      }
+   }
+   else
+   {
+      if(options.markovOrder >= options.klen-1)
+      {
+         cerr << "Markov order must be < klen-1 " << endl;
+         return ArgumentParser::PARSE_ERROR;
+      }
    }
 
    if(isSet(parser, "pairwise-file"))
