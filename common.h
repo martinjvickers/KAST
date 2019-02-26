@@ -60,7 +60,7 @@ struct ModifyStringOptions
    CharString outputFileName = NULL;
    vector<CharString> mask;
    int effectiveLength;
-   int score_cutoff;
+   double score_cutoff;
 };
 
 #endif
