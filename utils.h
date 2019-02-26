@@ -520,7 +520,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
    for(unsigned i = 0; i < length(markovbg); i++)
       tot = tot + markovbg[i];
 
-   cout << "Markov " << endl;
+   //cout << "Markov " << endl;
 
    for(unsigned i = 0; i < length(markovCounts); i++)
    {
@@ -535,7 +535,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
          prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
       }
       markovCounts[i] = prob;
-      cout << inf << "\t" << prob << "\t" << endl;
+      //cout << inf << "\t" << prob << "\t" << endl;
    }
 };
 
