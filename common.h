@@ -39,27 +39,28 @@ User defined options struct
 */
 struct ModifyStringOptions
 {
-        int klen;
-        int nohits;
-        int markovOrder;
-        CharString type;
-	CharString sequenceType;
-	CharString output_format;
-        bool noreverse;
-        bool calcgc;
-        bool noheader;
-        CharString queryFileName = NULL;
-        CharString referenceFileName = NULL;
-	CharString pairwiseFileName = NULL;
-        int num_threads;
-        bool debug;
-        bool lowram;
-	bool phylyp = true;
-	bool tabout;
-	bool blastlike;
-	CharString outputFileName = NULL;
-	vector<CharString> mask;
-	int effectiveLength;
+   int klen;
+   int nohits;
+   int markovOrder;
+   CharString type;
+   CharString sequenceType;
+   CharString output_format;
+   bool noreverse;
+   bool calcgc;
+   bool noheader;
+   CharString queryFileName = NULL;
+   CharString referenceFileName = NULL;
+   CharString pairwiseFileName = NULL;
+   int num_threads;
+   bool debug;
+   bool lowram;
+   bool phylyp = true;
+   bool tabout;
+   bool blastlike;
+   CharString outputFileName = NULL;
+   vector<CharString> mask;
+   int effectiveLength;
+   int score_cutoff;
 };
 
 #endif

@@ -49,6 +49,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                   "d2 euclid d2s d2star manhattan chebyshev dai bc ngd all");
    //            "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
    setDefaultValue(parser, "distance-type", "d2");
+   addOption(parser, ArgParseOption("sc", "score-cutoff", "Score Cutoff",
+             ArgParseArgument::INTEGER, "INT"));
    addOption(parser, ArgParseOption("s", "sequence-type",
              "Define the type of sequence data to work with.",
              ArgParseArgument::STRING, "STR"));
@@ -97,6 +99,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
 
    //begin extracting options
    getOptionValue(options.klen, parser, "klen");
+   getOptionValue(options.score_cutoff, parser, "score-cutoff");
    getOptionValue(options.nohits, parser, "num-hits");
    getOptionValue(options.markovOrder, parser, "markov-order");
    getOptionValue(options.type, parser, "distance-type");
@@ -506,6 +509,8 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
    for(unsigned i = 0; i < length(markovbg); i++)
       tot = tot + markovbg[i];
 
+   cout << "Markov " << endl;
+
    for(unsigned i = 0; i < length(markovCounts); i++)
    {
       String<Dna> inf;
@@ -519,6 +524,7 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
          prob = prob * pow(((double)markovbg[i]/(double)tot), occurances[i]);
       }
       markovCounts[i] = prob;
+      cout << inf << "\t" << prob << "\t" << endl;
    }
 };
 
