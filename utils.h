@@ -130,26 +130,31 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
 /*
    Check to see if markov order is correct. 
 */
-   if(options.markovOrder < 0)
+   if(options.type == "d2s" || options.type == "d2star" || 
+      options.type == "dai" || options.type == "hao" || 
+      options.type == "all")
    {
-      cerr << "Markov order must be >= 0 " << endl;
-      return ArgumentParser::PARSE_ERROR;
-   }
-
-   if(options.mask.size() > 0)
-   {
-      if(options.markovOrder >= options.effectiveLength-1)
+      if(options.markovOrder < 0)
       {
-         cerr << "Markov order must be < effectiveLength-1 " << endl;
+         cerr << "Markov order must be >= 0 " << endl;
          return ArgumentParser::PARSE_ERROR;
       }
-   }
-   else
-   {
-      if(options.markovOrder >= options.klen-1)
+
+      if(options.mask.size() > 0)
       {
-         cerr << "Markov order must be < klen-1 " << endl;
-         return ArgumentParser::PARSE_ERROR;
+         if(options.markovOrder >= options.effectiveLength-1)
+         {
+            cerr << "Markov order must be < effectiveLength-1 " << endl;
+            return ArgumentParser::PARSE_ERROR;
+         }
+      }
+      else
+      {
+         if(options.markovOrder >= options.klen-1)
+         {
+            cerr << "Markov order must be < klen-1 " << endl;
+            return ArgumentParser::PARSE_ERROR;
+         }
       }
    }
 
