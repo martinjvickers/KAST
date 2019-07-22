@@ -16,6 +16,13 @@ Microbial genome sequences and taxonomic information based on the Genometa 2012 
 
 https://doi.org/10.20391/e6974906-f30f-4976-90fb-ea1679eedef0
 
+## Data-prep
+
+I needed to prep the nucl data because it contains characters that ALF doesn't processed, so I replaced those characters with an N, which is what KAST does automagically.
+
+```
+cat allgenomes_subset.list.fa | sed  '/^>/! s/H\|B\|D\|V\|W\|S\|Y\|R\|M\|K/N/g' > allgenomes_subset.list_modded.fa
+```
 
 # Query/Search mode
 
