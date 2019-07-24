@@ -6,9 +6,9 @@
 
 # Software
 
-diamond version 0.9.24
-kast version: 0.0.29
-ncbi-blast+ 2.8.1
+* diamond version 0.9.24
+* kast version: 0.0.29
+* ncbi-blast+ 2.8.1
 
 # Data
 
@@ -23,6 +23,26 @@ I needed to prep the nucl data because it contains characters that ALF doesn't p
 ```
 cat allgenomes_subset.list.fa | sed  '/^>/! s/H\|B\|D\|V\|W\|S\|Y\|R\|M\|K/N/g' > allgenomes_subset.list_modded.fa
 ```
+
+# Results
+
+## Pairwise
+
+|   | KAST   |   |   |   |
+|---|---|---|---|---|
+|   |   |   |   |   |
+|   |   |   |   |   |
+|   |   |   |   |   |
+
+## Query/Ref mode
+
+|   | KAST  |   |   |   |
+|---|---|---|---|---|
+|   |   |   |   |   |
+|   |   |   |   |   |
+|   |   |   |   |   |
+
+# Raw Data results
 
 # Query/Search mode
 
