@@ -30,6 +30,10 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     data which you will perform pairwise \
                                     comparison on.",
                                     ArgParseArgument::INPUT_FILE, "IN"));
+   addOption(parser, ArgParseOption("i", "interleaved-file",
+                                    "Path to the file containing your sequence \
+                                    data which is interleaved.",
+                                    ArgParseArgument::INPUT_FILE, "IN"));
    addOption(parser, ArgParseOption("m", "markov-order", "Markov Order",
              ArgParseArgument::INTEGER, "INT"));
    addOption(parser, ArgParseOption("o", "output-file", "Output file.",
@@ -116,6 +120,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    getOptionValue(options.queryFileName, parser, "query-file");
    getOptionValue(options.referenceFileName, parser, "reference-file");
    getOptionValue(options.pairwiseFileName, parser, "pairwise-file");
+   getOptionValue(options.interleavedFileName, parser, "interleaved-file");
    getOptionValue(options.outputFileName, parser, "output-file");
    getOptionValue(options.num_threads, parser, "num-cores");
    getOptionValue(options.output_format, parser, "output-format");
@@ -190,9 +195,11 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
       printHelp(parser);
       return ArgumentParser::PARSE_ERROR;
    }
+
    if(isSet(parser, "reference-file") == false &&
       isSet(parser, "query-file") == false &&
-      isSet(parser, "pairwise-file") == false)
+      isSet(parser, "pairwise-file") == false &&
+      isSet(parser, "interleaved-file") == false)
    {
       cerr << "You have not specifed any input file. ";
       cerr << "See kast -h for details." << endl;

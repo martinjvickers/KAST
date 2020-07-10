@@ -51,6 +51,7 @@ struct ModifyStringOptions
    CharString queryFileName = NULL;
    CharString referenceFileName = NULL;
    CharString pairwiseFileName = NULL;
+   CharString interleavedFileName = NULL;
    int num_threads;
    bool debug;
    bool lowram;

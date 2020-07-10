@@ -79,7 +79,7 @@ int main(int argc, char const ** argv)
          return 1;
       }
    }
-   // Running in pairwise mode
+   // Running in pairwise all mode
    else if(options.pairwiseFileName != NULL && options.type == "all")
    {
       if(options.sequenceType == "aa")
@@ -93,6 +93,30 @@ int main(int argc, char const ** argv)
       else if(options.sequenceType == "dna")
       {
          pairwise_all_matrix(options, Dna5());
+      }
+      else
+      {
+         // there is no other mode
+         cerr << "Error: mode not found - " << options.sequenceType << endl;
+         return 1;
+      }
+   }
+   // Running in interleaved mode
+   else if(options.interleavedFileName != NULL)
+   {
+      cout << "Running Interleaved mode" << endl;
+
+      if(options.sequenceType == "aa")
+      {  
+         interleaved(options, AminoAcid());
+      }
+      else if(options.sequenceType == "raa")
+      {  
+         interleaved(options, ReducedAminoAcidMurphy10());
+      }
+      else if(options.sequenceType == "dna")
+      {  
+         interleaved(options, Dna5());
       }
       else
       {

@@ -245,6 +245,12 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 };
 
 template <typename TAlphabet>
+int interleaved(ModifyStringOptions options, TAlphabet const & alphabetType)
+{
+   return 0;
+}
+
+template <typename TAlphabet>
 int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
    // Read in the records into memory
