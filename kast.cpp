@@ -104,8 +104,6 @@ int main(int argc, char const ** argv)
    // Running in interleaved mode
    else if(options.interleavedFileName != NULL)
    {
-      cout << "Running Interleaved mode" << endl;
-
       if(options.sequenceType == "aa")
       {  
          interleaved(options, AminoAcid());
