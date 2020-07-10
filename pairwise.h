@@ -247,6 +247,112 @@ int pairwise_matrix(ModifyStringOptions options, TAlphabet const & alphabetType)
 template <typename TAlphabet>
 int interleaved(ModifyStringOptions options, TAlphabet const & alphabetType)
 {
+   SeqFileIn interleavedFileIn;
+   StringSet<CharString> pwids;
+   StringSet<String<TAlphabet>> pwseqs;
+
+   if(!open(interleavedFileIn, (toCString(options.interleavedFileName))))
+   {
+      cerr << "Error: could not open file ";
+      cerr << toCString(options.pairwiseFileName) << endl;
+      return 1;
+   }
+
+   while(!atEnd(interleavedFileIn))
+   {
+      CharString id;
+      CharString seq;
+
+      try
+      {
+         readRecord(id, seq, interleavedFileIn);
+      }
+      catch(Exception const & e)
+      {
+         std::cout << "ERROR: The --sequence-type which was selected was \"";
+         std::cout << options.sequenceType << "\" however when reading the \"";
+         std::cout << options.interleavedFileName << "\" file we get the following error;" << endl;
+         std::cout << e.what() << std::endl;
+         return 1;
+      }
+      appendValue(pwids, id);
+      String<TAlphabet> convseq = seq;
+      appendValue(pwseqs, convseq);
+
+      if(length(pwids) == 2 && length(pwseqs) == 2)
+      {
+         if(options.sequenceType == "dna")
+         {
+            String<Dna5> seqf_1 = pwseqs[0];
+            String<Dna5> seqf_2 = pwseqs[1];
+
+            if(options.noreverse == false)
+            {
+               String<Dna5> seqrc_1 = pwseqs[0];
+               reverseComplement(seqrc_1);
+               append(seqf_1, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
+               append(seqf_1, seqrc_1);
+
+               String<Dna5> seqrc_2 = pwseqs[1];
+               reverseComplement(seqrc_2);
+               append(seqf_2, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"); // this should probably the same size as options.klen
+               append(seqf_2, seqrc_2);
+
+               pwseqs[0] = seqf_1;
+               pwseqs[1] = seqf_2;
+            }
+         }
+
+         //compare
+         String<unsigned> counts_i, counts_j;
+         countKmersNew(counts_i, pwseqs[0], options.klen);
+         countKmersNew(counts_j, pwseqs[1], options.klen);
+         String<double> markov_i, markov_j;
+
+         // do markov if we're doing markov distances
+         if(options.type == "d2s" || options.type == "d2star" ||
+            options.type == "hao" || options.type == "dai" ||
+            options.type == "D2S" || options.type == "D2Star")
+         {
+            markov(markov_i, counts_i, pwseqs[0], options.klen, options.markovOrder);
+            markov(markov_j, counts_j, pwseqs[1], options.klen, options.markovOrder);
+         }
+
+         double dist;
+
+         if(options.type == "euclid")
+            dist = euler(counts_i, counts_j);
+         else if(options.type == "d2")
+            dist = d2(counts_i, counts_j);
+         else if(options.type == "manhattan")
+            dist = manhattan(counts_i, counts_j);
+         else if(options.type == "bc")
+            dist = bray_curtis_distance(counts_i, counts_j);
+         else if(options.type == "ngd")
+            dist = normalised_google_distance(counts_i, counts_j);
+         else if(options.type == "d2s" || options.type == "D2S")
+            dist = d2s(counts_i, counts_j, markov_i, markov_j);
+         else if(options.type == "hao")
+            dist = hao(counts_i, counts_j, markov_i, markov_j);
+         else if(options.type == "d2star" || options.type == "D2Star")
+            dist = d2star(counts_i, counts_j, markov_i, markov_j);
+         else if(options.type == "dai")
+            dist = dai(counts_i, counts_j, markov_i, markov_j);
+
+         cout << pwids[0] << "\t" << pwids[1] << "\t" << options.type << "\t" << dist << endl;
+         
+         // wipe
+         clear(pwids);
+         clear(pwseqs);
+      }
+   }
+
+   if(length(pwids) != 0 && length(pwseqs) != 0)
+   {
+      cerr << "WARNING: " << options.interleavedFileName;
+      cerr << " contains an unequal number of sequences." << endl;
+   }
+
    return 0;
 }
 
