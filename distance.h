@@ -25,6 +25,9 @@ double normalised_google_distance(String<unsigned> const & kmerCounts1,
 double chebyshev(String<unsigned> const & kmerCounts1,
                  String<unsigned> const & kmerCounts2);
 
+double canberra(String<unsigned> const & kmerCounts1,
+                String<unsigned> const & kmerCounts2);
+
 double manhattan(String<unsigned> const & kmerCounts1,
                  String<unsigned> const & kmerCounts2);
 

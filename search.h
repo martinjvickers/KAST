@@ -224,6 +224,8 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             dist = manhattan(querycounts, refcounts[i]);
          else if(options.type == "chebyshev")
             dist = chebyshev(querycounts, refcounts[i]);
+         else if(options.type == "canberra")
+            dist = chebyshev(querycounts, refcounts[i]);
          else if(options.type == "bc")
             dist = bray_curtis_distance(querycounts, refcounts[i]);
          else if(options.type == "ngd")

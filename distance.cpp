@@ -284,6 +284,19 @@ double chebyshev(String<unsigned> const & kmerCounts1,
    return score;
 }
 
+double canberra(String<unsigned> const & kmerCounts1,
+                String<unsigned> const & kmerCounts2)
+{
+   double score = 0.0;
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      double p1 = abs((long long int)kmerCounts1[i] - (long long int)kmerCounts2[i]);
+      double p2 = abs((long long int)kmerCounts1[i]) + abs((long long int)kmerCounts2[i]);
+      score += p1/p2;
+   }
+   return score;
+}
+
 double manhattan(String<unsigned> const & kmerCounts1,
                  String<unsigned> const & kmerCounts2)
 {

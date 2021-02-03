@@ -49,6 +49,8 @@ int calcDistance(unsigned & rI, unsigned & cI,
             dist = manhattan(counts[row], counts[column]);
          else if(options.type == "chebyshev")
             dist = chebyshev(counts[row], counts[column]);
+         else if(options.type == "canberra")
+            dist = canberra(counts[row], counts[column]);
          else if(options.type == "bc")
             dist = bray_curtis_distance(counts[row], counts[column]);
          else if(options.type == "ngd")
@@ -326,6 +328,10 @@ int interleaved(ModifyStringOptions options, TAlphabet const & alphabetType)
             dist = d2(counts_i, counts_j);
          else if(options.type == "manhattan")
             dist = manhattan(counts_i, counts_j);
+         else if(options.type == "chebyshev")
+            dist = chebyshev(counts_i, counts_j);
+         else if(options.type == "canberra")
+            dist = canberra(counts_i, counts_j);
          else if(options.type == "bc")
             dist = bray_curtis_distance(counts_i, counts_j);
          else if(options.type == "ngd")
@@ -393,7 +399,8 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
       appendValue(pwseqs, convseq);
    }
 
-   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\tHao\tdai\tD2S\tD2Star\n";
+   cout << "Q1\tQ2\tEuclid\td2\tManhattan\tBC\tNGD\tHao\tdai\tD2S\tD2Star\t";
+   cout << "Chebyshev\tCanberra\n";
    for(unsigned int i = 0; i < length(pwids); i++)
    {
       for(unsigned int j = 0; j < length(pwids); j++)
@@ -413,6 +420,8 @@ int pairwise_all_matrix(ModifyStringOptions options, TAlphabet const & alphabetT
          cout << "\t" << dai(counts_i, counts_j, markov_i, markov_j);
          cout << "\t" << d2s(counts_i, counts_j, markov_i, markov_j);
          cout << "\t" << d2star(counts_i, counts_j, markov_i, markov_j);
+         cout << "\t" << chebyshev(counts_i, counts_j);
+         cout << "\t" << canberra(counts_i, counts_j);
 
          cout << endl;
       }
