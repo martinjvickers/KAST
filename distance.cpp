@@ -292,7 +292,12 @@ double canberra(String<unsigned> const & kmerCounts1,
    {
       double p1 = abs((long long int)kmerCounts1[i] - (long long int)kmerCounts2[i]);
       double p2 = abs((long long int)kmerCounts1[i]) + abs((long long int)kmerCounts2[i]);
-      score += p1/p2;
+      if(p1 == 0 && p2 == 0)
+         score += 0.0;
+      else if(p2 == 0)
+         score += 0.0;
+      else
+         score += (double)p1/(double)p2;
    }
    return score;
 }
