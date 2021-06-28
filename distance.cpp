@@ -302,6 +302,24 @@ double canberra(String<unsigned> const & kmerCounts1,
    return score;
 }
 
+double normalised_canberra(String<unsigned> const & kmerCounts1,
+                           String<unsigned> const & kmerCounts2)
+{
+   double score = 0.0;
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      double p1 = abs((long long int)kmerCounts1[i] - (long long int)kmerCounts2[i]);
+      double p2 = abs((long long int)kmerCounts1[i]) + abs((long long int)kmerCounts2[i]);
+      if(p1 == 0 && p2 == 0)
+         score += 0.0;
+      else if(p2 == 0)
+         score += 0.0;
+      else
+         score += (double)p1/(double)p2;
+   }
+   return score / length(kmerCounts1);
+}
+
 double manhattan(String<unsigned> const & kmerCounts1,
                  String<unsigned> const & kmerCounts2)
 {

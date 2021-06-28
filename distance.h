@@ -28,6 +28,9 @@ double chebyshev(String<unsigned> const & kmerCounts1,
 double canberra(String<unsigned> const & kmerCounts1,
                 String<unsigned> const & kmerCounts2);
 
+double normalised_canberra(String<unsigned> const & kmerCounts1,
+                           String<unsigned> const & kmerCounts2);
+
 double manhattan(String<unsigned> const & kmerCounts1,
                  String<unsigned> const & kmerCounts2);
 
