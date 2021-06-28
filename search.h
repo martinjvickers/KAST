@@ -225,7 +225,7 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
          else if(options.type == "chebyshev")
             dist = chebyshev(querycounts, refcounts[i]);
          else if(options.type == "canberra")
-            dist = chebyshev(querycounts, refcounts[i]);
+            dist = canberra(querycounts, refcounts[i]);
          else if(options.type == "bc")
             dist = bray_curtis_distance(querycounts, refcounts[i]);
          else if(options.type == "ngd")
