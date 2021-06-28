@@ -50,7 +50,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     distance please refer to the wiki. ",
                                     ArgParseArgument::STRING, "STR"));
    setValidValues(parser, "distance-type",
-                  "d2 euclid d2s d2star manhattan chebyshev dai bc ngd all canberra");
+                  "d2 euclid d2s d2star manhattan chebyshev dai bc ngd all canberra normalised_canberra cosine");
    //            "d2 euclid d2s D2S d2s-opt d2star D2Star manhattan chebyshev hao dai bc ngd all new");
    setDefaultValue(parser, "distance-type", "d2");
    addOption(parser, ArgParseOption("sc", "score-cutoff", "Score Cutoff for search mode.",

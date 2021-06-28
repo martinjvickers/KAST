@@ -220,12 +220,16 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
             dist = euler(querycounts, refcounts[i]);
          else if(options.type == "d2")
             dist = d2(querycounts, refcounts[i]);
+         else if(options.type == "cosine")
+            dist = cosine(querycounts, refcounts[i]);
          else if(options.type == "manhattan")
             dist = manhattan(querycounts, refcounts[i]);
          else if(options.type == "chebyshev")
             dist = chebyshev(querycounts, refcounts[i]);
          else if(options.type == "canberra")
             dist = canberra(querycounts, refcounts[i]);
+         else if(options.type == "normalised_canberra")
+            dist = normalised_canberra(querycounts, refcounts[i]);
          else if(options.type == "bc")
             dist = bray_curtis_distance(querycounts, refcounts[i]);
          else if(options.type == "ngd")

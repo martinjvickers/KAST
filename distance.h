@@ -13,6 +13,9 @@
 double d2(String<unsigned> const & kmerCounts1,
           String<unsigned> const & kmerCounts2);
 
+double cosine(String<unsigned> const & kmerCounts1,
+              String<unsigned> const & kmerCounts2);
+
 double euler(String<unsigned> const & kmerCounts1,
              String<unsigned> const & kmerCounts2);
 

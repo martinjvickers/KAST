@@ -183,6 +183,24 @@ double d2(String<unsigned> const & kmerCounts1,
     return 0.5*(1-score);
 }
 
+double cosine(String<unsigned> const & kmerCounts1,
+              String<unsigned> const & kmerCounts2)
+{
+   long long int sumqCrC = 0;
+   long long int sumqC2 = 0;
+   long long int sumrC2 = 0;
+
+   for(unsigned i = 0; i < length(kmerCounts1); i++)
+   {
+      sumqCrC += (long long int)kmerCounts1[i] * (long long int)kmerCounts2[i];
+      sumqC2 += (long long int)kmerCounts1[i] * (long long int)kmerCounts1[i];
+      sumrC2 += (long long int)kmerCounts2[i] * (long long int)kmerCounts2[i];
+    }
+
+   double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
+   return (1-score);
+}
+
 double euler(String<unsigned> const & kmerCounts1,
              String<unsigned> const & kmerCounts2)
 {
