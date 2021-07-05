@@ -90,7 +90,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
               longer."));*/
    setDefaultValue(parser, "num-cores", "1");
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "0.0.32");
+   setVersion(parser, "0.0.33");
    setDate(parser, "July 2021");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
@@ -554,5 +554,49 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
       //cout << inf << "\t" << prob << "\t" << endl;
    }
 };
+
+/// Experimental idea
+
+/*
+Ignore the order of AA in the kmer for proteins only, so that e.g. TY and YT are the same, 
+and for 3mers CMY would be the equivalent to all 3x2x1 combinations 
+e.g. CMY, CYM, MCY, MYC, YCM, YMC. This could be useful for 4 mers and 5 mers because it 
+starts to reduce the number of kmers by quite a bit e.g. for 4-mers you have 4x3x2 = 24 
+redundant combinations, for 5mers its 120. This might make it tractable to use 5-mers. 
+E.g with this redundancy we would count, for 3mers 8000/6 = 1333 kmers, for 4mers that 
+becomes 6,666 and for 5 mers, 26,666 
+(as compared to 3,200,000 kmers without the redundancy for 5 mers).  
+
+I think the best way to do this is to put the kmers in alphabetical order. So in the 
+example above, CMY could be the correct order, and CYM and the others will all be reordered to CMY.
+
+*/
+template <typename TAlphabet>
+int countReducedAlphabet(String<unsigned> & kmerCounts, String<TAlphabet> const & sequence, unsigned const k)
+{
+   Shape<TAlphabet> myShape;
+   resize(myShape, k);
+   unsigned long long int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
+
+   seqan::clear(kmerCounts);
+   seqan::resize(kmerCounts, kmerNumber, 0);
+
+   auto itSequence = begin(sequence);
+
+   for (; itSequence <= (end(sequence) - k); ++itSequence)
+   {
+      cout << itSequence << "\t" << value(itSequence) << "\t";
+      DnaString meh;
+      seqan::unhash(meh, seqan::hash(myShape, itSequence), weight(myShape));
+      cout << meh << endl;
+      //cout << seqan::unhash(meh, seqan::hash(myShape, itSequence), itSequence) << endl;
+      long long unsigned int hashValue = seqan::hash(myShape, itSequence);
+
+      safe_increment(kmerCounts[hashValue]);
+   }
+   return 0;
+};
+
+
 
 #endif
