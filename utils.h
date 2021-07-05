@@ -96,7 +96,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    addOption(parser, ArgParseOption("fb", "filter-bp", "In search mode, only match\
                                     those results where the query and ref sequence \
                                     lengths are within +/- bp of oneanother.",
-             ArgParseArgument::INTEGER, "INT"));
+             ArgParseArgument::INT64, "INT64"));
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
    setVersion(parser, "0.0.33");
    setDate(parser, "July 2021");

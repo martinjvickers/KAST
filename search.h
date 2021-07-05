@@ -215,7 +215,6 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
       for(int i = 0; i < length(refids); i++)
       {
-
          if(options.filter_bp != 0)
          {
             if(abs((int)length(refseqs[i])-(int)length(queryseq)) > options.filter_bp)

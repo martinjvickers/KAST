@@ -63,7 +63,7 @@ struct ModifyStringOptions
    int effectiveLength;
    double score_cutoff;
    double filter_percent = 0;
-   int filter_bp = 0;
+   int64_t filter_bp = 0;
 };
 
 #endif
