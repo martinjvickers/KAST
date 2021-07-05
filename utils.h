@@ -89,6 +89,14 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
               reference, however it will take much \
               longer."));*/
    setDefaultValue(parser, "num-cores", "1");
+   addOption(parser, ArgParseOption("fp", "filter-percent", "In search mode, only match\
+                                    those results where the query and ref sequence \
+                                    lengths are within +/- percentage of oneanother.",
+             ArgParseArgument::DOUBLE, "DOUBLE"));
+   addOption(parser, ArgParseOption("fb", "filter-bp", "In search mode, only match\
+                                    those results where the query and ref sequence \
+                                    lengths are within +/- bp of oneanother.",
+             ArgParseArgument::INTEGER, "INT"));
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
    setVersion(parser, "0.0.33");
    setDate(parser, "July 2021");
@@ -117,6 +125,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    options.noheader = isSet(parser, "no-header");
    options.debug = isSet(parser, "debug");
    //options.lowram = isSet(parser, "low-ram");
+   getOptionValue(options.filter_percent, parser, "filter-percent");
+   getOptionValue(options.filter_bp, parser, "filter-bp");
    getOptionValue(options.queryFileName, parser, "query-file");
    getOptionValue(options.referenceFileName, parser, "reference-file");
    getOptionValue(options.pairwiseFileName, parser, "pairwise-file");

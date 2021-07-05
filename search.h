@@ -178,6 +178,8 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
          if(options.mask.size() > 0)
             countKmersNew(querycounts, qseq, options.klen, options.effectiveLength, options.mask);
+         else if(true)
+            countReducedAlphabet(querycounts, qseq, options.klen);
          else
             countKmersNew(querycounts, qseq, options.klen);
 
@@ -333,8 +335,11 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
          // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
+         else if(true)
+            countReducedAlphabet(counts[i], seq, options.klen);
          else
             countKmersNew(counts[i], seq, options.klen);
+            
 
          if(options.type == "d2s" || options.type == "D2S" ||
             options.type == "d2star" || options.type == "D2Star" ||

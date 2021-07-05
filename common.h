@@ -62,6 +62,8 @@ struct ModifyStringOptions
    vector<CharString> mask;
    int effectiveLength;
    double score_cutoff;
+   double filter_percent;
+   int filter_bp;
 };
 
 #endif
