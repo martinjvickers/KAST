@@ -178,8 +178,6 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
          if(options.mask.size() > 0)
             countKmersNew(querycounts, qseq, options.klen, options.effectiveLength, options.mask);
-         else if(true)
-            countReducedAlphabet(querycounts, qseq, options.klen);
          else
             countKmersNew(querycounts, qseq, options.klen);
 
@@ -217,6 +215,32 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
 
       for(int i = 0; i < length(refids); i++)
       {
+
+         if(options.filter_bp != 0)
+         {
+            if(abs((int)length(refseqs[i])-(int)length(queryseq)) > options.filter_bp)
+            {
+               continue;
+            }
+         }
+         else if(options.filter_percent != 0)
+         {
+            if(length(refseqs[i]>length(queryseq)))
+            {
+               if( (100 - (length(queryseq) / length(refseqs[i]))) > options.filter_percent)
+               {
+                  continue;
+               }
+            } 
+            else
+            {
+               if( (100 - (length(refseqs[i]) / length(queryseq))) > options.filter_percent)
+               {
+                  continue;
+               }
+            }
+         }
+
          double dist = 0;
          if(options.type == "euclid")
             dist = euler(querycounts, refcounts[i]);
@@ -335,8 +359,6 @@ int query_ref_search(ModifyStringOptions options, TAlphabet const & alphabetType
          // check if we are doing a mask
          if(options.mask.size() > 0)
             countKmersNew(counts[i], seq, options.klen, options.effectiveLength, options.mask);
-         else if(true)
-            countReducedAlphabet(counts[i], seq, options.klen);
          else
             countKmersNew(counts[i], seq, options.klen);
             
