@@ -224,19 +224,14 @@ int search_thread(ModifyStringOptions options, SeqFileIn & qrySeqFileIn,
          }
          else if(options.filter_percent != 0)
          {
-            if(length(refseqs[i]>length(queryseq)))
+            double tmpTest = (double)length(queryseq) / (double)length(refseqs[i]);
+            if( tmpTest > 1)
             {
-               if( (100 - (length(queryseq) / length(refseqs[i]))) > options.filter_percent)
-               {
-                  continue;
-               }
-            } 
-            else
+               tmpTest = 1 / tmpTest;
+            }
+            if(tmpTest <= (double)options.filter_percent/100)
             {
-               if( (100 - (length(refseqs[i]) / length(queryseq))) > options.filter_percent)
-               {
-                  continue;
-               }
+               continue;
             }
          }
 
