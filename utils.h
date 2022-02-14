@@ -98,8 +98,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     lengths are within +/- bp of oneanother.",
              ArgParseArgument::INT64, "INT64"));
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "0.0.34");
-   setDate(parser, "January 2022");
+   setVersion(parser, "1.0.0");
+   setDate(parser, "February 2022");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addDescription(parser, "Perform Alignment-free k-tuple frequency \
