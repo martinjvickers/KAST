@@ -4,7 +4,7 @@
 Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.
 
 ### Version ###
-Not far from a complete release but still a bit to go. This is version 0.0.34.
+This is version 1.0.0
 
 ### Manual and Usage ###
 
@@ -37,7 +37,7 @@ If you wish to do pairwise comparison the following command;
 
 Using standard CMAKE static build options a binary release has been created that works on 64bit x86 GNU/Linux machines, however it is not fully backwards compatible for old kernels since alfsc uses c++14 and SeqAn which make creating a backward compatible binary for very old kernels difficult. This does not mean that you will not be able to use alfsc, it just means that you will have to build alfsc from source. 
 
-The current beta binary release has been tested on CentOS6 and 7 (which implies that it should work on SL6 and 7), Ubuntu 12.04.5 and 16.04.1. 
+The current beta binary release has been built on Ubuntu LTS 20.04. If there is sufficient demand I can make older static binaries, otherwise one can use the installation on biocontainers.
 
 ### Who do I talk to? ###
 
