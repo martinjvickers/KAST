@@ -1,30 +1,43 @@
 [![Build Status](https://travis-ci.org/martinjvickers/KAST.svg?branch=master)](https://travis-ci.org/martinjvickers/KAST)
 
-### Quick summary ###
+# Summary #
+
 Perform Alignment-free k-tuple frequency comparisons from sequences. This can be in the form of two input files (e.g. a reference and a query) or a single file for pairwise comparisons to be made.
 
-### Version ###
-This is version 1.0.0
+## Documentation
 
-### Manual and Usage ###
+There are several features of KAST documented in the github wiki. 
 
 https://github.com/martinjvickers/KAST/wiki
 
-### How do I get set up on Ubuntu 16.04? ###
+## Installation
+
+KAST can be installed in a variety of different ways depending on your environment. For detailed installation documentation, take a look at the wiki.
+
+https://github.com/martinjvickers/KAST/wiki/Installation
+
+## Quick install and start ###
+
+If you have a modern Linux OS, you should be able to use the static binary.
+
+Get static binary and extract tar.gz
 
 ```
-sudo apt-get install git g++ build-essential cmake zlib1g-dev libbz2-dev libboost-all-dev
-git clone https://github.com/seqan/seqan.git seqan
-git clone https://github.com/martinjvickers/KAST.git
-cd KAST
-cmake ../KAST -DCMAKE_MODULE_PATH=../seqan/util/cmake -DSEQAN_INCLUDE_PATH=../seqan/include -DCMAKE_CXX_FLAGS=-std=c++14 -DCMAKE_BUILD_TYPE=Release
-make
+wget https://github.com/martinjvickers/KAST/releases/download/1.0.0/KAST_v1.0.0.tar.gz
+tar xvfz KAST_v1.0.0.tar.gz
 ```
 
-### Quick run test ###
+Get some example data to run;
 
 ```
-/usr/bin/time -v ./kast -q example_data/SRR042642_1.fastq.gz -r example_data/yeast.fasta -k 3 -c 4 -o output.txt
+wget -c https://github.com/martinjvickers/KAST/blob/master/example_data/yeast.fasta?raw=true -O yeast.fasta
+wget -c https://github.com/martinjvickers/KAST/blob/master/example_data/SRR042642_100k.fastq.gz?raw=true -O SRR042642_100k.fastq.gz
+```
+
+And now try the program (`-c` assuming 4 CPU cores)
+
+```
+/usr/bin/time -v ./kast -q SRR042642_100k.fastq.gz -r yeast.fasta -k 3 -c 4 -o output.txt
 ```
 
 If you wish to do pairwise comparison the following command;
@@ -33,9 +46,9 @@ If you wish to do pairwise comparison the following command;
 ./kast -p example_data/yeast.fasta -o test.txt
 ```
 
-### Binary Release ###
+### Notes on the binary release ###
 
-Using standard CMAKE static build options a binary release has been created that works on 64bit x86 GNU/Linux machines, however it is not fully backwards compatible for old kernels since alfsc uses c++14 and SeqAn which make creating a backward compatible binary for very old kernels difficult. This does not mean that you will not be able to use alfsc, it just means that you will have to build alfsc from source. 
+Using standard CMAKE static build options a binary release has been created that works on 64bit x86 GNU/Linux machines, however it is not fully backwards compatible for old kernels since alfsc uses c++14 and SeqAn which make creating a backward compatible binary for very old kernels difficult. This does not mean that you will not be able to use alfsc, it just means that you will have to build alfsc from source or use a container. 
 
 The current beta binary release has been built on Ubuntu LTS 20.04. If there is sufficient demand I can make older static binaries, otherwise one can use the installation on biocontainers.
 
