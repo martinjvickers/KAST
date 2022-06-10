@@ -117,6 +117,8 @@ int printResult(ModifyStringOptions options, CharString &queryid,
             }
          }
       }
+
+   return 0;
 }
 
 template <typename TAlphabet>
