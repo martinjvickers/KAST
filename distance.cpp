@@ -174,12 +174,9 @@ double d2(String<unsigned> const & kmerCounts1,
 
    for(unsigned i = 0; i < length(kmerCounts1); i++)
    {
-      if(kmerCounts1[i] != 0 && kmerCounts1[i] != 0)
-      {	      
-         sumqCrC += (long long int)kmerCounts1[i] * (long long int)kmerCounts2[i];
-         sumqC2 += (long long int)kmerCounts1[i] * (long long int)kmerCounts1[i];
-         sumrC2 += (long long int)kmerCounts2[i] * (long long int)kmerCounts2[i];
-      }
+      sumqCrC += (long long int)kmerCounts1[i] * (long long int)kmerCounts2[i];
+      sumqC2 += (long long int)kmerCounts1[i] * (long long int)kmerCounts1[i];
+      sumrC2 += (long long int)kmerCounts2[i] * (long long int)kmerCounts2[i];
    }
 
    double score = sumqCrC / (sqrt(sumqC2) * sqrt(sumrC2));
