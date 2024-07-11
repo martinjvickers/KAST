@@ -1,6 +1,6 @@
 /*
 KAST - Kmer Alignment-free Search Tool
-Version 1.0.1
+Version 1.0.2
 Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 
 */
@@ -20,7 +20,7 @@ Written by Dr. Martin Vickers (martin.vickers@jic.ac.uk)
 #include "pairwise.h"
 #include "search.h"
 
-using namespace seqan;
+using namespace seqan2;
 using namespace std;
 
 int main(int argc, char const ** argv)

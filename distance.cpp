@@ -1,5 +1,4 @@
 #include "distance.h"
-//#include <seqan/index.h> debugging
 
 double d2s(String<unsigned> const & kmerCounts1,
            String<unsigned> const & kmerCounts2,
@@ -25,12 +24,6 @@ double d2s(String<unsigned> const & kmerCounts1,
       double rCt = (long long int)kmerCounts1[i] - ((double)rN*(double)markovCounts1[i]);
 
       double dist = sqrt(qCt*qCt + rCt*rCt);
-
-// mjv08 debugging purposes
-//      String<ReducedAminoAcidMurphy10> orig;
-//      unhash(orig, i, 3);
-
-//      cout << orig << "\t" << dist << "\t" << qCt << "\t" << rCt << "\t" << kmerCounts2[i] << "\t" << kmerCounts1[i] << endl;
 
       if(dist == 0)
          dist = 1;

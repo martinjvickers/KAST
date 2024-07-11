@@ -6,7 +6,7 @@
 #include "distance.h"
 #include "utils.h"
 
-using namespace seqan;
+using namespace seqan2;
 using namespace std;
 
 /*

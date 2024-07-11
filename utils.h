@@ -98,8 +98,8 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
                                     lengths are within +/- bp of oneanother.",
              ArgParseArgument::INT64, "INT64"));
    setShortDescription(parser, "Kmer Alignment-free Search Tool.");
-   setVersion(parser, "1.0.1");
-   setDate(parser, "June 2022");
+   setVersion(parser, "1.0.2");
+   setDate(parser, "July 2024");
    addUsageLine(parser, "-q query.fasta -r reference.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addUsageLine(parser, "-p mydata.fasta -o results.txt [\\fIOPTIONS\\fP] ");
    addDescription(parser, "Perform Alignment-free k-tuple frequency \
@@ -110,7 +110,7 @@ ArgumentParser::ParseResult parseCommandLine(ModifyStringOptions & options,
    ArgumentParser::ParseResult res = parse(parser, argc, argv);
 
    // Only extract options if the program will continue after parseCommandLine
-   if (res != seqan::ArgumentParser::PARSE_OK)
+   if (res != seqan2::ArgumentParser::PARSE_OK)
       return res;
 
    //begin extracting options
@@ -315,14 +315,14 @@ int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & seque
    resize(myShape, k);
    unsigned long long int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
 
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    auto itSequence = begin(sequence);
 
    for (; itSequence <= (end(sequence) - k); ++itSequence)
    {
-      long long unsigned int hashValue = seqan::hash(myShape, itSequence);
+      long long unsigned int hashValue = seqan2::hash(myShape, itSequence);
       safe_increment(kmerCounts[hashValue]);
    }
    return 0;
@@ -334,8 +334,8 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
    Shape<Dna> myShape;
    resize(myShape, k);
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    auto itSequence = begin(sequence);
    int counterN = 0;
@@ -358,7 +358,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence, 
        // If there is no "N" overlapping with the current kmer, count it
        if (counterN <= 0)
        {
-           unsigned hashValue = seqan::hash(myShape, itSequence);
+           unsigned hashValue = seqan2::hash(myShape, itSequence);
            safe_increment(kmerCounts[hashValue]);
        }
        counterN--;
@@ -390,13 +390,13 @@ int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & seque
 
    // resize the kmerCounts vector for this entry which 
    int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(maskShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    // go through the sequence using k=X at a time
    for (; itSequence <= (end(sequence) - k); ++itSequence)
    {
-      unsigned hashValue = seqan::hash(myShape, itSequence);
+      unsigned hashValue = seqan2::hash(myShape, itSequence);
       String<TAlphabet> orig;
       unhash(orig, hashValue, k);
 
@@ -415,7 +415,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<TAlphabet> const & seque
          }
          //cout << dnaSeq << endl;
          auto it = begin(dnaSeq);
-         unsigned hashMask = seqan::hash(maskShape, it);
+         unsigned hashMask = seqan2::hash(maskShape, it);
          safe_increment(kmerCounts[hashMask]);
       }
    }
@@ -440,8 +440,8 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
    resize(maskShape, effectiveK);
 
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(maskShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    // Check for any N that destroys the first kmers
    unsigned j = k - 1;
@@ -462,7 +462,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
        // If there is no "N" overlapping with the current kmer, count it
        if (counterN <= 0)
        {
-           unsigned hashValue = seqan::hash(myShape, itSequence);
+           unsigned hashValue = seqan2::hash(myShape, itSequence);
            DnaString orig;
            unhash(orig, hashValue, k);
 
@@ -479,7 +479,7 @@ int countKmersNew(String<unsigned> & kmerCounts, String<Dna5> const & sequence,
               }
 
               auto it = begin(dnaSeq);
-              unsigned hashMask = seqan::hash(maskShape, it);
+              unsigned hashMask = seqan2::hash(maskShape, it);
               safe_increment(kmerCounts[hashMask]);
            }
        }
@@ -498,8 +498,8 @@ void markov(String<double> & markovCounts, String<unsigned> const & kmerCounts,
    resize(myShape, k);
    int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
 
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
+   seqan2::clear(markovCounts);
+   seqan2::resize(markovCounts, kmerNumber, 0);
 
    // Now create the background model
    String<unsigned> markovbg;
@@ -534,8 +534,8 @@ void markov<>(String<double> & markovCounts, String<unsigned> const & kmerCounts
    Shape<Dna> myShape;
    resize(myShape, k);
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(markovCounts);
-   seqan::resize(markovCounts, kmerNumber, 0);
+   seqan2::clear(markovCounts);
+   seqan2::resize(markovCounts, kmerNumber, 0);
 
    // Now create the background model
    String<unsigned> markovbg;
@@ -588,8 +588,8 @@ int countReducedAlphabet(String<unsigned> & kmerCounts, String<TAlphabet> const 
    resize(myShape, k);
    unsigned long long int kmerNumber = _intPow((unsigned)ValueSize<TAlphabet>::VALUE, weight(myShape));
 
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    auto itSequence = begin(sequence);
 
@@ -597,10 +597,10 @@ int countReducedAlphabet(String<unsigned> & kmerCounts, String<TAlphabet> const 
    {
       cout << itSequence << "\t" << value(itSequence) << "\t";
       DnaString meh;
-      seqan::unhash(meh, seqan::hash(myShape, itSequence), weight(myShape));
+      seqan2::unhash(meh, seqan2::hash(myShape, itSequence), weight(myShape));
       cout << meh << endl;
       //cout << seqan::unhash(meh, seqan::hash(myShape, itSequence), itSequence) << endl;
-      long long unsigned int hashValue = seqan::hash(myShape, itSequence);
+      long long unsigned int hashValue = seqan2::hash(myShape, itSequence);
 
       safe_increment(kmerCounts[hashValue]);
    }

@@ -9,7 +9,7 @@
 #include "distance_tests.h"
 #include "utils_tests.h"
 
-using namespace seqan;
+using namespace seqan2;
 using namespace std;
 
 SEQAN_BEGIN_TESTSUITE(KAST_tests)

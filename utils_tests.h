@@ -1,6 +1,6 @@
 #include "utils.h"
 
-using namespace seqan;
+using namespace seqan2;
 using namespace std;
 
 SEQAN_DEFINE_TEST(count_dna)
@@ -31,8 +31,8 @@ SEQAN_DEFINE_TEST(mask_count_dna)
    Shape<Dna> myShape;
    resize(myShape, effectiveLength);
    int kmerNumber = _intPow((unsigned)ValueSize<Dna>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
    kmerCounts[0] = 21;
    kmerCounts[1] = 24;
    kmerCounts[2] = 33;
@@ -58,8 +58,8 @@ SEQAN_DEFINE_TEST(mask_count_raa)
    Shape<ReducedAminoAcidMurphy10> myShape;
    resize(myShape, effectiveLength);
    int kmerNumber = _intPow((unsigned)ValueSize<ReducedAminoAcidMurphy10>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    kmerCounts[0] = 0;
    kmerCounts[1] = 2;
@@ -96,8 +96,8 @@ SEQAN_DEFINE_TEST(mask_count_aa)
    Shape<ReducedAminoAcidMurphy10> myShape;
    resize(myShape, effectiveLength);
    int kmerNumber = _intPow((unsigned)ValueSize<AminoAcid>::VALUE, weight(myShape));
-   seqan::clear(kmerCounts);
-   seqan::resize(kmerCounts, kmerNumber, 0);
+   seqan2::clear(kmerCounts);
+   seqan2::resize(kmerCounts, kmerNumber, 0);
 
    kmerCounts[0] = 0;
    kmerCounts[1] = 0;

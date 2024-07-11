@@ -4,7 +4,7 @@
 #include <seqan/sequence.h>
 #include <seqan/reduced_aminoacid.h>
 
-using namespace seqan;
+using namespace seqan2;
 using namespace std;
 
 typedef SimpleType<unsigned char, ReducedAminoAcid_<Murphy10> > ReducedAminoAcidMurphy10;
